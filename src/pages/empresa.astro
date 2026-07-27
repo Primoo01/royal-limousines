@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import site from '../config/site.js';
+import paginas from '../data/paginas-antigas.json';
+
+const dados = paginas.paginas.find((p) => p.url === '/empresa/');
+// A description original do backup (142c) ficava abaixo da faixa de 150-160
+// pedida na revisão de SEO. Reescrita a partir do mesmo texto real da página
+// (mesmas palavras-chave: locação de limousines, eventos, casamentos,
+// aniversários, São Paulo), só ajustando o tamanho.
+const description =
+  'Limousines para Casamentos SP. Somos especializados em locação de limousines para eventos, casamentos e aniversários em São Paulo. Ligue e peça um orçamento.';
+---
+
+<BaseLayout title={dados.title} description={description}>
+  <section class="u-container secao-empresa reveal">
+    <div class="secao-empresa__texto">
+      <p class="u-eyebrow">Empresa</p>
+      <h1 class="reveal-titulo">Limousines Royal</h1>
+      <div class="u-prosa">
+        <p>
+          Estamos desde 2008 oferecendo traslados especiais com limousines
+          modernas e choffer's altamente qualificados.
+        </p>
+        <p>
+          Somos especializados em eventos sociais, principalmente focados em
+          casamentos, bodas, jantares românticos e festas debutantes.
+        </p>
+        <p>
+          Optamos em atender pessoas sofisticadas que desejem entender o bom
+          ambiente familiar para suas festas e eventos, celebrando junto a
+          seus amigos e parentes momentos inesquecíveis.
+        </p>
+      </div>
+      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+    </div>
+    <ImagePlaceholder label="Royal Limousines — frota em evento" aspectRatio="4/3" class="reveal" />
+  </section>
+</BaseLayout>
+
+<style>
+  .secao-empresa {
+    padding-block: var(--espaco-7) var(--espaco-6);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  .secao-empresa__texto .u-prosa {
+    margin-top: var(--espaco-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .secao-empresa__texto .botao {
+    margin-top: var(--espaco-4);
+  }
+
+  @media (max-width: 56rem) {
+    .secao-empresa {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

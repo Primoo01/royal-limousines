@@ -1,0 +1,301 @@
+---
+// Página "Frota" — os dois Chrysler 300C e a transição dia→noite (ver CLAUDE.md
+// > Signature). A animação de scroll fica pra Etapa 4; aqui já entra a estrutura:
+// bloco do 300C branco (mundo claro, conteúdo real do backup) seguido do bloco
+// do 300C preto (mundo escuro).
+//
+// A assimetria entre as duas seções é proposital (ver CLAUDE.md > Design):
+// o 300C branco é espetáculo (chegada, festa), o 300C preto é discrição
+// (transfer, viagem, saída sem alarde) — por isso a seção dele é
+// deliberadamente mais curta. O texto do sedan mora isolado em
+// src/data/sedan-preto.js pra ser completado quando o cliente confirmar mais
+// detalhes (capacidade, itens de série, ano, serviços).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Marquee from '../components/Marquee.astro';
+import site from '../config/site.js';
+import paginas from '../data/paginas-antigas.json';
+import sedanPreto from '../data/sedan-preto.js';
+
+const dados = paginas.paginas.find((p) => p.url === '/limousines/');
+// O backup não tinha meta description nesta página. Escrita a partir de fatos
+// reais já usados no corpo da própria página (Chrysler 300C branco, 8m, 8
+// passageiros, casamentos/aniversários/eventos, São Paulo).
+const description =
+  'Aluguel de limousine em São Paulo: conheça o Chrysler 300C branco, com 8 metros e capacidade para 8 passageiros, para casamentos, aniversários e eventos.';
+---
+
+<BaseLayout title={dados.title} description={description}>
+  <section class="u-container bloco-frota reveal">
+    <p class="u-eyebrow">Frota Royal Limousines</p>
+    <h1 class="reveal-titulo">Limousine | Aluguel de Limousine</h1>
+    <div class="u-prosa bloco-frota__intro">
+      <p>
+        Limousine para casamento! As melhores limousines para locação,
+        limousine para eventos, limousine para casamentos é só na Royal
+        Limousines.
+      </p>
+      <p>
+        Limousine para baladas, limousine para aniversários, limousine para
+        jantares, você só encontra na Royal Limousines.
+      </p>
+    </div>
+
+    <div class="bloco-frota__grade">
+      <ImagePlaceholder label="Chrysler 300C branco — three-quarter frontal" aspectRatio="4/3" class="reveal" />
+      <div>
+        <h2 class="reveal-titulo">Limousine para Casamentos Chrysler 300C</h2>
+        <div class="u-prosa">
+          <p>
+            A Royal Limousine é uma empresa especializada na locação de
+            limousine. Estamos desde 2008 no mercado, no ramo de locação e
+            aluguel de limousine. Limousine traz sofisticação, elegância e
+            conforto.
+          </p>
+          <p>
+            As nossas limousines têm um estilo clássico idealizado para
+            atender os momentos especiais de sua vida.
+          </p>
+          <p>
+            Com seus 8 metros de extensão e capacidade para 8 passageiros,
+            foi projetada com base no contraste no clássico com o elegante.
+          </p>
+          <p>Tudo o que você precisa para causar grandes impressões.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco-frota__interior">
+      <h3>Espaço interno</h3>
+      <div class="u-prosa">
+        <p>
+          Nossas limousines têm sistema de iluminação party, com canhões de
+          laser e neon, poltronas em couro marfim com detalhes em marrom.
+        </p>
+        <p>
+          O interior da limousine, apesar de high-tech, dispõe de todo luxo e
+          conforto que você deseja.
+        </p>
+        <p>
+          Variedade de bebidas finas dispostas em seu bar, frigobar, 3 telas
+          de vídeo (uma de 20” de plasma e duas de 8,5” LCD), ar condicionado
+          bilateral, sistema completo de player (DVD, MP3, CD e foto)
+          integrado ao seu sistema especial de áudio, saída interna de 110
+          watts, comunicação com chofer através de head free e sistema party
+          de decoração.
+        </p>
+        <p>Tudo isso com total privacidade com seu insulfim black out.</p>
+      </div>
+    </div>
+
+    <div class="u-prosa bloco-frota__fechamento">
+      <p>
+        As melhores limousines para locação você só encontra na Royal
+        Limousine. Nossa empresa já está desde 2008 no mercado de
+        limousines. Somos líderes em aluguel de limousine para casamentos,
+        limousine para festas, limousine para eventos, limousine para
+        despedida de solteiro, limousine casamento, limousine pra
+        debutantes, limousine aluguel, limousine locação eventos, limousine
+        para eventos, limousine para televisão, limousine para festas em SP.
+        Nossas limousines são diferenciadas do mercado. Trabalhamos com
+        preço justo e garantia.
+      </p>
+      <p>
+        Entre em contato com a Royal Limousine e solicite o seu orçamento
+        para aluguel de limousine. Atendemos os serviços de limousine para
+        casamentos, limousine para eventos, limousine para festas de
+        despedida, limousine eventos e muito mais.
+      </p>
+    </div>
+
+    <div class="cta-veiculo glass-fake">
+      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+        {site.cta.whatsapp}
+      </a>
+    </div>
+  </section>
+
+  <Marquee />
+
+  <!--
+    Transição dia→noite (ver CLAUDE.md > Signature). O fundo/texto/dourado
+    de tudo daqui pra baixo é controlado por CSS custom properties no
+    wrapper .mundo-dinamico, interpoladas via JS conforme o scroll (Movimento.astro).
+    O style inline abaixo já nasce com os valores do mundo escuro — é o
+    estado de repouso (fim da transição, ou fallback sem JS). Como a seção
+    começa fora da viewport (depois do carro branco), o JS assume antes que
+    desse valor inicial "flashar" pra quem está rolando a página. Com
+    prefers-reduced-motion, global.css força esses mesmos valores e esconde
+    o spacer da transição — sem JS nenhum rodando.
+  -->
+  <div
+    class="mundo-dinamico"
+    data-mundo-dinamico
+    style="--bg:#141210;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;"
+  >
+    <div class="transicao-dia-noite" data-transicao-dia-noite aria-hidden="true">
+      <span class="ponto-luz" style="top: 15%; left: 12%;"></span>
+      <span class="ponto-luz" style="top: 30%; left: 78%;"></span>
+      <span class="ponto-luz" style="top: 48%; left: 35%;"></span>
+      <span class="ponto-luz" style="top: 62%; left: 88%;"></span>
+      <span class="ponto-luz" style="top: 75%; left: 20%;"></span>
+      <span class="ponto-luz" style="top: 88%; left: 60%;"></span>
+    </div>
+
+    <section class="u-container bloco-frota bloco-frota--escuro reveal">
+      <p class="u-eyebrow">{sedanPreto.eyebrow}</p>
+      <h2 class="reveal-titulo">{sedanPreto.titulo}</h2>
+      <div class="bloco-frota__grade bloco-frota__grade--inverso">
+        <div>
+          <div class="u-prosa">
+            {sedanPreto.paragrafos.map((paragrafo) => <p>{paragrafo}</p>)}
+          </div>
+          <div class="cta-veiculo glass-fake">
+            <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+            <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+              {site.cta.whatsapp}
+            </a>
+          </div>
+        </div>
+        <ImagePlaceholder
+          label="Chrysler 300C preto — three-quarter frontal, à noite"
+          class="reveal"
+          aspectRatio="4/3"
+          mundo="escuro"
+        />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .bloco-frota {
+    min-height: 100svh;
+    padding-block: var(--espaco-7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .bloco-frota__intro {
+    margin-top: var(--espaco-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .bloco-frota__grade {
+    margin-top: var(--espaco-5);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  .bloco-frota__grade--inverso {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bloco-frota__grade .u-prosa p {
+    color: var(--texto-mut);
+    margin-top: var(--espaco-2);
+  }
+
+  .bloco-frota__interior {
+    margin-top: var(--espaco-5);
+    max-width: 44rem;
+  }
+
+  .bloco-frota__interior .u-prosa {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .bloco-frota__fechamento {
+    margin-top: var(--espaco-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .cta-veiculo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+    margin-top: var(--espaco-4);
+    padding: var(--espaco-3);
+  }
+
+  /* Item 3: a seção do sedan resolve por peso visual, não por texto — tela
+     cheia, título bem maior, muito mais respiro. A contenção do texto é
+     proposital (branco = espetáculo, preto = discrição). */
+  .bloco-frota--escuro {
+    padding-block: var(--espaco-7);
+  }
+
+  .bloco-frota--escuro > .u-eyebrow {
+    margin-bottom: var(--espaco-3);
+  }
+
+  .bloco-frota--escuro h2 {
+    font-size: clamp(3rem, 2.1rem + 5.5vw, 6.5rem);
+    max-width: 18ch;
+  }
+
+  .bloco-frota--escuro .bloco-frota__grade {
+    margin-top: var(--espaco-7);
+    gap: var(--espaco-6);
+  }
+
+  .bloco-frota--escuro .u-prosa p {
+    font-size: 1.125rem;
+  }
+
+  .bloco-frota--escuro .u-prosa p + p {
+    margin-top: var(--espaco-3);
+  }
+
+  .bloco-frota--escuro .cta-veiculo {
+    margin-top: var(--espaco-6);
+  }
+
+  /* O wrapper é quem efetivamente pinta fundo/texto com as variáveis que o
+     JS interpola — sem isso, só as bordas/dourado mudariam de cor. */
+  .mundo-dinamico {
+    background-color: var(--bg);
+    color: var(--texto);
+  }
+
+  .transicao-dia-noite {
+    position: relative;
+    min-height: 100svh;
+    overflow: hidden;
+  }
+
+  .ponto-luz {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--ouro-escuro);
+    box-shadow: 0 0 6px 1px var(--ouro-escuro);
+    opacity: 0;
+  }
+
+  @media (max-width: 56rem) {
+    .bloco-frota__grade,
+    .bloco-frota__grade--inverso {
+      grid-template-columns: 1fr;
+    }
+
+    .transicao-dia-noite {
+      min-height: 60svh;
+    }
+  }
+</style>

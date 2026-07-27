@@ -1,0 +1,62 @@
+---
+// Faixa de texto em movimento contínuo, usada como divisor entre seções
+// (ver item 8 da rodada de refinamento). Só transform: translateX, CSS puro,
+// sem JS. Conteúdo duplicado (a cópia com aria-hidden) pra criar o loop sem
+// emenda visível. Pausa no hover; estática em prefers-reduced-motion.
+const texto = 'ROYAL LIMOUSINES · CASAMENTOS · DEBUTANTES · ANIVERSÁRIOS · EVENTOS · SÃO PAULO ·';
+---
+
+<div class="marquee">
+  <div class="marquee__trilho">
+    <span class="marquee__copia">{texto}</span>
+    <span class="marquee__copia" aria-hidden="true">{texto}</span>
+  </div>
+</div>
+
+<style>
+  .marquee {
+    overflow: hidden;
+    border-block: 1px solid var(--linha);
+    padding-block: var(--espaco-2);
+  }
+
+  .marquee__trilho {
+    display: flex;
+    width: max-content;
+    animation: marquee-deslocar 28s linear infinite;
+  }
+
+  .marquee:hover .marquee__trilho {
+    animation-play-state: paused;
+  }
+
+  .marquee__copia {
+    flex-shrink: 0;
+    padding-inline: 1em;
+    white-space: nowrap;
+    font-family: var(--fonte-sans);
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.14em;
+    color: var(--ouro);
+  }
+
+  @keyframes marquee-deslocar {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__trilho {
+      animation: none;
+    }
+
+    .marquee__copia[aria-hidden='true'] {
+      display: none;
+    }
+  }
+</style>

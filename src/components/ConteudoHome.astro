@@ -1,0 +1,280 @@
+---
+// Conteúdo da home (/). Título, meta description e h1 continuam intocados
+// (são eles que ranqueiam). A prosa ao redor foi reescrita num tom mais
+// sóbrio, inspirado na /lp-limousine/, mas toda frase com palavra-chave do
+// backup original foi preservada — ver comparação de keywords no relatório
+// da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
+import ImagePlaceholder from './ImagePlaceholder.astro';
+import Marquee from './Marquee.astro';
+import site from '../config/site.js';
+
+const passos = [
+  {
+    numero: '01',
+    titulo: 'Atendimento especializado',
+    texto: 'Equipe habituada a eventos sociais como casamentos, bodas, debutantes e jantares românticos.',
+  },
+  {
+    numero: '02',
+    titulo: 'Roteiro confirmado',
+    texto: 'Data, horário, saída, destino, duração e passageiros são alinhados antes da contratação.',
+  },
+  {
+    numero: '03',
+    titulo: 'Contato acessível',
+    texto: 'Atendimento por WhatsApp, telefone e e-mail para tirar dúvidas e consultar disponibilidade.',
+  },
+];
+---
+
+<section class="hero u-container reveal">
+  <div class="hero__miolo">
+    <p class="u-eyebrow">Royal Limousines</p>
+    <h1 class="reveal-titulo">Aluguel de Limousines para casamentos em SP</h1>
+    <div class="hero__texto u-prosa">
+      <p>
+        Aluguel de Limousines para casamentos em SP. Luxo e sofisticação para
+        momentos especiais, com a Royal Limousines.
+      </p>
+      <p>
+        Desde 2008, oferecemos aluguel de limousines em São Paulo para
+        casamentos, aniversários, eventos e jantares, com translados conduzidos
+        por chofferes qualificados.
+      </p>
+      <p>
+        Somos especializados em eventos sociais, com foco em casamentos, bodas,
+        jantares românticos e festas debutantes.
+      </p>
+      <p>
+        Atendemos pessoas que valorizam um ambiente familiar e elegante, ao
+        lado de amigos e parentes, em momentos que merecem ser lembrados.
+      </p>
+    </div>
+    <div class="hero__cta">
+      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+        {site.cta.whatsapp}
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="secao-frota u-container reveal">
+  <div class="secao-frota__texto">
+    <h2 class="reveal-titulo">Limousine para Casamentos em SP</h2>
+    <p class="secao-frota__lead">Sofisticação, elegância e conforto.</p>
+    <p>
+      Procurando por aluguel de limousines para casamentos? Ligue para a Royal
+      Limousines e solicite um orçamento. Atendemos todo o estado de SP.
+    </p>
+    <p>Modelo clássico, idealizado para os momentos especiais da sua vida.</p>
+    <p>
+      Com seus 8 metros de extensão e capacidade para 8 passageiros, foi
+      projetada com base no contraste entre o clássico e o elegante.
+    </p>
+    <p>Feita para causar uma boa impressão.</p>
+    <a class="botao botao--terciario" href="/limousines/"
+      >Conhecer a frota <span class="botao__seta" aria-hidden="true">→</span></a
+    >
+  </div>
+  <ImagePlaceholder label="Chrysler 300C branco — three-quarter frontal" aspectRatio="4/3" class="reveal" />
+</section>
+
+<Marquee />
+
+<section class="secao-passos u-container reveal">
+  <p class="u-eyebrow">Segurança e confiança</p>
+  <h2 class="reveal-titulo">Uma contratação com informações claras desde o primeiro contato.</h2>
+  <p class="u-prosa secao-passos__intro">
+    A proposta é feita com base nas informações do evento. Isso evita
+    dúvidas, organiza o roteiro e melhora a previsibilidade do atendimento.
+  </p>
+
+  <ol class="secao-passos__lista reveal-grupo">
+    {
+      passos.map((passo) => (
+        <li>
+          <span class="secao-passos__numero">{passo.numero}</span>
+          <div>
+            <h3>{passo.titulo}</h3>
+            <p>{passo.texto}</p>
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+</section>
+
+<section class="secao-galeria u-container reveal">
+  <p class="u-eyebrow">Fotos</p>
+  <h2 class="reveal-titulo">A limousine em detalhe</h2>
+  <div class="secao-galeria__grade reveal-grupo">
+    <ImagePlaceholder label="Chrysler 300C branco — foto 1" aspectRatio="3/4" />
+    <ImagePlaceholder label="Chrysler 300C branco — foto 2" aspectRatio="3/4" />
+    <ImagePlaceholder label="Chrysler 300C branco — foto 3" aspectRatio="3/4" />
+    <ImagePlaceholder label="Chrysler 300C branco — foto 4" aspectRatio="3/4" />
+  </div>
+</section>
+
+<section class="secao-contato u-container reveal">
+  <p class="u-eyebrow">Contato</p>
+  <h2 class="reveal-titulo">Faça um orçamento hoje mesmo</h2>
+  <div class="secao-contato__dados">
+    <p><a href={site.contato.telefone.link}>{site.contato.telefone.exibicao}</a></p>
+    <p><a href={`mailto:${site.contato.email}`}>{site.contato.email}</a></p>
+  </div>
+  <div class="hero__cta">
+    <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+    <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      {site.cta.whatsapp}
+    </a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    min-height: 100svh;
+    /* Compensa o header fixo — sem isso, o cálculo de centro considera uma
+       altura maior do que a realmente visível abaixo do header. */
+    padding-top: var(--altura-header);
+    padding-bottom: var(--espaco-6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hero__miolo h1 {
+    margin-top: var(--espaco-2);
+  }
+
+  /* Centro óptico: ~45% da altura, não 50% — desloca levemente pra cima.
+     Só a partir de um viewport com folga vertical razoável, pra nunca
+     cortar conteúdo em telas baixas/estreitas. */
+  @media (min-width: 40rem) {
+    .hero__miolo {
+      transform: translateY(-5svh);
+    }
+  }
+
+  .hero__texto {
+    margin-top: var(--espaco-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+    margin-top: var(--espaco-4);
+  }
+
+  .secao-frota,
+  .secao-galeria,
+  .secao-contato {
+    padding-block: var(--espaco-6);
+    border-top: 1px solid var(--linha);
+  }
+
+  /* .secao-passos não leva border-top: o <Marquee> logo acima já faz esse
+     papel de divisor entre seções. */
+  .secao-passos {
+    padding-block: var(--espaco-6);
+  }
+
+  .secao-frota {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  .secao-frota__texto p {
+    color: var(--texto-mut);
+    margin-top: var(--espaco-2);
+  }
+
+  .secao-frota__lead {
+    font-family: var(--fonte-serif);
+    font-size: 1.25rem;
+    color: var(--texto);
+  }
+
+  .secao-frota__texto .botao {
+    margin-top: var(--espaco-3);
+  }
+
+  .secao-passos__intro {
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+    max-width: 40rem;
+  }
+
+  .secao-passos__lista {
+    margin-top: var(--espaco-4);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--espaco-4);
+  }
+
+  .secao-passos__lista li {
+    display: flex;
+    gap: var(--espaco-2);
+  }
+
+  .secao-passos__numero {
+    font-family: var(--fonte-serif);
+    font-size: 1.75rem;
+    color: var(--ouro);
+    flex-shrink: 0;
+  }
+
+  .secao-passos__lista h3 {
+    font-size: 1.0625rem;
+  }
+
+  .secao-passos__lista p {
+    margin-top: 0.3rem;
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .secao-galeria__grade {
+    margin-top: var(--espaco-4);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--espaco-2);
+  }
+
+  .secao-contato__dados {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+
+  .secao-contato__dados a {
+    text-decoration: none;
+    color: var(--texto);
+  }
+
+  .secao-contato__dados a:hover {
+    color: var(--ouro);
+  }
+
+  @media (max-width: 56rem) {
+    .secao-frota {
+      grid-template-columns: 1fr;
+    }
+
+    .secao-passos__lista {
+      grid-template-columns: 1fr;
+    }
+
+    .secao-galeria__grade {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

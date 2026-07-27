@@ -1,0 +1,150 @@
+---
+// Painel de mídia do menu (ver CLAUDE.md > Navegação e > Mídia pesada).
+// Uma camada por grupo, empilhadas, trocando em crossfade (opacity) via
+// data-ativa — o Header.astro liga isso ao hover dos links.
+// Vídeo: preload="none", sem <source> no HTML — o Header.astro só define a
+// fonte e chama .load() na primeira abertura do menu.
+import menuMidiaData from '../data/menu-midia.js';
+
+const grupos = Object.entries(menuMidiaData);
+---
+
+<div class="menu-midia" data-menu-midia aria-hidden="true">
+  {
+    grupos.map(([chave, item]) => (
+      <div class="menu-midia__camada" data-midia-camada={chave} data-ativa={chave === 'padrao' ? 'true' : 'false'}>
+        {item.src && item.tipo === 'imagem' && <img src={item.src} alt="" loading="lazy" />}
+        {item.src && item.tipo === 'video' && (
+          <video muted loop playsinline preload="none" poster={item.poster ?? undefined} data-src={item.src} />
+        )}
+        {!item.src && <div class={`menu-midia__gradiente menu-midia__gradiente--${item.tom}`} />}
+      </div>
+    ))
+  }
+  <div class="menu-midia__escrim" />
+</div>
+
+<style>
+  .menu-midia {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--escuro-surface);
+  }
+
+  .menu-midia__camada {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .menu-midia__camada[data-ativa='true'] {
+    opacity: 1;
+  }
+
+  .menu-midia__camada img,
+  .menu-midia__camada video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .menu-midia__gradiente {
+    position: absolute;
+    inset: -20%;
+    animation: menu-midia-flutuar 50s ease-in-out infinite;
+  }
+
+  .menu-midia__gradiente--champagne {
+    background: radial-gradient(circle at 30% 30%, #c6a25e, #3a342a 70%);
+  }
+
+  .menu-midia__gradiente--aurora {
+    background: linear-gradient(135deg, #c6a25e, #6b3d2e 60%, #211e18);
+    animation-duration: 40s;
+  }
+
+  .menu-midia__gradiente--grafite {
+    background: linear-gradient(120deg, #3a4048, #14161a 70%);
+    animation-name: menu-midia-deslizar;
+    animation-duration: 55s;
+  }
+
+  .menu-midia__gradiente--linho {
+    background: radial-gradient(circle at 70% 40%, #efe6d8, #a89f8c 80%);
+    animation-duration: 60s;
+  }
+
+  .menu-midia__gradiente--ambar {
+    background: radial-gradient(circle at 50% 60%, #e0a458, #5c3a1e 75%);
+    animation-name: menu-midia-pulsar;
+    animation-duration: 12s;
+  }
+
+  .menu-midia__gradiente--carvao {
+    background: linear-gradient(160deg, #211e18, #050403 75%);
+    animation-duration: 65s;
+  }
+
+  @keyframes menu-midia-flutuar {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    50% {
+      transform: translate(-3%, 2%) rotate(3deg);
+    }
+  }
+
+  @keyframes menu-midia-deslizar {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    50% {
+      transform: translate(3%, -2%) scale(1.05);
+    }
+  }
+
+  @keyframes menu-midia-pulsar {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.08);
+    }
+  }
+
+  .menu-midia__escrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(20, 18, 16, 0.15), rgba(20, 18, 16, 0.55));
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-midia__gradiente {
+      animation: none;
+    }
+
+    .menu-midia__camada {
+      transition: none;
+    }
+  }
+
+  /* Mobile: sem painel — a mídia vira fundo atrás dos links (ver Header.astro
+     / MenuOverlay.astro pra como o container é reposicionado). */
+  @media (max-width: 56rem) {
+    .menu-midia__escrim {
+      background: linear-gradient(
+        to bottom,
+        rgba(20, 18, 16, 0.55),
+        rgba(20, 18, 16, 0.8) 40%,
+        rgba(20, 18, 16, 0.92)
+      );
+    }
+  }
+</style>

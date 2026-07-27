@@ -1,0 +1,135 @@
+---
+import faq from '../data/faq.js';
+---
+
+<section class="faq u-container reveal" aria-labelledby="faq-titulo">
+  <p class="u-eyebrow">Dúvidas frequentes</p>
+  <h2 id="faq-titulo" class="reveal-titulo">Antes de reservar</h2>
+
+  <div class="faq__lista reveal-grupo">
+    {
+      faq.map((item) => (
+        <details class="faq__item">
+          <summary>
+            {item.pergunta}
+            <span class="faq__indicador" aria-hidden="true"></span>
+          </summary>
+          <div class="faq__resposta">
+            <p>{item.resposta}</p>
+          </div>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .faq {
+    padding-block: var(--espaco-6);
+  }
+
+  .faq h2 {
+    max-width: var(--largura-conteudo);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .faq .u-eyebrow {
+    display: block;
+    text-align: center;
+  }
+
+  .faq__lista {
+    margin-top: var(--espaco-4);
+    max-width: var(--largura-conteudo);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .faq__item {
+    border-bottom: 1px solid var(--linha);
+    padding-block: var(--espaco-3);
+  }
+
+  .faq__item:first-child {
+    border-top: 1px solid var(--linha);
+  }
+
+  .faq__item summary {
+    cursor: pointer;
+    font-family: var(--fonte-sans);
+    font-weight: 500;
+    font-size: 1.0625rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-3);
+  }
+
+  .faq__item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq__indicador {
+    position: relative;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .faq__indicador::before,
+  .faq__indicador::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: var(--ouro);
+    transform: translate(-50%, -50%);
+    transition: transform 0.35s ease;
+  }
+
+  .faq__indicador::before {
+    width: 100%;
+    height: 1px;
+  }
+
+  .faq__indicador::after {
+    width: 1px;
+    height: 100%;
+  }
+
+  .faq__item[open] .faq__indicador::after {
+    transform: translate(-50%, -50%) rotate(90deg) scaleY(0);
+  }
+
+  /* Abertura/fechamento suave em CSS puro: grid-template-rows 0fr → 1fr.
+     Isso exige desligar o display:none nativo do <details> pro conteúdo
+     de resposta — quem controla a altura visível é o grid, não o browser. */
+  .faq__resposta {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s ease;
+  }
+
+  .faq__item[open] .faq__resposta {
+    grid-template-rows: 1fr;
+  }
+
+  .faq__resposta > p {
+    overflow: hidden;
+    min-height: 0;
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+    max-width: 34rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq__resposta,
+    .faq__indicador::before,
+    .faq__indicador::after {
+      transition: none;
+    }
+  }
+</style>

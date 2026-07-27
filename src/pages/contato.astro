@@ -1,0 +1,77 @@
+---
+// A página antiga não tinha meta description (nem tinha nenhuma frase de
+// corpo aproveitável — só rótulos de telefone/e-mail/formulário). A
+// description abaixo é factual, feita só com dados que já existem em outro
+// lugar do backup (telefone, e-mail, "aluguel de limousine para casamentos e
+// eventos em São Paulo"), não é uma frase nova inventada.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Faq from '../components/Faq.astro';
+import site from '../config/site.js';
+import paginas from '../data/paginas-antigas.json';
+
+const dados = paginas.paginas.find((p) => p.url === '/contato/');
+const description =
+  dados.meta_description ??
+  'Fale com a Royal Limousines: telefone, WhatsApp e e-mail para orçamento de aluguel de limousine para casamentos e eventos em São Paulo, 7 dias por semana.';
+---
+
+<BaseLayout title={dados.title} description={description}>
+  <section class="u-container secao-contato reveal">
+    <p class="u-eyebrow">Contato</p>
+    <h1 class="reveal-titulo">Contato</h1>
+
+    <div class="secao-contato__grade">
+      <div class="secao-contato__dados">
+        <p><a href={site.contato.telefone.link}>{site.contato.telefone.exibicao}</a></p>
+        <p><a href={site.contato.whatsapp.link} target="_blank" rel="noopener">{site.contato.whatsapp.exibicao}</a></p>
+        <p><a href={`mailto:${site.contato.email}`}>{site.contato.email}</a></p>
+        <p class="secao-contato__area">{site.contato.areaAtendida}</p>
+      </div>
+
+      <ContactForm />
+    </div>
+  </section>
+
+  <Faq />
+</BaseLayout>
+
+<style>
+  .secao-contato {
+    padding-block: var(--espaco-7) var(--espaco-4);
+  }
+
+  .secao-contato__grade {
+    margin-top: var(--espaco-4);
+    display: grid;
+    grid-template-columns: minmax(14rem, 18rem) 1fr;
+    gap: var(--espaco-5);
+  }
+
+  .secao-contato__dados p {
+    margin-top: var(--espaco-1);
+  }
+
+  .secao-contato__dados a {
+    text-decoration: none;
+    color: var(--texto);
+    font-family: var(--fonte-serif);
+    font-size: 1.25rem;
+  }
+
+  .secao-contato__dados a:hover {
+    color: var(--ouro);
+  }
+
+  .secao-contato__area {
+    color: var(--texto-mut);
+    font-family: var(--fonte-sans);
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 56rem) {
+    .secao-contato__grade {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,459 @@
+---
+// Landing usada pelos anúncios do Google Ads. Conteúdo e layout próprios —
+// texto real extraído do backup separado www.limousinesroyal.com.br-lp
+// (guardado em src/data/paginas-antigas.json, entrada "/lp-limousine/").
+// Página nunca indexada: noindex,follow, fora do sitemap, sem canonical
+// (o conteúdo agora é único, então um canonical pra "/" seria informação falsa).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Faq from '../components/Faq.astro';
+import site from '../config/site.js';
+import paginas from '../data/paginas-antigas.json';
+
+const dados = paginas.paginas.find((p) => p.url === '/lp-limousine/');
+
+const servicos = [
+  {
+    titulo: 'Casamentos',
+    subtitulo: 'Noivos e cerimônias',
+    texto: 'Transporte para chegada, deslocamento entre locais e momentos especiais do casamento.',
+  },
+  {
+    titulo: 'Bodas',
+    subtitulo: 'Celebrações a dois',
+    texto: 'Uma experiência elegante para comemorações de casamento e datas marcantes.',
+  },
+  {
+    titulo: 'Debutantes',
+    subtitulo: 'Festas de 15 anos',
+    texto: 'Chegada planejada para a debutante, com atenção ao horário e à organização familiar.',
+  },
+  {
+    titulo: 'Eventos',
+    subtitulo: 'Jantares e aniversários',
+    texto: 'Serviço para ocasiões especiais, pedidos românticos, festas e experiências personalizadas.',
+  },
+];
+
+const passosContratacao = [
+  {
+    numero: '01',
+    titulo: 'Atendimento especializado',
+    texto: 'Equipe habituada a eventos sociais como casamentos, bodas, debutantes e jantares românticos.',
+  },
+  {
+    numero: '02',
+    titulo: 'Roteiro confirmado',
+    texto: 'Data, horário, saída, destino, duração e passageiros são alinhados antes da contratação.',
+  },
+  {
+    numero: '03',
+    titulo: 'Contato acessível',
+    texto: 'Atendimento por WhatsApp, telefone e e-mail para tirar dúvidas e consultar disponibilidade.',
+  },
+];
+
+const passosOrcamento = [
+  { numero: '1', titulo: 'Data e horário', texto: 'Permite verificar disponibilidade e planejamento do deslocamento.' },
+  { numero: '2', titulo: 'Local de saída e destino', texto: 'Ajuda a entender o trajeto, a região e o tempo estimado de atendimento.' },
+  { numero: '3', titulo: 'Tipo de evento', texto: 'Casamento, bodas, debutante, aniversário, jantar romântico ou evento corporativo.' },
+  { numero: '4', titulo: 'Quantidade de passageiros', texto: 'A limousine comporta até 8 passageiros, sob confirmação da equipe.' },
+];
+---
+
+<BaseLayout
+  title={dados.title}
+  description={dados.meta_description}
+  robots="noindex, follow"
+  semCanonical
+>
+  <section class="u-container lp-hero reveal">
+    <div class="lp-hero__texto">
+      <p class="u-eyebrow">Aluguel de Limousines</p>
+      <h1 class="reveal-titulo">Aluguel de limousine com luxo, segurança e confiança.</h1>
+      <p class="u-prosa lp-hero__lead">
+        Translados especiais para casamentos, bodas, debutantes, aniversários,
+        jantares românticos e eventos. Uma contratação clara, organizada e
+        conduzida por uma empresa especializada.
+      </p>
+      <div class="lp-cta">
+        <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          {site.cta.whatsapp}
+        </a>
+        <a class="botao botao--secundario" href={site.contato.telefone.link}>Ligar: {site.contato.telefone.exibicao}</a>
+      </div>
+      <p class="lp-hero__selo">Royal Limousines • Desde 2008 em São Paulo</p>
+    </div>
+
+    <aside class="lp-hero__card glass-fake">
+      <ImagePlaceholder label="Chrysler Limousine Royal" aspectRatio="4/3" class="reveal" />
+      <div class="lp-hero__consulta">
+        <h2 class="reveal-titulo">Consulte sua data</h2>
+        <p>Para receber uma cotação correta, envie os principais dados do evento.</p>
+        <ul>
+          <li>Data e horário do serviço</li>
+          <li>Local de saída e destino</li>
+          <li>Duração aproximada do roteiro</li>
+          <li>Quantidade de passageiros</li>
+        </ul>
+        <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+      </div>
+    </aside>
+  </section>
+
+  <section class="u-container lp-selos reveal">
+    <div class="lp-selos__item">
+      <p class="u-eyebrow">Experiência comprovada</p>
+      <p>Atendimento em eventos sociais desde 2008.</p>
+    </div>
+    <div class="lp-selos__item">
+      <p class="u-eyebrow">Conforto e segurança</p>
+      <p>Roteiro alinhado antes da contratação.</p>
+    </div>
+    <div class="lp-selos__item">
+      <p class="u-eyebrow">Contato direto</p>
+      <p>WhatsApp, telefone e e-mail da empresa.</p>
+    </div>
+  </section>
+
+  <section class="u-container lp-secao reveal">
+    <p class="u-eyebrow">Serviços Royal</p>
+    <h2 class="reveal-titulo">Para momentos especiais que pedem uma chegada inesquecível.</h2>
+    <p class="u-prosa">
+      A Royal Limousines é especializada em eventos sociais e realiza
+      atendimentos sob consulta de agenda, roteiro e duração.
+    </p>
+
+    <div class="lp-servicos reveal-grupo">
+      {
+        servicos.map((servico) => (
+          <article class="lp-servicos__card">
+            <h3>{servico.titulo}</h3>
+            <p class="lp-servicos__subtitulo">{servico.subtitulo}</p>
+            <p>{servico.texto}</p>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="u-container lp-secao reveal">
+    <p class="u-eyebrow">Segurança e confiança</p>
+    <h2 class="reveal-titulo">Uma contratação com informações claras desde o primeiro contato.</h2>
+    <p class="u-prosa">
+      A proposta é feita com base nas informações do evento. Isso evita
+      dúvidas, organiza o roteiro e melhora a previsibilidade do atendimento.
+    </p>
+
+    <ol class="lp-passos reveal-grupo">
+      {
+        passosContratacao.map((passo) => (
+          <li>
+            <span class="lp-passos__numero">{passo.numero}</span>
+            <div>
+              <h3>{passo.titulo}</h3>
+              <p>{passo.texto}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="u-container lp-secao lp-veiculo reveal">
+    <ImagePlaceholder label="Chrysler Limousine Royal — perfil lateral" aspectRatio="16/9" class="reveal" />
+    <div>
+      <p class="u-eyebrow">A limousine</p>
+      <h2 class="reveal-titulo">Chrysler Limousine: clássica, elegante e confortável.</h2>
+      <p class="u-prosa">
+        Modelo idealizado para atender momentos especiais, com visual
+        imponente e estrutura voltada ao conforto dos passageiros.
+      </p>
+      <dl class="lp-stats">
+        <div><dt>8m</dt><dd>de extensão aproximada</dd></div>
+        <div><dt>8</dt><dd>passageiros sob confirmação</dd></div>
+        <div><dt>SP</dt><dd>atendimento em São Paulo</dd></div>
+        <div><dt>2008</dt><dd>empresa atuando desde</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="u-container lp-secao reveal">
+    <p class="u-eyebrow">Orçamento</p>
+    <h2 class="reveal-titulo">Solicite a cotação direto pelo WhatsApp.</h2>
+    <p class="u-prosa">
+      O valor depende do roteiro, da data, da duração do serviço e da
+      disponibilidade da agenda. Ao clicar no botão, a conversa abre com uma
+      mensagem pronta para você preencher os dados do evento.
+    </p>
+
+    <ol class="lp-passos lp-passos--compacto reveal-grupo">
+      {
+        passosOrcamento.map((passo) => (
+          <li>
+            <span class="lp-passos__numero">{passo.numero}</span>
+            <div>
+              <h3>{passo.titulo}</h3>
+              <p>{passo.texto}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <div class="lp-cta">
+      <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+        {site.cta.orcamento} pelo WhatsApp
+      </a>
+      <a class="botao botao--secundario" href={site.contato.telefone.link}>Ligar para a Royal</a>
+    </div>
+  </section>
+
+  <Faq />
+
+  <section class="u-container lp-fechamento glass-fake reveal">
+    <h2 class="reveal-titulo">Consulte sua data com antecedência.</h2>
+    <p class="u-prosa">
+      Envie o roteiro do evento e receba orientação sobre disponibilidade,
+      condições e orçamento para o aluguel da limousine.
+    </p>
+    <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      Consultar agora
+    </a>
+  </section>
+</BaseLayout>
+
+<style>
+  .lp-hero {
+    min-height: 100svh;
+    /* Compensa o header fixo, mesmo critério do hero da home. */
+    padding-top: var(--altura-header);
+    padding-bottom: var(--espaco-6);
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  /* Centro óptico ~45%, não 50% — as duas colunas sobem juntas, mantendo o
+     alinhamento entre texto e card. Só a partir de viewport com folga
+     vertical, pra nunca cortar conteúdo em telas baixas/estreitas. */
+  @media (min-width: 40rem) {
+    .lp-hero > * {
+      transform: translateY(-5svh);
+    }
+  }
+
+  .lp-hero__lead {
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .lp-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+    margin-top: var(--espaco-3);
+  }
+
+  .lp-hero__selo {
+    margin-top: var(--espaco-3);
+    font-size: 0.875rem;
+    color: var(--texto-mut);
+  }
+
+  .lp-hero__card {
+    padding: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-3);
+  }
+
+  .lp-hero__consulta h2 {
+    font-size: 1.25rem;
+  }
+
+  .lp-hero__consulta p {
+    margin-top: var(--espaco-1);
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .lp-hero__consulta ul {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .lp-hero__consulta li {
+    position: relative;
+    padding-left: 1.1em;
+    font-size: 0.875rem;
+    color: var(--texto-mut);
+  }
+
+  .lp-hero__consulta li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 4px;
+    height: 4px;
+    background-color: var(--ouro);
+  }
+
+  .lp-hero__consulta .botao {
+    margin-top: var(--espaco-2);
+  }
+
+  .lp-selos {
+    padding-block: var(--espaco-4);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--espaco-3);
+    border-block: 1px solid var(--linha);
+  }
+
+  .lp-selos__item p:last-child {
+    margin-top: var(--espaco-1);
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .lp-secao {
+    padding-block: var(--espaco-6);
+  }
+
+  .lp-secao > .u-prosa {
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .lp-servicos {
+    margin-top: var(--espaco-4);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--espaco-3);
+  }
+
+  .lp-servicos__card h3 {
+    font-size: 1.1875rem;
+  }
+
+  .lp-servicos__subtitulo {
+    margin-top: 0.25rem;
+    font-family: var(--fonte-sans);
+    font-size: 0.8125rem;
+    color: var(--ouro);
+  }
+
+  .lp-servicos__card p:last-child {
+    margin-top: var(--espaco-1);
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .lp-passos {
+    margin-top: var(--espaco-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-3);
+  }
+
+  .lp-passos--compacto {
+    max-width: 40rem;
+  }
+
+  .lp-passos li {
+    display: flex;
+    gap: var(--espaco-2);
+    align-items: baseline;
+  }
+
+  .lp-passos__numero {
+    font-family: var(--fonte-serif);
+    font-size: 1.5rem;
+    color: var(--ouro);
+    flex-shrink: 0;
+    width: 2.5rem;
+  }
+
+  .lp-passos h3 {
+    font-size: 1.0625rem;
+  }
+
+  .lp-passos p {
+    margin-top: 0.2rem;
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .lp-veiculo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  .lp-veiculo .u-prosa {
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .lp-stats {
+    margin-top: var(--espaco-4);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--espaco-2);
+  }
+
+  .lp-stats dt {
+    font-family: var(--fonte-serif);
+    font-size: 1.75rem;
+    color: var(--ouro);
+  }
+
+  .lp-stats dd {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--texto-mut);
+  }
+
+  .lp-fechamento {
+    margin-inline: auto;
+    margin-block: var(--espaco-6);
+    max-width: 44rem;
+    padding: var(--espaco-4);
+    text-align: center;
+  }
+
+  .lp-fechamento .u-prosa {
+    margin-inline: auto;
+    margin-top: var(--espaco-2);
+    color: var(--texto-mut);
+  }
+
+  .lp-fechamento .botao {
+    margin-top: var(--espaco-3);
+  }
+
+  @media (max-width: 56rem) {
+    .lp-hero,
+    .lp-veiculo {
+      grid-template-columns: 1fr;
+    }
+
+    .lp-selos,
+    .lp-servicos,
+    .lp-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .lp-selos {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

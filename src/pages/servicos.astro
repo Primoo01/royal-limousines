@@ -1,0 +1,143 @@
+---
+// A página antiga não tinha meta description. Escrita a partir das categorias
+// de serviço reais da própria página (casamento, bodas, jantares românticos,
+// festas debutantes) e do fato real "São Paulo" já usado em outras páginas.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import site from '../config/site.js';
+import paginas from '../data/paginas-antigas.json';
+
+const dados = paginas.paginas.find((p) => p.url === '/servicos/');
+const description =
+  dados.meta_description ??
+  'Serviços da Royal Limousines em São Paulo: aluguel de limousine para casamento e bodas, jantares românticos e festas debutantes, com conforto e segurança.';
+
+const servicos = [
+  {
+    titulo: 'Casamento e Bodas',
+    imagem: { arquivo: 'fotolimousinescasamento2-1.png', rotulo: 'Royal Limousines — casamento' },
+    itens: [
+      'Disponível para a noiva desde o salão de beleza até o final do evento',
+      'Conforto e segurança',
+      'Como cortesia oferecemos água, refrigerante, Champagne e bombons finos',
+      'Placa personalizada (opcional)',
+    ],
+  },
+  {
+    titulo: 'Jantares Românticos',
+    imagem: { arquivo: 'fotolimousinescasamento2-2.png', rotulo: 'Royal Limousines — jantar romântico' },
+    itens: [
+      '4 horas inesquecíveis com luxo e sofisticação',
+      'Pacotes e condições especiais para jantares de 2ª a 6ª',
+      'Ambiente romântico e personalizado (opcional)',
+      'Como cortesia oferecemos água, refrigerante, Champagne e bombons finos',
+    ],
+  },
+  {
+    titulo: 'Festas Debutantes',
+    imagem: { arquivo: 'fotolimousinescasamento2-3.png', rotulo: 'Royal Limousines — festa de debutante' },
+    itens: [
+      '2 horas de muita alegria e celebração',
+      'Pacotes e condições especiais para eventos de 2ª a 6ª',
+      'Infraestrutura de multimídia moderna (áudio e vídeo)',
+      'Como cortesia oferecemos água, refrigerante, Champagne sem álcool e bombons finos',
+    ],
+  },
+];
+---
+
+<BaseLayout title={dados.title} description={description}>
+  <section class="u-container secao-servicos reveal">
+    <p class="u-eyebrow">Serviços</p>
+    <h1 class="reveal-titulo">Serviços</h1>
+    <p class="u-prosa secao-servicos__lead">
+      Para clientes que exigem modernidade associada ao luxo e conforto que
+      só uma limousine pode oferecer.
+    </p>
+
+    <div class="secao-servicos__grade reveal-grupo">
+      {
+        servicos.map((servico) => (
+          <article class="servico-card">
+            <ImagePlaceholder label={servico.imagem.rotulo} aspectRatio="16/9" />
+            <h2>{servico.titulo}</h2>
+            <ul>
+              {servico.itens.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+    </div>
+
+    <div class="hero__cta">
+      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+        {site.cta.whatsapp}
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .secao-servicos {
+    padding-block: var(--espaco-7) var(--espaco-6);
+  }
+
+  .secao-servicos__lead {
+    margin-top: var(--espaco-3);
+    color: var(--texto-mut);
+    font-family: var(--fonte-serif);
+    font-size: 1.25rem;
+  }
+
+  .secao-servicos__grade {
+    margin-top: var(--espaco-5);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--espaco-4);
+  }
+
+  .servico-card h2 {
+    margin-top: var(--espaco-3);
+    font-size: 1.375rem;
+  }
+
+  .servico-card ul {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+
+  .servico-card li {
+    position: relative;
+    padding-left: 1.1em;
+    color: var(--texto-mut);
+    font-size: 0.9375rem;
+  }
+
+  .servico-card li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    background-color: var(--ouro);
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+    margin-top: var(--espaco-5);
+  }
+
+  @media (max-width: 56rem) {
+    .secao-servicos__grade {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,86 @@
+---
+// Placeholder elegante para onde uma foto real do cliente vai entrar.
+// Quando as fotos chegarem: trocar por <Image> de astro:assets mantendo o
+// mesmo aspect-ratio, para não causar CLS. Ver CLAUDE.md > "Imagens".
+interface Props {
+  /** Rótulo discreto do que vai entrar ali, ex.: "Chrysler 300C branco — three-quarter frontal" */
+  label: string;
+  /** Proporção do container, ex.: "16/9", "4/3", "3/4", "1/1" */
+  aspectRatio?: string;
+  /** Em qual mundo visual o placeholder vive — ajusta o tom da superfície */
+  mundo?: 'claro' | 'escuro';
+  class?: string;
+}
+
+const { label, aspectRatio = '4/3', mundo = 'claro', class: className } = Astro.props;
+---
+
+<div
+  class:list={['placeholder-imagem', mundo === 'escuro' && 'mundo-escuro', className]}
+  style={`aspect-ratio: ${aspectRatio};`}
+>
+  <div class="placeholder-imagem__zoom" aria-hidden="true"></div>
+  <p class="placeholder-imagem__rotulo">{label}</p>
+</div>
+
+<style>
+  .placeholder-imagem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: var(--surface);
+    border: 1px solid var(--linha);
+    overflow: hidden;
+  }
+
+  /* Ken Burns leve: quando o container é revelado (.reveal + .reveal--visivel
+     no elemento raiz, aplicado pela página que usa este componente em
+     imagens de destaque), esta camada dá um zoom lento e contínuo.
+     Quando a foto real entrar, ela ocupa este mesmo lugar (object-fit:
+     cover) e herda o efeito sem precisar mudar nada aqui. */
+  .placeholder-imagem__zoom {
+    position: absolute;
+    inset: 0;
+    transform: scale(1);
+    transition: transform 9s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .placeholder-imagem.reveal--visivel .placeholder-imagem__zoom {
+    transform: scale(1.08);
+  }
+
+  .placeholder-imagem::before,
+  .placeholder-imagem::after {
+    content: '';
+    position: absolute;
+    top: var(--espaco-2);
+    left: var(--espaco-2);
+    background-color: var(--ouro);
+    opacity: 0.85;
+  }
+
+  .placeholder-imagem::before {
+    width: 2rem;
+    height: 1px;
+  }
+
+  .placeholder-imagem::after {
+    width: 1px;
+    height: 2rem;
+  }
+
+  .placeholder-imagem__rotulo {
+    position: relative;
+    z-index: 1;
+    max-width: 75%;
+    text-align: center;
+    font-family: var(--fonte-sans);
+    font-size: 0.8125rem;
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    color: var(--texto-mut);
+    padding: var(--espaco-2);
+  }
+</style>

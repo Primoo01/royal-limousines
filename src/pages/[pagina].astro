@@ -1,0 +1,186 @@
+---
+// Template único para as 8 páginas de serviço/região do Mapa de páginas.
+// Os slugs e o conteúdo (reaproveitado do backup) vêm de src/data/servicos-regiao.js.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import site from '../config/site.js';
+import servicosRegiao from '../data/servicos-regiao.js';
+
+export function getStaticPaths() {
+  return servicosRegiao.map((item) => ({
+    params: { pagina: item.slug },
+    props: { dados: item },
+  }));
+}
+
+const { dados } = Astro.props;
+// Zona Norte não tinha meta description no backup — usa a primeira frase
+// real do corpo da própria página como fallback, em vez de inventar uma.
+const description = dados.description ?? dados.abertura[0];
+
+// Links cruzados entre as páginas de casamento (ver CLAUDE.md > Links internos):
+// cada uma linka para as outras, pra nenhuma ficar órfã.
+const outrasPaginasCasamento =
+  dados.categoria === 'casamento'
+    ? servicosRegiao.filter((item) => item.categoria === 'casamento' && item.slug !== dados.slug)
+    : [];
+---
+
+<BaseLayout title={dados.title} description={description}>
+  <section class="u-container secao-regiao reveal">
+    <p class="u-eyebrow">Royal Limousines</p>
+    <h1 class="reveal-titulo">{dados.h1}</h1>
+
+    <div class="secao-regiao__grade">
+      <div class="u-prosa">
+        {dados.abertura.map((paragrafo) => <p>{paragrafo}</p>)}
+
+        {
+          dados.disponibilidade && (
+            <p class="secao-regiao__disponibilidade">{dados.disponibilidade}</p>
+          )
+        }
+
+        {
+          dados.diferenciais && (
+            <ul class="secao-regiao__lista">
+              {dados.diferenciais.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          )
+        }
+
+        <div class="hero__cta">
+          <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+          <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+            {site.cta.whatsapp}
+          </a>
+        </div>
+      </div>
+
+      <ImagePlaceholder label={dados.imagens[0].rotulo} aspectRatio="3/4" class="reveal" />
+    </div>
+
+    <div class="secao-regiao__grade secao-regiao__grade--inverso">
+      <ImagePlaceholder label={dados.imagens[1].rotulo} aspectRatio="4/3" class="reveal" />
+
+      <div class="u-prosa">
+        <h2 class="reveal-titulo">{dados.h2}</h2>
+        {dados.fechamento.map((paragrafo) => <p>{paragrafo}</p>)}
+        <p>{dados.fraseTelefone}</p>
+      </div>
+    </div>
+
+    {
+      outrasPaginasCasamento.length > 0 && (
+        <p class="secao-regiao__cruzados">
+          Atendemos também:{' '}
+          {outrasPaginasCasamento.map((item, indice) => (
+            <>
+              <a href={`/${item.slug}/`}>{item.menuLabel}</a>
+              {indice < outrasPaginasCasamento.length - 1 ? ', ' : '.'}
+            </>
+          ))}
+        </p>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .secao-regiao {
+    padding-block: var(--espaco-7) var(--espaco-6);
+  }
+
+  .secao-regiao__grade {
+    margin-top: var(--espaco-5);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-5);
+    align-items: center;
+  }
+
+  .secao-regiao__grade + .secao-regiao__grade {
+    margin-top: var(--espaco-6);
+    padding-top: var(--espaco-6);
+    border-top: 1px solid var(--linha);
+  }
+
+  .secao-regiao__grade .u-prosa p {
+    color: var(--texto-mut);
+    margin-top: var(--espaco-2);
+  }
+
+  .secao-regiao__grade .u-prosa p:first-child {
+    margin-top: 0;
+  }
+
+  .secao-regiao__disponibilidade {
+    margin-top: var(--espaco-3);
+    font-family: var(--fonte-serif);
+    font-size: 1.125rem;
+    color: var(--texto);
+  }
+
+  .secao-regiao__lista {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+
+  .secao-regiao__lista li {
+    position: relative;
+    padding-left: 1.1em;
+    color: var(--texto-mut);
+  }
+
+  .secao-regiao__lista li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 5px;
+    height: 5px;
+    background-color: var(--ouro);
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+    margin-top: var(--espaco-4);
+  }
+
+  .secao-regiao__cruzados {
+    margin-top: var(--espaco-6);
+    padding-top: var(--espaco-4);
+    border-top: 1px solid var(--linha);
+    font-size: 0.9375rem;
+    color: var(--texto-mut);
+  }
+
+  .secao-regiao__cruzados a {
+    color: var(--texto);
+    text-decoration: underline;
+    text-decoration-color: var(--linha);
+    text-underline-offset: 0.2em;
+  }
+
+  .secao-regiao__cruzados a:hover {
+    color: var(--ouro);
+  }
+
+  @media (max-width: 56rem) {
+    .secao-regiao__grade,
+    .secao-regiao__grade--inverso {
+      grid-template-columns: 1fr;
+    }
+
+    .secao-regiao__grade--inverso {
+      display: flex;
+      flex-direction: column-reverse;
+    }
+  }
+</style>

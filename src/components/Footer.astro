@@ -1,0 +1,151 @@
+---
+// Rodapé com os links das 8 páginas de serviço/região agrupados por tipo
+// (ver CLAUDE.md > Links internos) — elas não podem ficar órfãs. O texto do
+// link usa o h1 real de cada página (palavra-chave completa), não um rótulo
+// curto, porque texto de âncora completo é sinal de relevância pro Google.
+import site from '../config/site.js';
+import servicosRegiao from '../data/servicos-regiao.js';
+
+const ano = new Date().getFullYear();
+
+const casamentos = servicosRegiao.filter((item) => item.categoria === 'casamento');
+const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
+---
+
+<footer class="footer">
+  <div class="u-container footer__grade">
+    <div class="footer__marca-coluna">
+      <p class="footer__marca">{site.nome}</p>
+      <p class="footer__descricao">{site.descricaoCurta}</p>
+    </div>
+
+    <nav aria-label="Navegação do rodapé">
+      <p class="u-eyebrow">Navegação</p>
+      <ul>
+        {
+          site.navegacao.map((item) => (
+            <li>
+              <a href={item.href}>{item.rotulo}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <nav aria-label="Casamentos por região">
+      <p class="u-eyebrow">Casamentos por região</p>
+      <ul>
+        {
+          casamentos.map((item) => (
+            <li>
+              <a href={`/${item.slug}/`}>{item.h1}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <nav aria-label="Outros eventos">
+      <p class="u-eyebrow">Outros eventos</p>
+      <ul>
+        {
+          eventos.map((item) => (
+            <li>
+              <a href={`/${item.slug}/`}>{item.h1}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="footer__contato">
+      <p class="u-eyebrow">Contato</p>
+      <p><a href={site.contato.telefone.link}>{site.contato.telefone.exibicao}</a></p>
+      <p><a href={site.contato.whatsapp.link} target="_blank" rel="noopener">{site.contato.whatsapp.exibicao}</a></p>
+      <p><a href={`mailto:${site.contato.email}`}>{site.contato.email}</a></p>
+      <p class="footer__area">{site.contato.areaAtendida}</p>
+    </div>
+  </div>
+
+  <div class="u-container footer__base">
+    <p>&copy; {ano} {site.nome}. Todos os direitos reservados.</p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--linha);
+    padding-block: var(--espaco-5) var(--espaco-3);
+    background-color: var(--surface);
+  }
+
+  .footer__grade {
+    display: grid;
+    grid-template-columns: 1.3fr 0.8fr 1fr 1fr 1fr;
+    gap: var(--espaco-4);
+  }
+
+  .footer__marca {
+    font-family: var(--fonte-serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .footer__descricao {
+    margin-top: var(--espaco-1);
+    max-width: 20rem;
+    color: var(--texto-mut);
+  }
+
+  .footer nav ul {
+    margin-top: var(--espaco-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+
+  .footer nav a,
+  .footer__contato a {
+    text-decoration: none;
+    color: var(--texto);
+    font-size: 0.9375rem;
+  }
+
+  .footer nav a:hover,
+  .footer__contato a:hover {
+    color: var(--ouro);
+  }
+
+  .footer__contato p {
+    margin-top: var(--espaco-1);
+  }
+
+  .footer__area {
+    color: var(--texto-mut);
+  }
+
+  .footer__base {
+    margin-top: var(--espaco-5);
+    padding-top: var(--espaco-3);
+    border-top: 1px solid var(--linha);
+    font-size: 0.8125rem;
+    color: var(--texto-mut);
+  }
+
+  @media (max-width: 64rem) {
+    .footer__grade {
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--espaco-4) var(--espaco-3);
+    }
+
+    .footer__marca-coluna {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .footer__grade {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>

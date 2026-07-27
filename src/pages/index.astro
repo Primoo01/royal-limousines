@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ConteudoHome from '../components/ConteudoHome.astro';
+import paginas from '../data/paginas-antigas.json';
+
+const dados = paginas.paginas.find((p) => p.url === '/');
+---
+
+<BaseLayout title={dados.title} description={dados.meta_description}>
+  <ConteudoHome />
+</BaseLayout>

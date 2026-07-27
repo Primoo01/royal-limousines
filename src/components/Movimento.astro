@@ -1,0 +1,277 @@
+---
+// Movimento do site inteiro (ver CLAUDE.md > Movimento):
+// 1) revelações no scroll (IntersectionObserver + classe .reveal)
+// 2) scroll suave com Lenis, só desktop, só sem prefers-reduced-motion
+// 3) chevron do hero, que some ao rolar
+// 4) indicador "estrada" com as seções como paradas
+// Um único componente, incluído uma vez no BaseLayout, pra manter o
+// JavaScript do site inteiro fácil de auditar num só lugar.
+---
+
+<button type="button" class="chevron-scroll" data-chevron aria-label="Rolar para ver mais">
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+    <path d="M4 9l8 8 8-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+</button>
+
+<nav class="estrada" data-estrada aria-hidden="true">
+  <div class="estrada__linha">
+    <span class="estrada__marcador" data-estrada-marcador></span>
+  </div>
+</nav>
+
+<style>
+  .chevron-scroll {
+    position: fixed;
+    bottom: var(--espaco-4);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    background: none;
+    border: none;
+    color: var(--ouro);
+    cursor: pointer;
+    padding: var(--espaco-1);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+    animation: chevron-flutuar 1.8s ease-in-out infinite;
+  }
+
+  .chevron-scroll[data-oculto='true'] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes chevron-flutuar {
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(8px);
+    }
+  }
+
+  .estrada {
+    position: fixed;
+    left: var(--espaco-3);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    height: 40vh;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  .estrada[data-visivel='true'] {
+    opacity: 1;
+  }
+
+  .estrada__linha {
+    position: relative;
+    width: 1px;
+    height: 100%;
+    background-color: var(--linha);
+  }
+
+  .estrada__marcador {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--ouro);
+    transform: translate(-50%, -50%);
+  }
+
+  .estrada__parada {
+    position: absolute;
+    left: 50%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background-color: var(--linha);
+    transform: translate(-50%, -50%);
+  }
+
+  @media (max-width: 56rem) {
+    .estrada {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chevron-scroll {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  const chevron = document.querySelector<HTMLElement>('[data-chevron]');
+  const estrada = document.querySelector<HTMLElement>('[data-estrada]');
+  const marcador = document.querySelector<HTMLElement>('[data-estrada-marcador]');
+  const linha = document.querySelector<HTMLElement>('.estrada__linha');
+
+  const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 1) Revelação no scroll ------------------------------------------------
+  // .reveal (seções), .reveal-grupo (escalonamento entre irmãos) e
+  // .reveal-titulo (clip-path) usam o mesmo observer e a mesma classe de
+  // estado — só o CSS de cada uma trata o efeito de forma diferente.
+  const elementosReveal = document.querySelectorAll<HTMLElement>('.reveal, .reveal-grupo, .reveal-titulo');
+
+  if (reduzMovimento || !('IntersectionObserver' in window)) {
+    elementosReveal.forEach((el) => el.classList.add('reveal--visivel'));
+  } else {
+    const observer = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add('reveal--visivel');
+            observer.unobserve(entrada.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    elementosReveal.forEach((el) => observer.observe(el));
+  }
+
+  // 3) e 4) Chevron + estrada ----------------------------------------------
+  if (chevron || estrada) {
+    // Paradas da estrada: uma por <section> dentro de <main> (inclui as que
+    // estão dentro do wrapper .mundo-dinamico em /limousines/).
+    const secoes = Array.from(document.querySelectorAll<HTMLElement>('main section'));
+    if (linha && secoes.length > 1) {
+      const alturaDocumento = document.documentElement.scrollHeight - window.innerHeight;
+      secoes.forEach((secao) => {
+        if (alturaDocumento <= 0) return;
+        const proporcao = (secao.offsetTop / alturaDocumento) * 100;
+        const parada = document.createElement('span');
+        parada.className = 'estrada__parada';
+        parada.style.top = `${Math.min(Math.max(proporcao, 0), 100)}%`;
+        linha.appendChild(parada);
+      });
+    }
+
+    // 5) Transição dia→noite em /limousines/ — só existe nessa página;
+    // nas demais, estes querySelectors retornam null e o bloco não faz nada.
+    const transicao = document.querySelector<HTMLElement>('[data-transicao-dia-noite]');
+    const mundoDinamico = document.querySelector<HTMLElement>('[data-mundo-dinamico]');
+    const pontosLuz = transicao ? Array.from(transicao.querySelectorAll<HTMLElement>('.ponto-luz')) : [];
+
+    // Mesmos pares de cor do global.css (claro → escuro). Precisa ficar em
+    // sincronia se a paleta mudar por lá.
+    const paresDeCor: Record<string, [string, string]> = {
+      '--bg': ['#f4f1eb', '#141210'],
+      '--surface': ['#e7e0d4', '#211e18'],
+      '--linha': ['#cfc6b5', '#3a342a'],
+      '--texto': ['#1a1815', '#ede7db'],
+      '--texto-mut': ['#8a8578', '#8c857a'],
+      '--ouro': ['#a8823c', '#c6a25e'],
+    };
+
+    function hexParaRgb(hex: string): [number, number, number] {
+      const valor = parseInt(hex.slice(1), 16);
+      return [(valor >> 16) & 255, (valor >> 8) & 255, valor & 255];
+    }
+
+    function interpolarCor(hexClaro: string, hexEscuro: string, t: number): string {
+      const [r1, g1, b1] = hexParaRgb(hexClaro);
+      const [r2, g2, b2] = hexParaRgb(hexEscuro);
+      const r = Math.round(r1 + (r2 - r1) * t);
+      const g = Math.round(g1 + (g2 - g1) * t);
+      const b = Math.round(b1 + (b2 - b1) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function atualizarTransicaoDiaNoite() {
+      if (!transicao || !mundoDinamico) return;
+
+      const rect = transicao.getBoundingClientRect();
+      const progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
+
+      for (const propriedade in paresDeCor) {
+        const [claro, escuro] = paresDeCor[propriedade];
+        mundoDinamico.style.setProperty(propriedade, interpolarCor(claro, escuro, progresso));
+      }
+
+      pontosLuz.forEach((ponto, indice) => {
+        const limiar = indice / pontosLuz.length;
+        const opacidadeAlvo = progresso > limiar ? Math.min((progresso - limiar) * 4, 1) : 0;
+        ponto.style.opacity = String(opacidadeAlvo);
+      });
+    }
+
+    // Header some ao descer, aparece ao subir (ver CLAUDE.md > Navegação).
+    const header = document.querySelector<HTMLElement>('[data-header]');
+    let ultimoScrollY = window.scrollY;
+
+    let ticking = false;
+
+    function atualizar() {
+      ticking = false;
+      const scrollY = window.scrollY;
+      const alturaJanela = window.innerHeight;
+      const alturaDocumento = document.documentElement.scrollHeight - alturaJanela;
+      const progresso = alturaDocumento > 0 ? scrollY / alturaDocumento : 0;
+
+      if (chevron) {
+        chevron.setAttribute('data-oculto', scrollY > 40 ? 'true' : 'false');
+      }
+
+      if (estrada) {
+        estrada.setAttribute('data-visivel', scrollY > alturaJanela * 0.6 ? 'true' : 'false');
+      }
+
+      if (marcador) {
+        marcador.style.top = `${Math.min(Math.max(progresso, 0), 1) * 100}%`;
+      }
+
+      if (header && !reduzMovimento) {
+        const delta = scrollY - ultimoScrollY;
+        if (scrollY <= 0) {
+          header.setAttribute('data-oculto', 'false');
+          ultimoScrollY = scrollY;
+        } else if (Math.abs(delta) > 8) {
+          header.setAttribute('data-oculto', delta > 0 ? 'true' : 'false');
+          ultimoScrollY = scrollY;
+        }
+      }
+
+      if (!reduzMovimento) {
+        atualizarTransicaoDiaNoite();
+      }
+    }
+
+    function aoRolar() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(atualizar);
+      }
+    }
+
+    atualizar();
+    window.addEventListener('scroll', aoRolar, { passive: true });
+    window.addEventListener('resize', aoRolar);
+  }
+
+  // 2) Scroll suave com Lenis — só desktop, só sem reduced-motion ---------
+  const ehDesktop = window.matchMedia('(min-width: 56rem)').matches;
+
+  if (ehDesktop && !reduzMovimento) {
+    import('lenis').then(({ default: Lenis }) => {
+      const lenis = new Lenis();
+
+      function rafLenis(time: number) {
+        lenis.raf(time);
+        requestAnimationFrame(rafLenis);
+      }
+
+      requestAnimationFrame(rafLenis);
+    });
+  }
+</script>

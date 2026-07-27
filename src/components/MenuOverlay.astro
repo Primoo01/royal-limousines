@@ -1,0 +1,290 @@
+---
+// Overlay de navegação em tela cheia, painel duplo (ver CLAUDE.md > Navegação).
+// Esquerda: mídia (MenuMidia.astro). Direita: links grandes em Cormorant,
+// alinhados à esquerda, com cabeçalhos de grupo pequenos em dourado.
+// Aberto/fechado e crossfade de mídia são coordenados pelo script do
+// Header.astro (mesmo DOM final, componentes diferentes só na fonte).
+import site from '../config/site.js';
+import servicosRegiao from '../data/servicos-regiao.js';
+import MenuMidia from './MenuMidia.astro';
+
+const casamentos = servicosRegiao.filter((item) => item.categoria === 'casamento');
+const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
+// "Casamentos em SP" entra em Serviços (não é uma das 4 zonas) — junto com
+// debutantes/aniversários/jantares, como aprovado no agrupamento 4+4.
+const casamentosEmSp = casamentos.find((item) => item.slug === 'aluguel-de-limousines-para-casamentos-em-sp');
+const zonas = casamentos.filter((item) => item.slug !== 'aluguel-de-limousines-para-casamentos-em-sp');
+const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
+---
+
+<div id="menu-overlay" class="menu-overlay mundo-escuro" role="dialog" aria-modal="true" aria-label="Menu de navegação" hidden>
+  <div class="menu-overlay__midia">
+    <MenuMidia />
+  </div>
+
+  <button type="button" class="menu-overlay__fechar" data-menu-fechar aria-label="Fechar menu">
+    <span aria-hidden="true">Fechar ×</span>
+  </button>
+
+  <div class="menu-overlay__painel">
+    <nav class="menu-overlay__conteudo" aria-label="Navegação principal">
+      <a href="/" class="menu-overlay__link menu-overlay__inicio" data-midia-grupo="inicio">Início</a>
+
+      <div class="menu-overlay__colunas">
+        <div class="menu-overlay__coluna" data-midia-grupo="frota">
+          <a href="/limousines/" class="menu-overlay__link">Frota</a>
+        </div>
+
+        <div class="menu-overlay__coluna" data-midia-grupo="servicos">
+          <a href="/servicos/" class="menu-overlay__categoria">Serviços</a>
+          <ul>
+            {
+              itensServicos.map((item) => (
+                <li>
+                  <a href={`/${item.slug}/`} class="menu-overlay__link">
+                    {item.menuLabel}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="menu-overlay__coluna" data-midia-grupo="regiao">
+          <p class="menu-overlay__categoria menu-overlay__categoria--texto">Casamentos por região</p>
+          <ul>
+            {
+              zonas.map((item) => (
+                <li>
+                  <a href={`/${item.slug}/`} class="menu-overlay__link">
+                    {item.menuLabel}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="menu-overlay__coluna" data-midia-grupo="royal">
+          <a href="/empresa/" class="menu-overlay__link">A Royal</a>
+        </div>
+      </div>
+
+      <div class="menu-overlay__cta" data-midia-grupo="contato">
+        <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+        <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          {site.cta.whatsapp}
+        </a>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    background-color: var(--bg);
+    color: var(--texto);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .menu-overlay[data-aberto='true'] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .menu-overlay__midia {
+    display: none;
+  }
+
+  .menu-overlay__fechar {
+    position: absolute;
+    top: var(--espaco-3);
+    right: var(--espaco-3);
+    z-index: 2;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--fonte-sans);
+    font-size: 0.9375rem;
+    color: var(--texto);
+  }
+
+  .menu-overlay__painel {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    /* Padding generoso, mínimo 6vw à esquerda — o texto encosta perto da
+       borda da mídia, não fica flutuando centralizado. */
+    padding: var(--espaco-6) 6vw;
+  }
+
+  .menu-overlay__conteudo {
+    max-width: 56rem;
+  }
+
+  /* Item de navegação real (Início, Frota, A Royal, e cada sub-link) —
+     estes são os "itens principais" do menu: grandes, serifados, com
+     bastante espaço entre eles. */
+  .menu-overlay__link {
+    display: inline-block;
+    font-family: var(--fonte-serif);
+    font-weight: 500;
+    font-size: clamp(2rem, 3.5vw, 3.25rem);
+    line-height: 1.1;
+    text-decoration: none;
+    color: var(--texto);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.25s ease;
+  }
+
+  .menu-overlay__inicio {
+    margin-bottom: var(--espaco-2);
+  }
+
+  /* Cabeçalho de grupo — pequeno, dourado, Space Grotesk. Nunca do tamanho
+     dos itens principais. */
+  .menu-overlay__categoria {
+    display: inline-block;
+    font-family: var(--fonte-sans);
+    font-weight: 500;
+    font-size: var(--tamanho-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ouro);
+    text-decoration: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .menu-overlay__categoria--texto {
+    cursor: default;
+  }
+
+  .menu-overlay__colunas {
+    margin-top: var(--espaco-6);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--espaco-5) var(--espaco-4);
+  }
+
+  .menu-overlay__coluna ul {
+    margin-top: var(--espaco-3);
+    display: flex;
+    flex-direction: column;
+    /* "Muito espaço vertical" — o menu respira, não é uma lista compacta. */
+    gap: var(--espaco-3);
+  }
+
+  .menu-overlay__cta {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: var(--espaco-6);
+    padding-top: var(--espaco-4);
+    border-top: 1px solid var(--linha);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espaco-2);
+  }
+
+  /* Entrada escalonada: 50ms entre grupos, fade + 20px, 500ms. */
+  .menu-overlay__inicio {
+    transition-delay: 0ms;
+  }
+  .menu-overlay__colunas > *:nth-child(1) * {
+    transition-delay: 50ms;
+  }
+  .menu-overlay__colunas > *:nth-child(2) * {
+    transition-delay: 100ms;
+  }
+  .menu-overlay__colunas > *:nth-child(3) * {
+    transition-delay: 150ms;
+  }
+  .menu-overlay__colunas > *:nth-child(4) * {
+    transition-delay: 200ms;
+  }
+  .menu-overlay__cta {
+    transition-delay: 250ms;
+  }
+
+  .menu-overlay[data-aberto='true'] .menu-overlay__link,
+  .menu-overlay[data-aberto='true'] .menu-overlay__categoria,
+  .menu-overlay[data-aberto='true'] .menu-overlay__cta {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hover: o item muda de cor; os outros links do menu baixam a opacidade.
+     :has() puro em CSS — não precisa de JS pra isso. */
+  .menu-overlay__link:hover,
+  .menu-overlay__link:focus-visible {
+    color: var(--ouro);
+  }
+
+  .menu-overlay__conteudo:has(.menu-overlay__link:hover, .menu-overlay__link:focus-visible)
+    .menu-overlay__link:not(:hover):not(:focus-visible) {
+    opacity: 0.4;
+  }
+
+  .menu-overlay__cta {
+    margin-top: var(--espaco-6);
+  }
+
+  @media (min-width: 56rem) {
+    .menu-overlay__midia {
+      display: block;
+      width: 40%;
+      flex-shrink: 0;
+      height: 100%;
+    }
+  }
+
+  @media (max-width: 56rem) {
+    .menu-overlay__midia {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .menu-overlay__fechar {
+      color: var(--escuro-texto);
+    }
+
+    .menu-overlay__painel {
+      z-index: 1;
+    }
+
+    /* Mundo escuro já é o padrão deste componente (.mundo-escuro no root) —
+       aqui só reduz o tamanho, a cor já resolve certo em qualquer largura. */
+    .menu-overlay__link {
+      font-size: clamp(1.5rem, 6vw, 2.25rem);
+    }
+
+    /* Empilhado de verdade no mobile — nada de grid de 2 colunas apertando
+       texto grande. */
+    .menu-overlay__colunas {
+      grid-template-columns: 1fr;
+      gap: var(--espaco-5);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu-overlay,
+    .menu-overlay__link,
+    .menu-overlay__categoria,
+    .menu-overlay__cta {
+      transition: none;
+    }
+  }
+</style>

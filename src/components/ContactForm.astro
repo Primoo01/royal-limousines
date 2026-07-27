@@ -1,0 +1,142 @@
+---
+import site from '../config/site.js';
+
+const accessKey = import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY ?? '';
+const redirectUrl = new URL('/contato/?enviado=1', site.url).toString();
+---
+
+{
+  !accessKey && import.meta.env.DEV && (
+    <p style="background:#fee;border:1px solid #c00;color:#900;padding:1rem;font-size:0.875rem;">
+      Aviso de desenvolvimento: defina PUBLIC_WEB3FORMS_ACCESS_KEY no .env para o
+      formulário funcionar em produção (ver .env.example).
+    </p>
+  )
+}
+
+<form
+  class="formulario-contato"
+  action="https://api.web3forms.com/submit"
+  method="POST"
+  data-form-contato
+>
+  <input type="hidden" name="access_key" value={accessKey} />
+  <input type="hidden" name="subject" value={`Novo pedido de orçamento — ${site.nome}`} />
+  <input type="hidden" name="from_name" value={site.nome} />
+  <input type="hidden" name="redirect" value={redirectUrl} />
+  <input type="checkbox" name="botcheck" class="u-visually-hidden" tabindex="-1" autocomplete="off" />
+
+  <div class="campo">
+    <label for="nome">Nome</label>
+    <input type="text" id="nome" name="nome" required autocomplete="name" />
+  </div>
+
+  <div class="campo">
+    <label for="telefone">Telefone / WhatsApp</label>
+    <input type="tel" id="telefone" name="telefone" required autocomplete="tel" />
+  </div>
+
+  <div class="campo">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" name="email" required autocomplete="email" />
+  </div>
+
+  <div class="campo">
+    <label for="data_evento">Data do evento</label>
+    <input type="date" id="data_evento" name="data_evento" required />
+  </div>
+
+  <div class="campo">
+    <label for="tipo_evento">Tipo de evento</label>
+    <select id="tipo_evento" name="tipo_evento" required>
+      <option value="">Selecione</option>
+      <option value="Casamento">Casamento</option>
+      <option value="Bodas">Bodas</option>
+      <option value="Debutante">Debutante</option>
+      <option value="Aniversário">Aniversário</option>
+      <option value="Jantar romântico">Jantar romântico</option>
+      <option value="Outro">Outro</option>
+    </select>
+  </div>
+
+  <div class="campo campo--largo">
+    <label for="mensagem">Mensagem</label>
+    <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
+  </div>
+
+  <button type="submit" class="botao botao--primario">{site.cta.orcamento}</button>
+</form>
+
+<p class="formulario-contato__confirmacao" data-confirmacao-envio hidden>
+  Mensagem enviada. Entraremos em contato em breve.
+</p>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('enviado') === '1') {
+    const form = document.querySelector('[data-form-contato]');
+    const confirmacao = document.querySelector('[data-confirmacao-envio]');
+    form?.setAttribute('hidden', '');
+    confirmacao?.removeAttribute('hidden');
+  }
+</script>
+
+<style>
+  .formulario-contato {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--espaco-3);
+    max-width: 40rem;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+
+  .campo--largo {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-family: var(--fonte-sans);
+    font-size: 0.875rem;
+    color: var(--texto-mut);
+  }
+
+  input,
+  select,
+  textarea {
+    font-family: var(--fonte-sans);
+    font-size: 1rem;
+    padding: 0.65em 0.8em;
+    background-color: var(--bg);
+    color: var(--texto);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio);
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  .formulario-contato button {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: var(--espaco-1);
+  }
+
+  .formulario-contato__confirmacao {
+    max-width: 40rem;
+    padding: var(--espaco-2);
+    border: 1px solid var(--ouro);
+    color: var(--texto);
+  }
+
+  @media (max-width: 40rem) {
+    .formulario-contato {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

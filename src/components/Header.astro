@@ -1,0 +1,240 @@
+---
+import site from '../config/site.js';
+import MenuOverlay from './MenuOverlay.astro';
+---
+
+<header class="header glass-real" data-header>
+  <div class="header__conteudo u-container">
+    <a href="/" class="header__marca">{site.nome}</a>
+
+    <div class="header__acoes">
+      <a
+        href={site.contato.whatsapp.link}
+        class="header__whatsapp"
+        target="_blank"
+        rel="noopener"
+        aria-label={`${site.cta.whatsapp} — ${site.contato.whatsapp.exibicao}`}
+      >
+        <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true" focusable="false">
+          <path
+            fill="currentColor"
+            d="M16.02 3C9.4 3 4 8.4 4 15.02c0 2.2.58 4.27 1.6 6.06L4 29l8.1-1.56a12 12 0 0 0 3.92.66c6.62 0 12.02-5.4 12.02-12.02C28.04 8.4 22.64 3 16.02 3Zm0 21.86c-1.9 0-3.68-.5-5.24-1.44l-.38-.22-4.8.93.94-4.68-.25-.4a9.83 9.83 0 0 1-1.5-5.03c0-5.43 4.42-9.85 9.85-9.85s9.85 4.42 9.85 9.85-4.42 9.84-9.85 9.84Zm5.4-7.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.66.15-.2.3-.76.96-.93 1.16-.17.2-.34.22-.63.07-.3-.15-1.24-.46-2.37-1.47-.87-.78-1.46-1.74-1.63-2.03-.17-.3-.02-.46.13-.6.13-.13.3-.34.44-.51.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.66-1.6-.9-2.18-.24-.58-.48-.5-.66-.5h-.56c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.87 1.22 3.07.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.62.71.23 1.36.2 1.87.12.57-.09 1.75-.71 2-1.4.24-.68.24-1.27.17-1.4-.07-.13-.27-.2-.56-.35Z"
+          ></path>
+        </svg>
+      </a>
+
+      <button
+        type="button"
+        class="header__menu-botao"
+        id="botao-menu"
+        aria-expanded="false"
+        aria-controls="menu-overlay"
+      >
+        Menu
+      </button>
+    </div>
+  </div>
+</header>
+
+<MenuOverlay />
+
+<style>
+  .header {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 40;
+    transform: translateY(0);
+    transition: transform 0.35s ease;
+  }
+
+  .header[data-oculto='true'] {
+    transform: translateY(-100%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header {
+      transition: none;
+    }
+  }
+
+  .header__conteudo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-3);
+    min-height: var(--altura-header);
+  }
+
+  .header__marca {
+    font-family: var(--fonte-serif);
+    font-weight: 600;
+    font-size: 1.375rem;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    color: var(--texto);
+    opacity: 1;
+    transition: opacity 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Nunca muda de peso — só uma leve queda de opacidade. */
+  .header__marca:active,
+  .header__marca:focus,
+  .header__marca:visited {
+    font-weight: 600;
+  }
+
+  .header__marca:active {
+    opacity: 0.7;
+  }
+
+  .header__acoes {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-3);
+  }
+
+  .header__whatsapp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ouro);
+  }
+
+  .header__menu-botao {
+    background: none;
+    border: 1px solid var(--ouro);
+    border-radius: var(--raio);
+    padding: 0.5em 1.2em;
+    font-family: var(--fonte-sans);
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+    color: var(--texto);
+    cursor: pointer;
+  }
+
+  .header__menu-botao:hover {
+    background-color: var(--ouro);
+    color: var(--claro-bg);
+  }
+</style>
+
+<script>
+  const botaoMenu = document.getElementById('botao-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const botaoFechar = overlay?.querySelector('[data-menu-fechar]');
+
+  let ultimoFoco: HTMLElement | null = null;
+
+  function seletorFocavel() {
+    return 'a[href], button:not([disabled])';
+  }
+
+  // Mídia do painel esquerdo (ver CLAUDE.md > Navegação e > Mídia pesada):
+  // troca em crossfade no hover, vídeo só carrega na primeira abertura e
+  // pausa ao fechar. Sem vídeo real ainda, isso fica pronto e inerte.
+  const reduzMovimentoMenu = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const camadasMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-camada]')) : [];
+  const gruposComMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-grupo]')) : [];
+  let midiaCarregada = false;
+
+  function ativarMidia(grupo: string) {
+    camadasMidia.forEach((camada) => {
+      const ativa = camada.getAttribute('data-midia-camada') === grupo;
+      camada.setAttribute('data-ativa', String(ativa));
+      const video = camada.querySelector('video');
+      if (!video) return;
+      if (ativa && !reduzMovimentoMenu) video.play().catch(() => {});
+      else video.pause();
+    });
+  }
+
+  function carregarMidiaNaPrimeiraAbertura() {
+    if (midiaCarregada) return;
+    midiaCarregada = true;
+    camadasMidia.forEach((camada) => {
+      const video = camada.querySelector<HTMLVideoElement>('video[data-src]');
+      if (!video) return;
+      video.src = video.dataset.src ?? '';
+      video.load();
+    });
+  }
+
+  gruposComMidia.forEach((grupo) => {
+    const chave = grupo.getAttribute('data-midia-grupo');
+    if (!chave) return;
+    grupo.addEventListener('mouseenter', () => ativarMidia(chave));
+    grupo.addEventListener('focusin', () => ativarMidia(chave));
+  });
+
+  overlay?.querySelector('.menu-overlay__painel')?.addEventListener('mouseleave', () => ativarMidia('padrao'));
+
+  function abrirMenu() {
+    if (!overlay || !botaoMenu) return;
+    ultimoFoco = document.activeElement as HTMLElement;
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.setAttribute('data-aberto', 'true'));
+    botaoMenu.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    carregarMidiaNaPrimeiraAbertura();
+    const primeiroFocavel = overlay.querySelector<HTMLElement>(seletorFocavel());
+    primeiroFocavel?.focus();
+    document.addEventListener('keydown', aoTeclar);
+  }
+
+  function fecharMenu() {
+    if (!overlay || !botaoMenu) return;
+    overlay.setAttribute('data-aberto', 'false');
+    botaoMenu.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', aoTeclar);
+    camadasMidia.forEach((camada) => camada.querySelector('video')?.pause());
+    ativarMidia('padrao');
+    window.setTimeout(() => {
+      if (overlay.getAttribute('data-aberto') === 'false') overlay.hidden = true;
+    }, 300);
+    (ultimoFoco ?? botaoMenu).focus();
+  }
+
+  function aoTeclar(evento: KeyboardEvent) {
+    if (!overlay) return;
+
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      fecharMenu();
+      return;
+    }
+
+    if (evento.key === 'Tab') {
+      const focaveis = Array.from(overlay.querySelectorAll<HTMLElement>(seletorFocavel()));
+      if (focaveis.length === 0) return;
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+
+      if (evento.shiftKey && document.activeElement === primeiro) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    }
+  }
+
+  botaoMenu?.addEventListener('click', () => {
+    const aberto = botaoMenu.getAttribute('aria-expanded') === 'true';
+    if (aberto) fecharMenu();
+    else abrirMenu();
+  });
+
+  botaoFechar?.addEventListener('click', fecharMenu);
+
+  overlay?.addEventListener('click', (evento) => {
+    if (evento.target === overlay) fecharMenu();
+  });
+
+  overlay?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', fecharMenu);
+  });
+</script>

@@ -1,0 +1,82 @@
+---
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '../styles/global.css';
+
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import Movimento from '../components/Movimento.astro';
+import site from '../config/site.js';
+
+interface Props {
+  /** <title> da página — vem do backup, sem reescrever. */
+  title: string;
+  /** Meta description — vem do backup. Pode ser null se a página de origem não tinha. */
+  description?: string | null;
+  /** Caminho a usar no canonical, se diferente da URL atual. */
+  canonicalPath?: string;
+  /** Quando true, não renderiza nenhum <link rel="canonical"> (caso do /lp-limousine/, que não é conteúdo duplicado de mais nada). */
+  semCanonical?: boolean;
+  /** Conteúdo de <meta name="robots">. Só usado em páginas noindex, como a /lp-limousine/. */
+  robots?: string;
+  /** Caminho absoluto de uma imagem para Open Graph / Twitter card. */
+  ogImage?: string | null;
+  ogType?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = null,
+  canonicalPath,
+  semCanonical = false,
+  robots,
+  ogImage = site.seo.imagemPadrao,
+  ogType = 'website',
+} = Astro.props;
+
+const paginaUrl = new URL(Astro.url.pathname, Astro.site);
+const canonicalUrl = canonicalPath ? new URL(canonicalPath, Astro.site) : paginaUrl;
+const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : null;
+---
+
+<!doctype html>
+<html lang={site.idioma}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4f1eb" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {robots && <meta name="robots" content={robots} />}
+    {!semCanonical && <link rel="canonical" href={canonicalUrl} />}
+
+    <meta property="og:site_name" content={site.nome} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={paginaUrl} />
+    <meta property="og:locale" content={site.localeOg} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <slot name="head" />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppButton />
+    <Movimento />
+  </body>
+</html>

@@ -1,0 +1,472 @@
+/*
+  Sistema de design — Royal Limousines
+  Dois mundos (300C branco / 300C preto), unidos pelo dourado champagne.
+  Ver CLAUDE.md para o racional completo.
+*/
+
+:root {
+  /* ---- Mundo claro (300C branco) ---- */
+  --claro-bg: #f4f1eb;
+  --claro-surface: #e7e0d4;
+  --claro-linha: #cfc6b5;
+  --claro-texto: #1a1815;
+  --claro-texto-mut: #8a8578;
+
+  /* ---- Mundo escuro (300C preto) ---- */
+  --escuro-bg: #141210;
+  --escuro-surface: #211e18;
+  --escuro-linha: #3a342a;
+  --escuro-texto: #ede7db;
+  --escuro-texto-mut: #8c857a;
+
+  /* ---- Dourado (une os dois mundos — usar com restrição) ---- */
+  --ouro-claro: #a8823c;
+  --ouro-escuro: #c6a25e;
+
+  /* ---- Tokens semânticos ----
+     Toda página nasce no mundo claro por padrão.
+     A seção .mundo-escuro (usada em /limousines/ na transição dia→noite)
+     sobrescreve estes tokens localmente. */
+  --bg: var(--claro-bg);
+  --surface: var(--claro-surface);
+  --linha: var(--claro-linha);
+  --texto: var(--claro-texto);
+  --texto-mut: var(--claro-texto-mut);
+  --ouro: var(--ouro-claro);
+
+  /* ---- Tipografia ---- */
+  --fonte-serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --fonte-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --tamanho-corpo: clamp(1rem, 0.94rem + 0.25vw, 1.125rem);
+  --tamanho-eyebrow: 0.8125rem;
+  --tamanho-h1: clamp(2.5rem, 1.9rem + 2.6vw, 4.5rem);
+  --tamanho-h2: clamp(1.9rem, 1.55rem + 1.5vw, 3rem);
+  --tamanho-h3: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+
+  /* ---- Espaçamento e layout ---- */
+  --espaco-1: 0.5rem;
+  --espaco-2: 1rem;
+  --espaco-3: 1.5rem;
+  --espaco-4: 2.5rem;
+  --espaco-5: 4rem;
+  --espaco-6: 6rem;
+  --espaco-7: 9rem;
+
+  --largura-conteudo: 40rem;
+  --largura-container: 75rem;
+  --largura-container-largo: 90rem;
+
+  --raio: 2px;
+
+  /* Altura real do header fixo (ver Header.astro > .header__conteudo) —
+     hero e afins usam isso pra compensar a sobreposição no cálculo de
+     centralização vertical, em vez de adivinhar um valor solto. */
+  --altura-header: 4.5rem;
+
+  color-scheme: light;
+}
+
+/* Seção/bloco no mundo escuro (ex.: segunda metade de /limousines/) */
+.mundo-escuro {
+  --bg: var(--escuro-bg);
+  --surface: var(--escuro-surface);
+  --linha: var(--escuro-linha);
+  --texto: var(--escuro-texto);
+  --texto-mut: var(--escuro-texto-mut);
+  --ouro: var(--ouro-escuro);
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------- */
+/* Reset mínimo                                                      */
+/* ---------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Barra de rolagem escondida no desktop — a "estrada" já é o indicador de
+   progresso, então não perdemos orientação. Scroll continua 100% funcional,
+   isso só afeta a aparência da barra. */
+@media (min-width: 56rem) {
+  html {
+    scrollbar-width: none; /* Firefox */
+  }
+
+  html::-webkit-scrollbar {
+    display: none; /* Chrome, Edge, Safari */
+  }
+}
+
+body {
+  min-height: 100svh;
+  font-family: var(--fonte-sans);
+  font-weight: 400;
+  font-size: var(--tamanho-corpo);
+  line-height: 1.65;
+  color: var(--texto);
+  background-color: var(--bg);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+ul,
+ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Foco de teclado sempre visível */
+:focus-visible {
+  outline: 2px solid var(--ouro);
+  outline-offset: 3px;
+}
+
+::selection {
+  background-color: var(--ouro);
+  color: var(--claro-bg);
+}
+
+/* ---------------------------------------------------------------- */
+/* Tipografia                                                        */
+/* ---------------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--fonte-serif);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--texto);
+}
+
+h1 {
+  font-size: var(--tamanho-h1);
+}
+
+h2 {
+  font-size: var(--tamanho-h2);
+  font-weight: 500;
+}
+
+h3 {
+  font-size: var(--tamanho-h3);
+  font-weight: 500;
+}
+
+p {
+  line-height: 1.7;
+}
+
+p + p {
+  margin-top: var(--espaco-2);
+}
+
+.u-eyebrow {
+  display: inline-block;
+  font-family: var(--fonte-sans);
+  font-weight: 500;
+  font-size: var(--tamanho-eyebrow);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ouro);
+}
+
+/* ---------------------------------------------------------------- */
+/* Layout / utilitários                                              */
+/* ---------------------------------------------------------------- */
+
+.u-container {
+  width: 100%;
+  max-width: var(--largura-container);
+  margin-inline: auto;
+  padding-inline: var(--espaco-3);
+}
+
+.u-container--largo {
+  max-width: var(--largura-container-largo);
+}
+
+.u-prosa {
+  max-width: var(--largura-conteudo);
+}
+
+.u-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Botões — três níveis (ver CLAUDE.md > Botões)                     */
+/* ---------------------------------------------------------------- */
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--fonte-sans);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--texto);
+}
+
+/* Primário: borda dourada fina, preenchimento sobe de baixo pra cima no
+   hover (scaleY, não width/height), texto inverte de cor. */
+.botao--primario {
+  position: relative;
+  isolation: isolate;
+  padding: 0.9em 1.7em;
+  border: 1px solid var(--ouro);
+  border-radius: var(--raio);
+  overflow: hidden;
+  transition: color 0.3s ease;
+}
+
+.botao--primario::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--ouro);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.3s ease;
+}
+
+.botao--primario:hover,
+.botao--primario:focus-visible {
+  color: var(--bg);
+}
+
+.botao--primario:hover::before,
+.botao--primario:focus-visible::before {
+  transform: scaleY(1);
+}
+
+/* Secundário: só texto, fio fino embaixo que se estende no hover. */
+.botao--secundario {
+  position: relative;
+  padding-bottom: 0.3em;
+}
+
+.botao--secundario::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--ouro);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.botao--secundario:hover::after,
+.botao--secundario:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Terciário/link: texto com seta que avança no hover. */
+.botao--terciario {
+  color: var(--ouro);
+  gap: 0.35em;
+}
+
+.botao__seta {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.botao--terciario:hover .botao__seta,
+.botao--terciario:focus-visible .botao__seta {
+  transform: translateX(4px);
+}
+
+/* ---------------------------------------------------------------- */
+/* Glass — ver regra em CLAUDE.md                                     */
+/* "Glass real" (backdrop-filter) é permitido em NO MÁXIMO dois       */
+/* lugares do site inteiro: a nav fixa e o botão de WhatsApp.         */
+/* Não aplique .glass-real em mais nenhum componente.                */
+/* ---------------------------------------------------------------- */
+
+.glass-real {
+  background-color: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--linha) 70%, transparent);
+}
+
+/* Glass falso — usar em todo o resto. Mesmo efeito visual, sem custo de blur. */
+.glass-fake {
+  background-color: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--linha) 80%, transparent);
+}
+
+/* ---------------------------------------------------------------- */
+/* Movimento                                                          */
+/* ---------------------------------------------------------------- */
+
+/* Revelação no scroll — Movimento.astro observa estes elementos com
+   IntersectionObserver e adiciona .reveal--visivel uma vez.
+   Curva mais lenta e com mais deslocamento que uma fade simples, mas sem
+   overshoot — elegante, não um salto. */
+.reveal {
+  opacity: 0;
+  transform: translateY(56px);
+  transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.reveal--visivel {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Grupo com escalonamento entre irmãos — o pai é quem é observado; os
+   filhos herdam a transição e cada nth-child ganha um atraso próprio. */
+.reveal-grupo > * {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-grupo.reveal--visivel > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-grupo > *:nth-child(1) {
+  transition-delay: 0ms;
+}
+.reveal-grupo > *:nth-child(2) {
+  transition-delay: 90ms;
+}
+.reveal-grupo > *:nth-child(3) {
+  transition-delay: 180ms;
+}
+.reveal-grupo > *:nth-child(4) {
+  transition-delay: 270ms;
+}
+.reveal-grupo > *:nth-child(5) {
+  transition-delay: 360ms;
+}
+.reveal-grupo > *:nth-child(6) {
+  transition-delay: 450ms;
+}
+.reveal-grupo > *:nth-child(7) {
+  transition-delay: 540ms;
+}
+.reveal-grupo > *:nth-child(8) {
+  transition-delay: 630ms;
+}
+
+/* Títulos: revelação de baixo pra cima com clip-path (exceção deliberada à
+   regra de só transform/opacity — clip-path é igualmente leve/acelerado). */
+.reveal-titulo {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-titulo.reveal--visivel {
+  clip-path: inset(0 0 0% 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Conteúdo sempre no estado final — nunca depende de JS rodar. */
+  .reveal,
+  .reveal-grupo > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .reveal-titulo {
+    clip-path: none !important;
+  }
+
+  .placeholder-imagem__zoom {
+    transform: none !important;
+  }
+
+  /* /limousines/: sem transição dia→noite animada, direto pro mundo escuro
+     (o wrapper já nasce com esses valores inline — isto é só reforço/clareza). */
+  .mundo-dinamico {
+    --bg: var(--escuro-bg) !important;
+    --surface: var(--escuro-surface) !important;
+    --linha: var(--escuro-linha) !important;
+    --texto: var(--escuro-texto) !important;
+    --texto-mut: var(--escuro-texto-mut) !important;
+    --ouro: var(--ouro-escuro) !important;
+  }
+
+  .transicao-dia-noite {
+    display: none !important;
+  }
+}
