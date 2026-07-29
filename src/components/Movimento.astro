@@ -8,11 +8,16 @@
 // JavaScript do site inteiro fácil de auditar num só lugar.
 ---
 
-<button type="button" class="chevron-scroll" data-chevron aria-label="Rolar para ver mais">
+<!--
+  Puramente decorativo — não faz nada ao ser ativado, então não pode ser
+  focável nem exposto a leitor de tela (senão é foco de teclado que não leva
+  a lugar nenhum). Dar comportamento a ele é tarefa separada, futura.
+-->
+<div class="chevron-scroll" data-chevron aria-hidden="true">
   <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
     <path d="M4 9l8 8 8-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
-</button>
+</div>
 
 <nav class="estrada" data-estrada aria-hidden="true">
   <div class="estrada__linha">
@@ -26,11 +31,9 @@
     bottom: var(--espaco-4);
     left: 50%;
     transform: translateX(-50%);
-    z-index: 30;
-    background: none;
-    border: none;
+    z-index: var(--z-indicadores);
     color: var(--ouro);
-    cursor: pointer;
+    pointer-events: none;
     padding: var(--espaco-1);
     opacity: 1;
     transition: opacity 0.4s ease;
@@ -39,7 +42,6 @@
 
   .chevron-scroll[data-oculto='true'] {
     opacity: 0;
-    pointer-events: none;
   }
 
   @keyframes chevron-flutuar {
@@ -57,9 +59,10 @@
     left: var(--espaco-3);
     top: 50%;
     transform: translateY(-50%);
-    z-index: 30;
+    z-index: var(--z-indicadores);
     height: 40vh;
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.5s ease;
   }
 

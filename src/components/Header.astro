@@ -43,7 +43,7 @@ import MenuOverlay from './MenuOverlay.astro';
     position: fixed;
     inset-inline: 0;
     top: 0;
-    z-index: 40;
+    z-index: var(--z-header);
     transform: translateY(0);
     transition: transform 0.35s ease;
   }
@@ -170,11 +170,14 @@ import MenuOverlay from './MenuOverlay.astro';
 
   overlay?.querySelector('.menu-overlay__painel')?.addEventListener('mouseleave', () => ativarMidia('padrao'));
 
+  // Única fonte de verdade do estado do overlay: o atributo data-aberto.
+  // O CSS cuida de opacity/visibility/pointer-events a partir dele — nada
+  // de alternar "hidden" pelo JS (era um segundo mecanismo concorrente,
+  // e o motivo do bug de clique interceptado).
   function abrirMenu() {
     if (!overlay || !botaoMenu) return;
     ultimoFoco = document.activeElement as HTMLElement;
-    overlay.hidden = false;
-    requestAnimationFrame(() => overlay.setAttribute('data-aberto', 'true'));
+    overlay.setAttribute('data-aberto', 'true');
     botaoMenu.setAttribute('aria-expanded', 'true');
     document.body.style.overflow = 'hidden';
     carregarMidiaNaPrimeiraAbertura();
@@ -191,9 +194,6 @@ import MenuOverlay from './MenuOverlay.astro';
     document.removeEventListener('keydown', aoTeclar);
     camadasMidia.forEach((camada) => camada.querySelector('video')?.pause());
     ativarMidia('padrao');
-    window.setTimeout(() => {
-      if (overlay.getAttribute('data-aberto') === 'false') overlay.hidden = true;
-    }, 300);
     (ultimoFoco ?? botaoMenu).focus();
   }
 

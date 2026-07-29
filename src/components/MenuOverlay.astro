@@ -17,7 +17,7 @@ const zonas = casamentos.filter((item) => item.slug !== 'aluguel-de-limousines-p
 const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
 ---
 
-<div id="menu-overlay" class="menu-overlay mundo-escuro" role="dialog" aria-modal="true" aria-label="Menu de navegação" hidden>
+<div id="menu-overlay" class="menu-overlay mundo-escuro" role="dialog" aria-modal="true" aria-label="Menu de navegação" data-aberto="false">
   <div class="menu-overlay__midia">
     <MenuMidia />
   </div>
@@ -84,22 +84,31 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
   .menu-overlay {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: var(--z-menu);
     display: flex;
     background-color: var(--bg);
     color: var(--texto);
     opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
     transform: translateY(-8px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Ao fechar, visibility espera o fade terminar (delay = duração da
+       transição) antes de sair da árvore de acessibilidade/tab order. */
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s 0.3s;
   }
 
   .menu-overlay[data-aberto='true'] {
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
     transform: translateY(0);
+    /* Ao abrir, visibility muda na hora — sem delay. */
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s 0s;
   }
 
   .menu-overlay__midia {
     display: none;
+    pointer-events: none;
   }
 
   .menu-overlay__fechar {
@@ -281,6 +290,7 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
 
   @media (prefers-reduced-motion: reduce) {
     .menu-overlay,
+    .menu-overlay[data-aberto='true'],
     .menu-overlay__link,
     .menu-overlay__categoria,
     .menu-overlay__cta {

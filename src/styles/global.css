@@ -64,6 +64,24 @@
      centralização vertical, em vez de adivinhar um valor solto. */
   --altura-header: 4.5rem;
 
+  /* ---- Escala de z-index ----
+     Conteúdo normal de página (texto, cards, imagens) não define z-index —
+     fica no nível 0/auto, abaixo de tudo daqui. A partir daí, cada camada
+     fixa do site usa um valor desta escala, sempre nesta ordem:
+
+       1. --z-indicadores  → chevron do hero e indicador "estrada"
+       2. --z-header       → barra de navegação fixa
+       3. --z-whatsapp     → botão flutuante de WhatsApp
+       4. --z-menu         → overlay do menu (cobre tudo, inclusive o header)
+
+     Não hardcode número de z-index em nenhum componente novo — use uma
+     destas variáveis, ou adicione uma nova aqui se precisar de mais uma
+     camada, mantendo a ordem. */
+  --z-indicadores: 30;
+  --z-header: 40;
+  --z-whatsapp: 50;
+  --z-menu: 100;
+
   color-scheme: light;
 }
 
