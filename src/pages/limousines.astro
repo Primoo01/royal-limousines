@@ -13,6 +13,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Marquee from '../components/Marquee.astro';
+import Botao from '../components/Botao.astro';
+import EntradaTitulo from '../components/EntradaTitulo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 import sedanPreto from '../data/sedan-preto.js';
@@ -28,7 +30,7 @@ const description =
 <BaseLayout title={dados.title} description={description}>
   <section class="u-container bloco-frota reveal">
     <p class="u-eyebrow">Frota Royal Limousines</p>
-    <h1 class="reveal-titulo">Limousine | Aluguel de Limousine</h1>
+    <EntradaTitulo as="h1">Limousine | Aluguel de Limousine</EntradaTitulo>
     <div class="u-prosa bloco-frota__intro">
       <p>
         Limousine para casamento! As melhores limousines para locação,
@@ -44,7 +46,7 @@ const description =
     <div class="bloco-frota__grade">
       <ImagePlaceholder label="Chrysler 300C branco — three-quarter frontal" aspectRatio="4/3" class="reveal" />
       <div>
-        <h2 class="reveal-titulo">Limousine para Casamentos Chrysler 300C</h2>
+        <EntradaTitulo as="h2">Limousine para Casamentos Chrysler 300C</EntradaTitulo>
         <div class="u-prosa">
           <p>
             A Royal Limousine é uma empresa especializada na locação de
@@ -108,11 +110,11 @@ const description =
       </p>
     </div>
 
-    <div class="cta-veiculo glass-fake">
-      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+    <div class="cta-veiculo">
+      <Botao variante="barra" href="/contato/">{site.cta.orcamento}</Botao>
+      <Botao variante="barra" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.whatsapp}
-      </a>
+      </Botao>
     </div>
   </section>
 
@@ -145,17 +147,17 @@ const description =
 
     <section class="u-container bloco-frota bloco-frota--escuro reveal">
       <p class="u-eyebrow">{sedanPreto.eyebrow}</p>
-      <h2 class="reveal-titulo">{sedanPreto.titulo}</h2>
+      <EntradaTitulo as="h2">{sedanPreto.titulo}</EntradaTitulo>
       <div class="bloco-frota__grade bloco-frota__grade--inverso">
         <div>
           <div class="u-prosa">
             {sedanPreto.paragrafos.map((paragrafo) => <p>{paragrafo}</p>)}
           </div>
-          <div class="cta-veiculo glass-fake">
-            <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-            <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          <div class="cta-veiculo">
+            <Botao variante="barra" href="/contato/">{site.cta.orcamento}</Botao>
+            <Botao variante="barra" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
               {site.cta.whatsapp}
-            </a>
+            </Botao>
           </div>
         </div>
         <ImagePlaceholder
@@ -224,12 +226,16 @@ const description =
     color: var(--texto-mut);
   }
 
+  /* Duas barras de fim de seção empilhadas (uma por ação) — a de baixo não
+     repete o fio de cima, pra não dobrar a linha no meio. */
   .cta-veiculo {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--espaco-2);
+    flex-direction: column;
     margin-top: var(--espaco-4);
-    padding: var(--espaco-3);
+  }
+
+  .cta-veiculo > .botao--barra + .botao--barra {
+    border-top: none;
   }
 
   /* Item 3: a seção do sedan resolve por peso visual, não por texto — tela

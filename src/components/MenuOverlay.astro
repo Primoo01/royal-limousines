@@ -1,19 +1,19 @@
 ---
 // Overlay de navegação em tela cheia, painel duplo (ver CLAUDE.md > Navegação).
-// Esquerda: mídia (MenuMidia.astro). Direita: links grandes em Cormorant,
-// alinhados à esquerda, com cabeçalhos de grupo pequenos em dourado.
-// Aberto/fechado e crossfade de mídia são coordenados pelo script do
-// Header.astro (mesmo DOM final, componentes diferentes só na fonte).
-import site from '../config/site.js';
+// Esquerda: mídia (MenuMidia.astro). Direita: lista vertical única de links
+// em Cormorant — sem colunas, sem cabeçalhos de grupo em dourado.
+// Aberto/fechado, crossfade de mídia e fechar são coordenados pelo script do
+// Header.astro (mesmo DOM final, componentes diferentes só na fonte). O
+// único botão que abre/fecha o menu mora no Header — não há botão de fechar
+// aqui dentro.
 import servicosRegiao from '../data/servicos-regiao.js';
 import MenuMidia from './MenuMidia.astro';
 
 const casamentos = servicosRegiao.filter((item) => item.categoria === 'casamento');
 const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
-// "Casamentos em SP" entra em Serviços (não é uma das 4 zonas) — junto com
-// debutantes/aniversários/jantares, como aprovado no agrupamento 4+4.
+// "Casamentos em SP" entra como subitem de Serviços (não é uma das 4 zonas).
+// As 4 zonas (Zona Leste/Norte/Oeste/Sul) não aparecem no menu — só no rodapé.
 const casamentosEmSp = casamentos.find((item) => item.slug === 'aluguel-de-limousines-para-casamentos-em-sp');
-const zonas = casamentos.filter((item) => item.slug !== 'aluguel-de-limousines-para-casamentos-em-sp');
 const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
 ---
 
@@ -22,26 +22,44 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
     <MenuMidia />
   </div>
 
-  <button type="button" class="menu-overlay__fechar" data-menu-fechar aria-label="Fechar menu">
-    <span aria-hidden="true">Fechar ×</span>
-  </button>
-
   <div class="menu-overlay__painel">
-    <nav class="menu-overlay__conteudo" aria-label="Navegação principal">
-      <a href="/" class="menu-overlay__link menu-overlay__inicio" data-midia-grupo="inicio">Início</a>
+    <nav class="menu-overlay__lista" aria-label="Navegação principal">
+      <a href="/" class="menu-overlay__link menu-overlay__link--principal" data-midia-grupo="inicio">Início</a>
 
-      <div class="menu-overlay__colunas">
-        <div class="menu-overlay__coluna" data-midia-grupo="frota">
-          <a href="/limousines/" class="menu-overlay__link">Frota</a>
+      <a href="/limousines/" class="menu-overlay__link menu-overlay__link--principal" data-midia-grupo="frota">
+        Frota
+      </a>
+
+      <div class="menu-overlay__grupo" data-midia-grupo="servicos" data-acordeao="false">
+        <div class="menu-overlay__servicos-linha">
+          <a href="/servicos/" class="menu-overlay__link menu-overlay__link--principal">Serviços</a>
+          <button
+            type="button"
+            class="menu-overlay__acordeao-seta"
+            id="menu-overlay-acordeao-servicos"
+            aria-expanded="false"
+            aria-controls="menu-overlay-servicos-subitens"
+            aria-label="Mostrar serviços"
+            data-acordeao-servicos
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path
+                d="M4 9l8 8 8-8"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+          </button>
         </div>
-
-        <div class="menu-overlay__coluna" data-midia-grupo="servicos">
-          <a href="/servicos/" class="menu-overlay__categoria">Serviços</a>
-          <ul>
+        <div class="menu-overlay__acordeao-wrapper" id="menu-overlay-servicos-subitens" role="region" aria-labelledby="menu-overlay-acordeao-servicos">
+          <ul class="menu-overlay__subitens">
             {
               itensServicos.map((item) => (
                 <li>
-                  <a href={`/${item.slug}/`} class="menu-overlay__link">
+                  <a href={`/${item.slug}/`} class="menu-overlay__link menu-overlay__link--sub">
                     {item.menuLabel}
                   </a>
                 </li>
@@ -49,33 +67,19 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
             }
           </ul>
         </div>
-
-        <div class="menu-overlay__coluna" data-midia-grupo="regiao">
-          <p class="menu-overlay__categoria menu-overlay__categoria--texto">Casamentos por região</p>
-          <ul>
-            {
-              zonas.map((item) => (
-                <li>
-                  <a href={`/${item.slug}/`} class="menu-overlay__link">
-                    {item.menuLabel}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-
-        <div class="menu-overlay__coluna" data-midia-grupo="royal">
-          <a href="/empresa/" class="menu-overlay__link">A Royal</a>
-        </div>
       </div>
 
-      <div class="menu-overlay__cta" data-midia-grupo="contato">
-        <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-        <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
-          {site.cta.whatsapp}
-        </a>
-      </div>
+      <a href="/empresa/" class="menu-overlay__link menu-overlay__link--principal" data-midia-grupo="royal">
+        A Royal
+      </a>
+
+      <a
+        href="/contato/"
+        class="menu-overlay__link menu-overlay__link--principal menu-overlay__link--destaque"
+        data-midia-grupo="contato"
+      >
+        Contato
+      </a>
     </nav>
   </div>
 </div>
@@ -111,19 +115,6 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
     pointer-events: none;
   }
 
-  .menu-overlay__fechar {
-    position: absolute;
-    top: var(--espaco-3);
-    right: var(--espaco-3);
-    z-index: 2;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--fonte-sans);
-    font-size: 0.9375rem;
-    color: var(--texto);
-  }
-
   .menu-overlay__painel {
     position: relative;
     flex: 1;
@@ -132,21 +123,33 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
     /* Padding generoso, mínimo 6vw à esquerda — o texto encosta perto da
        borda da mídia, não fica flutuando centralizado. */
     padding: var(--espaco-6) 6vw;
+
+    /* Barra de rolagem invisível — mesma técnica do documento (ver global.css),
+       sem media query: vale em qualquer largura. Scroll continua funcional
+       por roda, toque e teclado, só a barra não aparece. */
+    scrollbar-width: none;
   }
 
-  .menu-overlay__conteudo {
-    max-width: 56rem;
+  .menu-overlay__painel::-webkit-scrollbar {
+    display: none;
   }
 
-  /* Item de navegação real (Início, Frota, A Royal, e cada sub-link) —
-     estes são os "itens principais" do menu: grandes, serifados, com
-     bastante espaço entre eles. */
+  .menu-overlay__lista {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--espaco-4);
+    max-width: 40rem;
+  }
+
+  /* Item de navegação — base compartilhada por principais e subitens:
+     cor, transição de entrada e comportamento de hover/foco. Tamanho e
+     recuo vêm dos modificadores abaixo. */
   .menu-overlay__link {
     display: inline-block;
     font-family: var(--fonte-serif);
     font-weight: 500;
-    font-size: clamp(2rem, 3.5vw, 3.25rem);
-    line-height: 1.1;
+    line-height: 1.15;
     text-decoration: none;
     color: var(--texto);
     opacity: 0;
@@ -155,80 +158,110 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
       color 0.25s ease;
   }
 
-  .menu-overlay__inicio {
-    margin-bottom: var(--espaco-2);
+  .menu-overlay__link--principal {
+    font-size: clamp(1.9rem, 3.2vw, 3rem);
   }
 
-  /* Cabeçalho de grupo — pequeno, dourado, Space Grotesk. Nunca do tamanho
-     dos itens principais. */
-  .menu-overlay__categoria {
-    display: inline-block;
-    font-family: var(--fonte-sans);
-    font-weight: 500;
-    font-size: var(--tamanho-eyebrow);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
+  /* Pouco menor que "Serviços", não muito — a diferença precisa ser visível,
+     mas discreta (ver CLAUDE.md > Acordeão de Serviços). */
+  .menu-overlay__link--sub {
+    font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+  }
+
+  /* Contato tem destaque visual (cor dourada por padrão), mas o MESMO
+     tamanho dos outros itens principais — não é maior nem vira botão. */
+  .menu-overlay__link--destaque {
     color: var(--ouro);
-    text-decoration: none;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .menu-overlay__categoria--texto {
-    cursor: default;
-  }
-
-  .menu-overlay__colunas {
-    margin-top: var(--espaco-6);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--espaco-5) var(--espaco-4);
-  }
-
-  .menu-overlay__coluna ul {
-    margin-top: var(--espaco-3);
+  .menu-overlay__grupo {
     display: flex;
     flex-direction: column;
-    /* "Muito espaço vertical" — o menu respira, não é uma lista compacta. */
-    gap: var(--espaco-3);
+    align-items: stretch;
   }
 
-  .menu-overlay__cta {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    margin-top: var(--espaco-6);
-    padding-top: var(--espaco-4);
-    border-top: 1px solid var(--linha);
+  .menu-overlay__servicos-linha {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     gap: var(--espaco-2);
   }
 
-  /* Entrada escalonada: 50ms entre grupos, fade + 20px, 500ms. */
-  .menu-overlay__inicio {
+  /* "Serviços" continua um link normal e clicável; a seta é um controle
+     separado que só abre/fecha o acordeão, por clique — nunca por hover
+     (ver CLAUDE.md > Acordeão de Serviços). */
+  .menu-overlay__acordeao-seta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--ouro);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .menu-overlay__acordeao-seta svg {
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .menu-overlay__acordeao-seta[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+
+  /* Técnica de acordeão sem animar height: a track do grid vai de 0fr a 1fr,
+     e o filho com overflow:hidden é quem permite a track encolher a zero
+     de verdade (senão o "auto minimum size" do grid trava no min-content). */
+  .menu-overlay__acordeao-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .menu-overlay__grupo[data-acordeao='true'] .menu-overlay__acordeao-wrapper {
+    grid-template-rows: 1fr;
+  }
+
+  .menu-overlay__subitens {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    overflow: hidden;
+    min-height: 0;
+    /* Recuo visível à esquerda — deixa claro que são filhos de Serviços. */
+    padding-left: clamp(1.25rem, 3.5vw, 2.25rem);
+    padding-top: var(--espaco-2);
+  }
+
+  /* Entrada escalonada — precisa parecer quase instantâneo: 40ms entre os
+     itens principais (ver CLAUDE.md > Navegação). Delay por item: Início 0
+     / Frota 40 / Serviços 80 / A Royal 205 / Contato 245ms. Os subitens de
+     Serviços não participam desse escalonamento — eles nascem escondidos
+     pelo acordeão (fechado por padrão), então já terminam a própria
+     transição de opacidade em silêncio antes de qualquer clique na seta. */
+  .menu-overlay__lista > *:nth-child(1) {
     transition-delay: 0ms;
   }
-  .menu-overlay__colunas > *:nth-child(1) * {
-    transition-delay: 50ms;
+  .menu-overlay__lista > *:nth-child(2) {
+    transition-delay: 40ms;
   }
-  .menu-overlay__colunas > *:nth-child(2) * {
-    transition-delay: 100ms;
+  .menu-overlay__lista > *:nth-child(3) .menu-overlay__link--principal,
+  .menu-overlay__lista > *:nth-child(3) .menu-overlay__acordeao-seta {
+    transition-delay: 80ms;
   }
-  .menu-overlay__colunas > *:nth-child(3) * {
-    transition-delay: 150ms;
+  .menu-overlay__lista > *:nth-child(4) {
+    transition-delay: 205ms;
   }
-  .menu-overlay__colunas > *:nth-child(4) * {
-    transition-delay: 200ms;
-  }
-  .menu-overlay__cta {
-    transition-delay: 250ms;
+  .menu-overlay__lista > *:nth-child(5) {
+    transition-delay: 245ms;
   }
 
   .menu-overlay[data-aberto='true'] .menu-overlay__link,
-  .menu-overlay[data-aberto='true'] .menu-overlay__categoria,
-  .menu-overlay[data-aberto='true'] .menu-overlay__cta {
+  .menu-overlay[data-aberto='true'] .menu-overlay__acordeao-seta {
     opacity: 1;
     transform: translateY(0);
   }
@@ -240,13 +273,9 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
     color: var(--ouro);
   }
 
-  .menu-overlay__conteudo:has(.menu-overlay__link:hover, .menu-overlay__link:focus-visible)
+  .menu-overlay__lista:has(.menu-overlay__link:hover, .menu-overlay__link:focus-visible)
     .menu-overlay__link:not(:hover):not(:focus-visible) {
     opacity: 0.4;
-  }
-
-  .menu-overlay__cta {
-    margin-top: var(--espaco-6);
   }
 
   @media (min-width: 56rem) {
@@ -266,25 +295,22 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
       z-index: 0;
     }
 
-    .menu-overlay__fechar {
-      color: var(--escuro-texto);
-    }
-
     .menu-overlay__painel {
       z-index: 1;
     }
 
     /* Mundo escuro já é o padrão deste componente (.mundo-escuro no root) —
        aqui só reduz o tamanho, a cor já resolve certo em qualquer largura. */
-    .menu-overlay__link {
+    .menu-overlay__link--principal {
       font-size: clamp(1.5rem, 6vw, 2.25rem);
     }
 
-    /* Empilhado de verdade no mobile — nada de grid de 2 colunas apertando
-       texto grande. */
-    .menu-overlay__colunas {
-      grid-template-columns: 1fr;
-      gap: var(--espaco-5);
+    .menu-overlay__link--sub {
+      font-size: clamp(1.1rem, 5vw, 1.65rem);
+    }
+
+    .menu-overlay__subitens {
+      padding-left: clamp(1rem, 5vw, 1.5rem);
     }
   }
 
@@ -292,8 +318,9 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
     .menu-overlay,
     .menu-overlay[data-aberto='true'],
     .menu-overlay__link,
-    .menu-overlay__categoria,
-    .menu-overlay__cta {
+    .menu-overlay__acordeao-seta,
+    .menu-overlay__acordeao-seta svg,
+    .menu-overlay__acordeao-wrapper {
       transition: none;
     }
   }

@@ -1,0 +1,98 @@
+---
+// Vocabulário de entrada — único efeito de entrada do site, usado em
+// títulos, cabeçalhos de seção e legendas (ver CLAUDE.md > Vocabulário de
+// entrada). Bloco dourado varre o texto da esquerda pra direita revelando-o,
+// enquanto o texto entra vindo de cima/esquerda.
+//
+// Regra de segurança: o texto é visível por padrão neste componente — quem
+// decide se ele precisa "preparar" para animar é o JS em Movimento.astro,
+// e só para elementos ainda fora da viewport no carregamento. Sem isso (ou
+// se o JS falhar), o conteúdo nunca fica invisível.
+interface Props {
+  as?: 'h1' | 'h2' | 'h3' | 'p' | 'span';
+  class?: string;
+  id?: string;
+}
+
+const { as: Tag = 'h2', class: className, ...resto } = Astro.props;
+const classes = ['entrada', className].filter(Boolean).join(' ');
+---
+
+<Tag class={classes} {...resto}>
+  <span class="entrada__bloco" aria-hidden="true"></span>
+  <span class="entrada__texto"><slot /></span>
+</Tag>
+
+<style>
+  .entrada {
+    position: relative;
+    display: block;
+  }
+
+  .entrada__bloco {
+    position: absolute;
+    inset: 0;
+    background-color: var(--ouro);
+    transform: scaleX(0);
+    transform-origin: left;
+    pointer-events: none;
+  }
+
+  .entrada__texto {
+    display: inline-block;
+  }
+
+  /* Estado "preparado" — só é aplicado pelo JS a elementos que ainda não
+     entraram na viewport. É o único jeito de o texto ficar invisível; sem
+     esta classe, ele está sempre visível. */
+  .entrada.entrada--preparado .entrada__texto {
+    opacity: 0;
+    transform: translate(-24px, -16px);
+  }
+
+  .entrada.entrada--preparado .entrada__texto,
+  .entrada.entrada--visivel .entrada__texto {
+    transition: opacity 550ms cubic-bezier(0.2, 0.7, 0.3, 1) 180ms, transform 550ms cubic-bezier(0.2, 0.7, 0.3, 1) 180ms;
+  }
+
+  .entrada.entrada--visivel .entrada__texto {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+
+  .entrada.entrada--visivel .entrada__bloco {
+    animation: entrada-bloco 560ms cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+
+  @keyframes entrada-bloco {
+    0% {
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+    49.99% {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+    50% {
+      transform: scaleX(1);
+      transform-origin: right;
+    }
+    100% {
+      transform: scaleX(0);
+      transform-origin: right;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .entrada__texto,
+    .entrada__bloco {
+      transition: none !important;
+      animation: none !important;
+    }
+
+    .entrada.entrada--preparado .entrada__texto {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

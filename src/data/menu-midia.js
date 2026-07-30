@@ -1,7 +1,7 @@
 // Mídia do painel esquerdo do menu (ver CLAUDE.md > Navegação).
-// Uma entrada por GRUPO do menu (não por cada uma das 8 páginas de
-// serviço/região — "grupo" aqui é a coluna: Frota, Serviços, Casamentos por
-// região, A Royal, mais Início e Contato).
+// Uma entrada por item principal da lista vertical do menu: Início, Frota,
+// Serviços, A Royal, Contato (as páginas de casamento por região não têm
+// grupo próprio — não aparecem no menu, só no rodapé).
 //
 // Enquanto `src` for null, o painel mostra uma textura CSS abstrata (gradiente
 // + leve movimento) usando o tom indicado em `tom`. Quando a mídia real
@@ -38,13 +38,6 @@ export const menuMidia = {
     poster: null,
     tom: 'linho',
     alt: 'Textura têxtil abstrata, tom claro',
-  },
-  regiao: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'ambar',
-    alt: 'Luz âmbar abstrata em movimento',
   },
   royal: {
     tipo: 'imagem',

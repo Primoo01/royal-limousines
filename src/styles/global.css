@@ -70,17 +70,27 @@
      fixa do site usa um valor desta escala, sempre nesta ordem:
 
        1. --z-indicadores  → chevron do hero e indicador "estrada"
-       2. --z-header       → barra de navegação fixa
-       3. --z-whatsapp     → botão flutuante de WhatsApp
-       4. --z-menu         → overlay do menu (cobre tudo, inclusive o header)
+       2. --z-whatsapp     → botão flutuante de WhatsApp
+       3. --z-menu         → overlay do menu
+       4. --z-header       → barra de navegação fixa (fica ACIMA do overlay
+                              de propósito: o botão de menu mora dentro do
+                              header, e precisa continuar clicável com o
+                              menu aberto — ver Header.astro)
+
+     Invertido em relação à primeira versão desta escala: o header por cima
+     do overlay era a única forma de manter o botão de menu clicável sem
+     reestruturar o componente pra fora do <header>. Quando o menu abre, o
+     header fica com fundo transparente (ver Header.astro), então o overlay
+     continua parecendo cobrir a tela inteira visualmente — só o z-index
+     real é que ficou invertido.
 
      Não hardcode número de z-index em nenhum componente novo — use uma
      destas variáveis, ou adicione uma nova aqui se precisar de mais uma
      camada, mantendo a ordem. */
   --z-indicadores: 30;
-  --z-header: 40;
-  --z-whatsapp: 50;
-  --z-menu: 100;
+  --z-whatsapp: 40;
+  --z-menu: 50;
+  --z-header: 100;
 
   color-scheme: light;
 }
@@ -265,95 +275,238 @@ p + p {
 
 /* ---------------------------------------------------------------- */
 /* Botões — três níveis (ver CLAUDE.md > Botões)                     */
+/* Cantos retos, Space Grotesk caixa alta, letter-spacing .14em.      */
+/* Tudo aqui é transform + opacity/color — nunca width/height.       */
 /* ---------------------------------------------------------------- */
 
 .botao {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.6em;
   font-family: var(--fonte-sans);
   font-weight: 500;
-  font-size: 0.8125rem;
-  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
   cursor: pointer;
   border: none;
+  border-radius: 0;
   background: none;
   color: var(--texto);
+  transition: transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-/* Primário: borda dourada fina, preenchimento sobe de baixo pra cima no
-   hover (scaleY, não width/height), texto inverte de cor. */
+/* ---- Primário — moldura em colchete ----
+   Repouso: 4 colchetes de 11px nos cantos. Hover: os colchetes crescem
+   (scaleX/scaleY) até se encontrarem, fechando a moldura, e um preenchimento
+   dourado sobe de baixo pra cima. Ver componente Botao.astro para o markup
+   (4 spans de canto + 1 de preenchimento) exigido por esta técnica. */
 .botao--primario {
-  position: relative;
-  isolation: isolate;
-  padding: 0.9em 1.7em;
-  border: 1px solid var(--ouro);
-  border-radius: var(--raio);
+  padding: 1.1em 2em;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.botao--primario:active {
+  transform: scale(0.98);
+}
+
+.botao--primario .botao__texto {
+  position: relative;
+  z-index: 2;
   transition: color 0.3s ease;
 }
 
-.botao--primario::before {
-  content: '';
+.botao--primario .botao__preenchimento {
   position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   background-color: var(--ouro);
   transform: scaleY(0);
   transform-origin: bottom;
-  transition: transform 0.3s ease;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.botao--primario:hover,
-.botao--primario:focus-visible {
-  color: var(--bg);
-}
-
-.botao--primario:hover::before,
-.botao--primario:focus-visible::before {
+.botao--primario:hover .botao__preenchimento,
+.botao--primario:focus-visible .botao__preenchimento {
   transform: scaleY(1);
 }
 
-/* Secundário: só texto, fio fino embaixo que se estende no hover. */
-.botao--secundario {
-  position: relative;
-  padding-bottom: 0.3em;
+.botao--primario:hover .botao__texto,
+.botao--primario:focus-visible .botao__texto {
+  color: var(--bg);
 }
 
-.botao--secundario::after {
+.botao__colchete {
+  position: absolute;
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+}
+
+.botao__colchete::before,
+.botao__colchete::after {
   content: '';
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
+  background-color: var(--ouro);
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* Linha horizontal (::before, 11px) e vertical (::after, 11px) — repouso.
+   No hover escalam bem além do necessário (60x); o overflow:hidden do
+   botão corta no tamanho real, então a moldura fecha certo em qualquer
+   largura sem precisar medir o botão em px. */
+.botao__colchete::before {
+  width: 11px;
   height: 1px;
+}
+
+.botao__colchete::after {
+  width: 1px;
+  height: 11px;
+}
+
+.botao__colchete--tl {
+  top: 0;
+  left: 0;
+}
+.botao__colchete--tl::before {
+  top: 0;
+  left: 0;
+  transform-origin: left;
+}
+.botao__colchete--tl::after {
+  top: 0;
+  left: 0;
+  transform-origin: top;
+}
+
+.botao__colchete--tr {
+  top: 0;
+  right: 0;
+}
+.botao__colchete--tr::before {
+  top: 0;
+  right: 0;
+  transform-origin: right;
+}
+.botao__colchete--tr::after {
+  top: 0;
+  right: 0;
+  transform-origin: top;
+}
+
+.botao__colchete--bl {
+  bottom: 0;
+  left: 0;
+}
+.botao__colchete--bl::before {
+  bottom: 0;
+  left: 0;
+  transform-origin: left;
+}
+.botao__colchete--bl::after {
+  bottom: 0;
+  left: 0;
+  transform-origin: bottom;
+}
+
+.botao__colchete--br {
+  bottom: 0;
+  right: 0;
+}
+.botao__colchete--br::before {
+  bottom: 0;
+  right: 0;
+  transform-origin: right;
+}
+.botao__colchete--br::after {
+  bottom: 0;
+  right: 0;
+  transform-origin: bottom;
+}
+
+.botao--primario:hover .botao__colchete::before,
+.botao--primario:focus-visible .botao__colchete::before {
+  transform: scaleX(60);
+}
+
+.botao--primario:hover .botao__colchete::after,
+.botao--primario:focus-visible .botao__colchete::after {
+  transform: scaleY(60);
+}
+
+/* ---- Barra de fim de seção ----
+   Largura total, fecha seções (usada nas duas seções de veículo em
+   /limousines/). Fio fino acima/abaixo, texto à esquerda, seta dourada à
+   direita. Hover: preenchimento varre da esquerda pra direita. */
+.botao--barra {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  padding: 1.3em var(--espaco-1);
+  border-top: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.botao--barra:active {
+  transform: scale(0.995);
+}
+
+.botao--barra .botao__preenchimento {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   background-color: var(--ouro);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s ease;
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.botao--secundario:hover::after,
-.botao--secundario:focus-visible::after {
+.botao--barra:hover .botao__preenchimento,
+.botao--barra:focus-visible .botao__preenchimento {
   transform: scaleX(1);
 }
 
-/* Terciário/link: texto com seta que avança no hover. */
+.botao--barra .botao__texto,
+.botao--barra .botao__seta {
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.botao--barra .botao__seta {
+  color: var(--ouro);
+}
+
+.botao--barra:hover .botao__texto,
+.botao--barra:hover .botao__seta,
+.botao--barra:focus-visible .botao__texto,
+.botao--barra:focus-visible .botao__seta {
+  color: var(--bg);
+}
+
+/* ---- Terciário — link em texto ---- */
 .botao--terciario {
   color: var(--ouro);
-  gap: 0.35em;
+  gap: 0.4em;
 }
 
 .botao__seta {
   display: inline-block;
-  transition: transform 0.25s ease;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 .botao--terciario:hover .botao__seta,
 .botao--terciario:focus-visible .botao__seta {
-  transform: translateX(4px);
+  transform: translateX(6px);
 }
 
 /* ---------------------------------------------------------------- */
@@ -433,16 +586,9 @@ p + p {
   transition-delay: 630ms;
 }
 
-/* Títulos: revelação de baixo pra cima com clip-path (exceção deliberada à
-   regra de só transform/opacity — clip-path é igualmente leve/acelerado). */
-.reveal-titulo {
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.reveal-titulo.reveal--visivel {
-  clip-path: inset(0 0 0% 0);
-}
+/* Títulos, cabeçalhos de seção e legendas: ver componente EntradaTitulo.astro
+   (vocabulário de entrada, CLAUDE.md > Movimento) — CSS próprio, escopado
+   no componente, não fica aqui. */
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -463,10 +609,6 @@ p + p {
   .reveal-grupo > * {
     opacity: 1 !important;
     transform: none !important;
-  }
-
-  .reveal-titulo {
-    clip-path: none !important;
   }
 
   .placeholder-imagem__zoom {

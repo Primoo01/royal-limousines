@@ -3,6 +3,8 @@
 // Os slugs e o conteúdo (reaproveitado do backup) vêm de src/data/servicos-regiao.js.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Botao from '../components/Botao.astro';
+import EntradaTitulo from '../components/EntradaTitulo.astro';
 import site from '../config/site.js';
 import servicosRegiao from '../data/servicos-regiao.js';
 
@@ -29,7 +31,7 @@ const outrasPaginasCasamento =
 <BaseLayout title={dados.title} description={description}>
   <section class="u-container secao-regiao reveal">
     <p class="u-eyebrow">Royal Limousines</p>
-    <h1 class="reveal-titulo">{dados.h1}</h1>
+    <EntradaTitulo as="h1">{dados.h1}</EntradaTitulo>
 
     <div class="secao-regiao__grade">
       <div class="u-prosa">
@@ -52,10 +54,10 @@ const outrasPaginasCasamento =
         }
 
         <div class="hero__cta">
-          <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-          <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
+          <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
             {site.cta.whatsapp}
-          </a>
+          </Botao>
         </div>
       </div>
 
@@ -66,7 +68,7 @@ const outrasPaginasCasamento =
       <ImagePlaceholder label={dados.imagens[1].rotulo} aspectRatio="4/3" class="reveal" />
 
       <div class="u-prosa">
-        <h2 class="reveal-titulo">{dados.h2}</h2>
+        <EntradaTitulo as="h2">{dados.h2}</EntradaTitulo>
         {dados.fechamento.map((paragrafo) => <p>{paragrafo}</p>)}
         <p>{dados.fraseTelefone}</p>
       </div>

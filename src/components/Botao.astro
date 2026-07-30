@@ -1,0 +1,50 @@
+---
+// Botão do sistema de 3 níveis (ver CLAUDE.md > Botões e global.css).
+// Existe como componente porque o Primário exige um markup fixo — 4 spans
+// de canto (colchetes) + 1 de preenchimento — que seria fácil de errar ou
+// deixar inconsistente copiando à mão em cada página que usa o botão.
+//
+// variante: 'primario' | 'barra' | 'terciario'
+// href presente → renderiza <a>. Ausente → <button type={type ?? 'button'}>.
+interface Props {
+  variante: 'primario' | 'barra' | 'terciario';
+  href?: string;
+  target?: string;
+  rel?: string;
+  type?: 'button' | 'submit';
+  class?: string;
+  ariaLabel?: string;
+}
+
+const { variante, href, target, rel, type, class: className, ariaLabel } = Astro.props;
+const Tag = href ? 'a' : 'button';
+const classes = ['botao', `botao--${variante}`, className].filter(Boolean).join(' ');
+---
+
+<Tag
+  href={href}
+  target={target}
+  rel={rel}
+  type={!href ? type ?? 'button' : undefined}
+  class={classes}
+  aria-label={ariaLabel}
+>
+  {
+    variante === 'primario' && (
+      <>
+        <span class="botao__colchete botao__colchete--tl" aria-hidden="true" />
+        <span class="botao__colchete botao__colchete--tr" aria-hidden="true" />
+        <span class="botao__colchete botao__colchete--bl" aria-hidden="true" />
+        <span class="botao__colchete botao__colchete--br" aria-hidden="true" />
+        <span class="botao__preenchimento" aria-hidden="true" />
+      </>
+    )
+  }
+  {variante === 'barra' && <span class="botao__preenchimento" aria-hidden="true" />}
+  <span class="botao__texto"><slot /></span>
+  {(variante === 'barra' || variante === 'terciario') && (
+    <span class="botao__seta" aria-hidden="true">
+      →
+    </span>
+  )}
+</Tag>

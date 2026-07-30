@@ -120,10 +120,15 @@
   const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // 1) Revelação no scroll ------------------------------------------------
-  // .reveal (seções), .reveal-grupo (escalonamento entre irmãos) e
-  // .reveal-titulo (clip-path) usam o mesmo observer e a mesma classe de
-  // estado — só o CSS de cada uma trata o efeito de forma diferente.
-  const elementosReveal = document.querySelectorAll<HTMLElement>('.reveal, .reveal-grupo, .reveal-titulo');
+  // .reveal (seções) e .reveal-grupo (escalonamento entre irmãos) usam
+  // IntersectionObserver normalmente.
+  function proporcaoVisivel(el: HTMLElement) {
+    const rect = el.getBoundingClientRect();
+    const alturaVisivel = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+    return rect.height > 0 ? alturaVisivel / rect.height : 0;
+  }
+
+  const elementosReveal = document.querySelectorAll<HTMLElement>('.reveal, .reveal-grupo');
 
   if (reduzMovimento || !('IntersectionObserver' in window)) {
     elementosReveal.forEach((el) => el.classList.add('reveal--visivel'));
@@ -141,6 +146,103 @@
     );
 
     elementosReveal.forEach((el) => observer.observe(el));
+
+    // 1b) Vocabulário de entrada (ver EntradaTitulo.astro) -----------------
+    // Regra de segurança (CLAUDE.md > Vocabulário de entrada): o texto é
+    // visível por padrão no CSS. Só elementos que ainda NÃO estão na
+    // viewport no carregamento recebem a classe que os prepara pra animar
+    // (escondidos). Os que já estão visíveis nunca são tocados — se o JS
+    // falhar ou demorar, nada fica invisível. Diferente do antigo
+    // reveal-titulo, o elemento observado aqui nunca tem clip-path nele
+    // mesmo (só opacity/transform num filho), então não repete o impasse
+    // de interseção sempre-zero que esse clip-path causava no Chromium.
+    const entradaPendentes = Array.from(document.querySelectorAll<HTMLElement>('.entrada')).filter(
+      (el) => proporcaoVisivel(el) < 0.35
+    );
+    entradaPendentes.forEach((el) => {
+      // Força o navegador a "commitar" o estado atual (visível, sem a
+      // classe) antes de aplicar a classe que traz opacity:0 + transition
+      // no mesmo elemento — sem isso, a mudança pode não ser reconhecida
+      // como uma transição de verdade.
+      void el.getBoundingClientRect();
+      el.classList.add('entrada--preparado');
+    });
+
+    if (entradaPendentes.length) {
+      const entradaObserver = new IntersectionObserver(
+        (entradas) => {
+          entradas.forEach((entrada) => {
+            if (entrada.isIntersecting) {
+              entrada.target.classList.remove('entrada--preparado');
+              entrada.target.classList.add('entrada--visivel');
+              entradaObserver.unobserve(entrada.target);
+            }
+          });
+        },
+        { threshold: 0.35 }
+      );
+      entradaPendentes.forEach((el) => entradaObserver.observe(el));
+    }
+
+    // 1c) Linha que se desenha (ver LinhaDesenhada.astro) -------------------
+    // Mesma regra de segurança: sem dasharray/dashoffset definidos, a curva
+    // aparece inteira; o ponto some só quando o JS prepara o elemento.
+    const linhasPendentes = Array.from(document.querySelectorAll<HTMLElement>('[data-linha-desenhada]')).filter(
+      (el) => proporcaoVisivel(el) < 0.5
+    );
+
+    linhasPendentes.forEach((container) => {
+      const path = container.querySelector<SVGPathElement>('.linha-desenhada__curva');
+      if (!path) return;
+      const comprimento = path.getTotalLength();
+      // .style, não setAttribute: transition só anima de forma confiável um
+      // valor que já veio da cascata CSS — um valor só de atributo de
+      // apresentação SVG não conta como estado "de onde" para o motor de
+      // transição em alguns casos. E precisa de unidade (px): um número puro
+      // é sintaxe CSS inválida e é ignorado silenciosamente. "px" aqui é
+      // resolvido nas mesmas user units do sistema de coordenadas do path —
+      // o mesmo que getTotalLength() usa — não pixels de tela.
+      path.style.strokeDasharray = `${comprimento}px`;
+      path.style.strokeDashoffset = `${comprimento}px`;
+      // Força o navegador a "commitar" esse estado antes de aplicar a classe
+      // — a leitura precisa ser no MESMO elemento que vai receber a classe
+      // (o container, que também esconde o ponto via opacity+transition),
+      // não em qualquer elemento do documento.
+      void container.getBoundingClientRect();
+      container.classList.add('linha-desenhada--preparada');
+    });
+
+    if (linhasPendentes.length) {
+      const linhaObserver = new IntersectionObserver(
+        (entradas) => {
+          entradas.forEach((entrada) => {
+            if (!entrada.isIntersecting) return;
+            const container = entrada.target as HTMLElement;
+            const path = container.querySelector<SVGPathElement>('.linha-desenhada__curva');
+            const ponto = container.querySelector<HTMLElement>('[data-linha-ponto]');
+            // Mantém a classe "preparada" — é ela quem carrega a regra de
+            // transition; removê-la agora tiraria o tapete da transição que
+            // está prestes a começar. O ponto usa uma classe própria
+            // (--visivel) por cima dela pra chegar ao estado final.
+            if (path) {
+              path.style.strokeDashoffset = '0px';
+              const aoTerminar = (evento: TransitionEvent) => {
+                if (evento.propertyName !== 'stroke-dashoffset') return;
+                if (ponto) {
+                  void ponto.getBoundingClientRect();
+                  ponto.classList.add('linha-desenhada__ponto--visivel');
+                }
+                path.removeEventListener('transitionend', aoTerminar);
+              };
+              path.addEventListener('transitionend', aoTerminar);
+            }
+            linhaObserver.unobserve(container);
+          });
+        },
+        { threshold: 0.5 }
+      );
+      linhasPendentes.forEach((el) => linhaObserver.observe(el));
+    }
   }
 
   // 3) e 4) Chevron + estrada ----------------------------------------------

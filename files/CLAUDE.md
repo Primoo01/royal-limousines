@@ -28,6 +28,25 @@ Estas regras existem para não destruir o SEO do cliente. Nunca as quebre, mesmo
 
 ---
 
+## Já funciona — não regrida
+
+Os itens abaixo estão confirmados funcionando. Qualquer alteração no projeto precisa preservá-los:
+
+- Sistema de botões (3 níveis, com hover e foco visível)
+- Header que some ao descer e reaparece ao subir
+- Formulário de orçamento na /contato/
+- Scroll suave, sem solavancos
+- Transição dia→noite na /limousines/
+- As 14 URLs idênticas ao mapa
+- JS abaixo de 25 KB
+- Overlay do menu abrindo e fechando, com o ícone se transformando
+- Sistema de botões (moldura em colchete e barra de fim de seção)
+- Nenhuma barra de rolagem visível em lugar nenhum
+
+Ao terminar qualquer tarefa, confirme item por item que nada disso regrediu. Se algo precisar ser alterado para a tarefa funcionar, pare e me pergunte antes.
+
+---
+
 ## Caminhos
 
 - **Projeto (onde construir):** `C:\Users\leayu\OneDrive\Área de Trabalho\PrimoStoneLAB\Projeto Dusdete\new-site`
@@ -92,6 +111,56 @@ Geradas por **um template só** + arquivo de dados. Não crie 8 arquivos `.astro
 
 ## Design
 
+### Carrossel de fotos
+
+Um componente só, reutilizado em todos os lugares.
+
+**Entrada:** a primeira foto começa à esquerda ocupando cerca de 45% da largura e **cresce conforme o scroll** até ~92% da tela. Terminada a entrada, o carrossel horizontal começa.
+
+**Desktop:** avanço horizontal conduzido pelo scroll vertical.
+**Mobile:** rolagem horizontal nativa com `scroll-snap`. Nunca sequestre o scroll no mobile — quebra a expectativa do toque e é ruim de usar.
+
+- Legenda própria por foto, trocando junto.
+- As fotos precisam aparecer grandes e fáceis de ver.
+- Proporção de slide fixa, com `object-fit: cover`, para aceitar foto de qualquer orientação sem quebrar o layout.
+- Acessível por teclado (setas) e com `aria-label` nos controles.
+- Barra de rolagem invisível, como no resto do site.
+
+---
+
+### Cabeçalho das páginas de conteúdo
+
+Vale para as 8 páginas de serviço/região, `/empresa/`, `/servicos/` e `/contato/`.
+
+- `min-height: 60svh` — deliberadamente menor que o hero da home, para não competir com ele.
+- `<h1>` grande entrando com o vocabulário de entrada.
+- Uma linha de apoio curta abaixo.
+- A linha que se desenha, com o ponto no fim.
+- Mundo claro.
+
+Isso resolve o vazio no topo dessas páginas com uma solução única, e sem inventar conteúdo.
+
+---
+
+
+### Hero da home — dois estágios
+
+**Estágio 1 (mundo escuro).** `min-height: 100svh`.
+- Fundo: cortina de luz + véu.
+- Canto superior esquerdo: eyebrow, `<h1>` grande em Cormorant, e um parágrafo de no máximo duas linhas.
+- Mídia: à direita/centro, em tamanho moderado (placeholder até chegar a foto real da limousine).
+- Canto inferior esquerdo: **marquee grande** — cerca de 30% da altura da tela e 50% da largura, atravessando por cima da borda da mídia.
+- Canto inferior direito: um texto pequeno e refinado.
+- Chevron ancorado à base, sem sobrepor conteúdo.
+
+**A passagem.** Conforme o scroll avança: a mídia cresce (a chegada), e o fundo transiciona do mundo escuro para o mundo claro. Mesma máquina da transição dia→noite da /limousines/, mas mais rápida e por trás do conteúdo — ali ela é protagonista e dura três telas; aqui dura uma seção.
+
+**Estágio 2 (mundo claro).** A assinatura: o wordmark e, entrando depois dele, `Desde 2008 · São Paulo`. É a procedência que sustenta a marca, e por isso entra por último.
+
+Narrativa: **noite (expectativa) → a chegada (espetáculo) → dia (celebração).** A /limousines/ faz o caminho inverso, e as duas páginas se espelham.
+
+---
+
 ### Altura de seção
 
 - **Seções de vitrine** (hero da home, hero da LP, seção da limousine branca, seção do 300C preto, painel do menu): ocupam a tela inteira. Use `min-height: 100svh` — **nunca `height`, nunca `100vh`**. `100vh` quebra no mobile por causa da barra do navegador.
@@ -103,13 +172,24 @@ Geradas por **um template só** + arquivo de dados. Não crie 8 arquivos `.astro
 
 ### Botões
 
-Três níveis, todos em Space Grotesk, caixa alta, `letter-spacing: .12em`, tamanho pequeno. Cantos retos ou raio máximo de 2px — arredondado forte destoa do editorial.
+Todos em Space Grotesk, caixa alta, letter-spacing .14em, 12px. Cantos retos.
+Easing padrão: cubic-bezier(.2,.7,.3,1).
 
-- **Primário:** borda fina dourada, fundo transparente. No hover, um preenchimento sobe de baixo para cima e o texto inverte de cor. Transição em `transform`, não em `width`/`height`.
-- **Secundário:** texto com um fio fino embaixo, que se estende da esquerda para a direita no hover.
-- **Terciário/link:** texto com seta discreta que avança alguns pixels no hover.
-- Nos dois mundos: dourado `#A8823C` no claro, `#C6A25E` no escuro.
-- Foco de teclado sempre visível.
+**Primário — moldura em colchete.** Botão isolado, dentro de seções.
+- Repouso: quatro colchetes de 11px nos cantos (borda de 1px na cor dourada do mundo), fundo transparente, texto na cor de texto do mundo.
+- Hover: os quatro colchetes crescem ao mesmo tempo até se encontrarem, fechando a moldura completa (450ms), E um preenchimento dourado sobe de baixo para cima (450ms). O texto inverte para a cor de fundo do mundo.
+- Clique: scale(.98) com retorno imediato.
+- Implementação obrigatória: colchetes crescem com transform: scaleX/scaleY sobre linhas finas, com transform-origin no canto. O preenchimento é uma camada com transform: scaleY(0) → scaleY(1), origin bottom. **Nunca width/height.**
+
+**Barra de fim de seção.** Largura total, fecha seções.
+- Repouso: fio fino acima e abaixo, texto à esquerda, seta à direita na cor dourada.
+- Hover: preenchimento dourado varre da esquerda para a direita (550ms, transform: scaleX, transform-origin: left). Texto e seta invertem para a cor de fundo.
+- Clique: scale(.995).
+
+**Terciário — link em texto.** Dentro de parágrafos.
+- Texto com seta discreta que avança ~6px no hover (transform: translateX).
+
+Em todos: foco de teclado visível. Em prefers-reduced-motion, as transições são removidas e o estado final permanece legível.
 
 ---
 
@@ -170,6 +250,52 @@ O cliente gosta do efeito translúcido tipo iOS, **mas o site precisa ser leve**
 
 ## Movimento
 
+### Fundos animados
+
+Dois fundos, um por mundo. Nunca os dois na mesma tela.
+
+**Cortina de luz — hero da home (mundo escuro).**
+- 8 linhas verticais, 1,4px, dourado a ~34% de opacidade, distribuídas na largura.
+- Cada linha anima `scaleY` entre .25 e 1, `transform-origin: top`, `transform-box: fill-box`, com atrasos escalonados de ~700ms entre elas.
+- Duração base exposta na variável `--cortina-dur` (padrão `3.5s`) para ajuste fino num lugar só.
+- Um véu radial escuro por cima mantém o centro limpo para o texto e a mídia.
+
+**Faróis atravessando — seção escura da /limousines/.**
+- Rastros de base fixos e apagados (~7% de opacidade) e, por cima, traços de luz percorrendo o caminho com `stroke-dashoffset`.
+- Três caminhos com durações `1.25s`, `1.875s` e `2.375s` e atrasos negativos para dessincronizar. Expor em `--farois-dur`.
+- O brilho é simulado com dois traços sobrepostos (um largo e translúcido atrás, um fino e claro na frente). **Nunca use `filter: blur`** — é caro para a GPU.
+
+Os dois desligam em `prefers-reduced-motion`.
+
+
+---
+
+
+### Vocabulário de entrada
+
+Existe **um único** efeito de entrada no site, usado em todos os títulos, cabeçalhos de seção e legendas. Um efeito repetido com disciplina cria identidade; vários efeitos criam ruído.
+
+**Como funciona:** um bloco sólido dourado varre o texto da esquerda para a direita e sai pela direita, revelando o texto — que ao mesmo tempo entra vindo da esquerda e de cima.
+
+- Bloco: `scaleX(0)→1` com origem à esquerda (~280ms), depois a origem passa para a direita e `scaleX(1)→0` (~280ms).
+- Texto: `opacity 0→1` e `translate(-24px,-16px)→(0,0)`, atraso de ~180ms, duração ~550ms.
+- Easing: `cubic-bezier(.2,.7,.3,1)`.
+- Disparado por `IntersectionObserver` com threshold ~0.35.
+
+**Regra de segurança que não pode ser quebrada:** o conteúdo é **visível por padrão** no CSS. O JavaScript é quem adiciona a classe que prepara o elemento para animar, e só em elementos que ainda não entraram na viewport. Elementos já visíveis no carregamento aparecem imediatamente, sem animação. Se o JS falhar, todo o conteúdo continua visível.
+
+### Linha que se desenha
+
+Curva única e suave, terminando num ponto marcado.
+
+- SVG com `stroke-dasharray`/`stroke-dashoffset` animados. O comprimento é medido com `getTotalLength()` no JS, nunca chutado.
+- Duração ~1,6s, atraso ~200ms depois do título.
+- O ponto no fim aparece em fade só depois de a linha completar (~1,5s).
+- Dourado do mundo correspondente.
+
+---
+
+
 ### Filosofia
 
 Movimento discreto e elegante. **Só `transform` e `opacity`** (o navegador acelera na GPU). Nunca anime `width`, `height`, `top`, `left`, `margin`, `filter` ou `box-shadow`.
@@ -217,24 +343,79 @@ Implementação leve: interpolar as variáveis CSS de cor conforme o progresso d
 
 ## Navegação
 
+
+---
+
+
+### Botão de menu (abre e fecha)
+
+Um único botão no header controla os dois estados.
+
+- Ícone de duas linhas horizontais paralelas: largura ~30px, espessura 1px, espaçadas ~9px.
+- Fechado: as duas linhas paralelas.
+- Aberto: a linha de cima gira +45° e a de baixo -45°, ambas convergindo ao centro e formando um X.
+- Transição de 350ms, apenas transform (rotate e translate).
+- Não existe rótulo textual. Apenas o ícone, no mesmo tratamento visual do X. `aria-label` alterna entre "Abrir menu" e "Fechar menu".
+- O botão fica acima do overlay no z-index e permanece sempre clicável.
+- aria-label alterna entre "Abrir menu" e "Fechar menu"; aria-expanded acompanha o estado.
+- **Não existe mais um segundo botão de fechar dentro do overlay.**
+
+### Escala de z-index
+
+O botão de menu mora dentro do `<header>` e precisa ficar clicável com o overlay aberto. Todo elemento `position: fixed` cria seu próprio contexto de empilhamento — então nenhum z-index no botão o colocaria acima do overlay se o header, como um todo, estivesse abaixo dele. Solução: o header fica acima do overlay na escala, e quando o menu abre, o fundo do header vira transparente (ver abaixo) para não parecer uma barra flutuando por cima do menu.
+
+Ordem, do mais baixo pro mais alto:
+
+1. Conteúdo e decorações de página (sem z-index — nível 0/auto)
+2. Indicador "estrada" / chevron do hero
+3. Botão flutuante de WhatsApp
+4. Overlay do menu
+5. Header (bar fixa do topo, incluindo o botão de menu)
+
+Documentado como `--z-indicadores` / `--z-whatsapp` / `--z-menu` / `--z-header` em `global.css` — não hardcode número de z-index em componente novo.
+
 ### Barra do topo
 - Fina, discreta, glass real. Contém: logo, botão "Menu" e acesso ao WhatsApp.
 - **Comportamento no scroll:** some ao descer, reaparece ao subir. `transform: translateY(-100%)`, nunca `display` ou `height`. Sempre visível no topo absoluto da página. Limiar de ~8px para não tremer. Desligado em `prefers-reduced-motion`.
+- **Com o menu aberto:** o header fica travado em visível (a regra de esconder ao descer não se aplica) e o fundo glass vira transparente, com a transição acompanhando a abertura — só o logo e o botão de menu continuam aparentes, agora na cor do mundo escuro (o overlay está por baixo, mas visualmente contínuo).
 - O logo nunca muda de peso ao ser clicado. Estado ativo = leve queda de opacidade (0.7), nada mais.
 
 ### Menu em overlay — painel duplo
-Ao clicar em "Menu", abre um painel de tela cheia dividido:
 
-- **Esquerda (~40% no desktop):** painel de mídia. Imagem ou vídeo abstrato, ocupando toda a altura.
-- **Direita (~60%):** os links em Cormorant grande, organizados em colunas: **Frota · Serviços · Casamentos por região · A Royal**, com Início solto no topo e Contato em destaque.
+Mídia à esquerda (~40vw), conteúdo à direita (~60vw). No mobile, sem painel lateral: a mídia vira fundo com escurecimento.
 
-Comportamento:
-- Entrada escalonada dos itens (~50ms entre eles, apenas opacity/transform).
-- **Ao passar o mouse sobre um item, a mídia da esquerda troca em crossfade** (transição de opacidade, ~400ms). Há uma mídia padrão quando nada está sob o cursor.
-- Cada grupo/item principal tem sua própria mídia. Elas são **abstratas** — luz, reflexo, tecido, materiais — e se diferenciam por **temperatura e movimento**, nunca por assunto literal. Nada de foto de limousine ou de casamento aqui.
-- **Mobile:** sem painel lateral. A mídia vira fundo sutil atrás dos links, com escurecimento suficiente para o texto continuar legível.
-- Fecha com Esc, clique fora e botão de fechar. Foco preso enquanto aberto, `aria-expanded` no botão, `body` sem scroll.
-- Sem biblioteca.
+**Itens — lista vertical única, um abaixo do outro. Sem colunas.**
+
+- Início
+- Frota
+- Serviços
+  - Casamentos em SP
+  - Debutantes
+  - Aniversários
+  - Jantares românticos
+- A Royal
+- Contato (destaque)
+
+As páginas de casamento por região (Zona Leste, Norte, Oeste, Sul) **não aparecem no menu**. Ficam apenas no rodapé — e o rodapé continua com todas as 8 páginas de serviço/região, sem exceção.
+
+**Hierarquia tipográfica:**
+- Itens principais (Início, Frota, Serviços, A Royal, Contato): Cormorant, clamp(1.9rem, 3.2vw, 3rem).
+- Subitens de Serviços: Cormorant, clamp(1.05rem, 1.5vw, 1.4rem) — visivelmente menores que o item pai, recuados à esquerda.
+- **Não existem mais cabeçalhos de grupo pequenos em dourado.** "Serviços" é um item principal normal, do mesmo tamanho dos outros, e também é link para /servicos/.
+- Contato recebe destaque visual, mas mantém o mesmo tamanho dos demais itens principais.
+
+**Barra de rolagem:** se o conteúdo exceder a altura da tela, o menu rola — mas a barra fica invisível, com a mesma técnica usada no documento. O scroll precisa funcionar por roda, toque e teclado.
+
+Entrada escalonada dos itens — precisa parecer instantâneo, não uma sequência lenta: 40ms entre os itens principais, 25ms entre os 4 subitens de Serviços, atraso total abaixo de ~250ms. Hover trocando a mídia da esquerda em crossfade de 400ms, fecha com Esc, clique fora e pelo botão. Foco preso enquanto aberto. Sem biblioteca.
+
+**Acordeão de Serviços:**
+- "Serviços" é um link normal para `/servicos/` e continua clicável.
+- Ao lado dele, uma **seta separada** abre e fecha o acordeão, **por clique** (nunca por hover — hover empurrando o layout faz o item fugir do cursor, e no mobile hover não existe).
+- Ao abrir, os 4 subitens surgem abaixo e empurram os itens seguintes para baixo.
+- Os subitens são **pouco menores** que "Serviços", não muito: `clamp(1.4rem, 2.4vw, 2.2rem)` contra `clamp(1.9rem, 3.2vw, 3rem)`. A diferença precisa ser visível, mas discreta.
+- Mesmo comportamento no desktop e no mobile.
+- A seta gira ao abrir. `aria-expanded` acompanha o estado.
+
 
 ---
 

@@ -1,10 +1,11 @@
 ---
 import faq from '../data/faq.js';
+import EntradaTitulo from './EntradaTitulo.astro';
 ---
 
 <section class="faq u-container reveal" aria-labelledby="faq-titulo">
   <p class="u-eyebrow">Dúvidas frequentes</p>
-  <h2 id="faq-titulo" class="reveal-titulo">Antes de reservar</h2>
+  <EntradaTitulo as="h2" id="faq-titulo">Antes de reservar</EntradaTitulo>
 
   <div class="faq__lista reveal-grupo">
     {

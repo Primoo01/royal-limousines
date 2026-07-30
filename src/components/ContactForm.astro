@@ -1,4 +1,5 @@
 ---
+import Botao from './Botao.astro';
 import site from '../config/site.js';
 
 const accessKey = import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY ?? '';
@@ -64,7 +65,7 @@ const redirectUrl = new URL('/contato/?enviado=1', site.url).toString();
     <textarea id="mensagem" name="mensagem" rows="4" required></textarea>
   </div>
 
-  <button type="submit" class="botao botao--primario">{site.cta.orcamento}</button>
+  <Botao variante="primario" type="submit">{site.cta.orcamento}</Botao>
 </form>
 
 <p class="formulario-contato__confirmacao" data-confirmacao-envio hidden>

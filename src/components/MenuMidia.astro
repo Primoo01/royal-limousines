@@ -79,12 +79,6 @@ const grupos = Object.entries(menuMidiaData);
     animation-duration: 60s;
   }
 
-  .menu-midia__gradiente--ambar {
-    background: radial-gradient(circle at 50% 60%, #e0a458, #5c3a1e 75%);
-    animation-name: menu-midia-pulsar;
-    animation-duration: 12s;
-  }
-
   .menu-midia__gradiente--carvao {
     background: linear-gradient(160deg, #211e18, #050403 75%);
     animation-duration: 65s;
@@ -107,16 +101,6 @@ const grupos = Object.entries(menuMidiaData);
     }
     50% {
       transform: translate(3%, -2%) scale(1.05);
-    }
-  }
-
-  @keyframes menu-midia-pulsar {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.08);
     }
   }
 

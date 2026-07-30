@@ -7,6 +7,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Faq from '../components/Faq.astro';
+import Botao from '../components/Botao.astro';
+import EntradaTitulo from '../components/EntradaTitulo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 
@@ -70,17 +72,17 @@ const passosOrcamento = [
   <section class="u-container lp-hero reveal">
     <div class="lp-hero__texto">
       <p class="u-eyebrow">Aluguel de Limousines</p>
-      <h1 class="reveal-titulo">Aluguel de limousine com luxo, segurança e confiança.</h1>
+      <EntradaTitulo as="h1">Aluguel de limousine com luxo, segurança e confiança.</EntradaTitulo>
       <p class="u-prosa lp-hero__lead">
         Translados especiais para casamentos, bodas, debutantes, aniversários,
         jantares românticos e eventos. Uma contratação clara, organizada e
         conduzida por uma empresa especializada.
       </p>
       <div class="lp-cta">
-        <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+        <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
           {site.cta.whatsapp}
-        </a>
-        <a class="botao botao--secundario" href={site.contato.telefone.link}>Ligar: {site.contato.telefone.exibicao}</a>
+        </Botao>
+        <Botao variante="primario" href={site.contato.telefone.link}>Ligar: {site.contato.telefone.exibicao}</Botao>
       </div>
       <p class="lp-hero__selo">Royal Limousines • Desde 2008 em São Paulo</p>
     </div>
@@ -88,7 +90,7 @@ const passosOrcamento = [
     <aside class="lp-hero__card glass-fake">
       <ImagePlaceholder label="Chrysler Limousine Royal" aspectRatio="4/3" class="reveal" />
       <div class="lp-hero__consulta">
-        <h2 class="reveal-titulo">Consulte sua data</h2>
+        <EntradaTitulo as="h2">Consulte sua data</EntradaTitulo>
         <p>Para receber uma cotação correta, envie os principais dados do evento.</p>
         <ul>
           <li>Data e horário do serviço</li>
@@ -96,7 +98,7 @@ const passosOrcamento = [
           <li>Duração aproximada do roteiro</li>
           <li>Quantidade de passageiros</li>
         </ul>
-        <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
+        <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
       </div>
     </aside>
   </section>
@@ -118,7 +120,7 @@ const passosOrcamento = [
 
   <section class="u-container lp-secao reveal">
     <p class="u-eyebrow">Serviços Royal</p>
-    <h2 class="reveal-titulo">Para momentos especiais que pedem uma chegada inesquecível.</h2>
+    <EntradaTitulo as="h2">Para momentos especiais que pedem uma chegada inesquecível.</EntradaTitulo>
     <p class="u-prosa">
       A Royal Limousines é especializada em eventos sociais e realiza
       atendimentos sob consulta de agenda, roteiro e duração.
@@ -139,7 +141,7 @@ const passosOrcamento = [
 
   <section class="u-container lp-secao reveal">
     <p class="u-eyebrow">Segurança e confiança</p>
-    <h2 class="reveal-titulo">Uma contratação com informações claras desde o primeiro contato.</h2>
+    <EntradaTitulo as="h2">Uma contratação com informações claras desde o primeiro contato.</EntradaTitulo>
     <p class="u-prosa">
       A proposta é feita com base nas informações do evento. Isso evita
       dúvidas, organiza o roteiro e melhora a previsibilidade do atendimento.
@@ -164,7 +166,7 @@ const passosOrcamento = [
     <ImagePlaceholder label="Chrysler Limousine Royal — perfil lateral" aspectRatio="16/9" class="reveal" />
     <div>
       <p class="u-eyebrow">A limousine</p>
-      <h2 class="reveal-titulo">Chrysler Limousine: clássica, elegante e confortável.</h2>
+      <EntradaTitulo as="h2">Chrysler Limousine: clássica, elegante e confortável.</EntradaTitulo>
       <p class="u-prosa">
         Modelo idealizado para atender momentos especiais, com visual
         imponente e estrutura voltada ao conforto dos passageiros.
@@ -180,7 +182,7 @@ const passosOrcamento = [
 
   <section class="u-container lp-secao reveal">
     <p class="u-eyebrow">Orçamento</p>
-    <h2 class="reveal-titulo">Solicite a cotação direto pelo WhatsApp.</h2>
+    <EntradaTitulo as="h2">Solicite a cotação direto pelo WhatsApp.</EntradaTitulo>
     <p class="u-prosa">
       O valor depende do roteiro, da data, da duração do serviço e da
       disponibilidade da agenda. Ao clicar no botão, a conversa abre com uma
@@ -202,45 +204,54 @@ const passosOrcamento = [
     </ol>
 
     <div class="lp-cta">
-      <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.orcamento} pelo WhatsApp
-      </a>
-      <a class="botao botao--secundario" href={site.contato.telefone.link}>Ligar para a Royal</a>
+      </Botao>
+      <Botao variante="primario" href={site.contato.telefone.link}>Ligar para a Royal</Botao>
     </div>
   </section>
 
   <Faq />
 
   <section class="u-container lp-fechamento glass-fake reveal">
-    <h2 class="reveal-titulo">Consulte sua data com antecedência.</h2>
+    <EntradaTitulo as="h2">Consulte sua data com antecedência.</EntradaTitulo>
     <p class="u-prosa">
       Envie o roteiro do evento e receba orientação sobre disponibilidade,
       condições e orçamento para o aluguel da limousine.
     </p>
-    <a class="botao botao--primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+    <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
       Consultar agora
-    </a>
+    </Botao>
   </section>
 </BaseLayout>
 
 <style>
   .lp-hero {
     min-height: 100svh;
-    /* Compensa o header fixo, mesmo critério do hero da home. */
+    /* Compensa o header fixo, mesmo critério do hero da home — só
+       padding-top. Com padding-bottom também, o centro do grid passa a ser
+       o centro de uma área menor que a realmente disponível, e o conteúdo
+       fica alto demais, quase encostando no header. */
     padding-top: var(--altura-header);
-    padding-bottom: var(--espaco-6);
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     gap: var(--espaco-5);
     align-items: center;
   }
 
-  /* Centro óptico ~45%, não 50% — as duas colunas sobem juntas, mantendo o
-     alinhamento entre texto e card. Só a partir de viewport com folga
-     vertical, pra nunca cortar conteúdo em telas baixas/estreitas. */
+  /* Centro óptico ~45% da altura disponível ABAIXO do header, não 50% — as
+     duas colunas sobem juntas, mantendo o alinhamento entre texto e card.
+     Sem padding-bottom, o centro natural do grid já é 50% dessa área; o
+     nudge desloca só a diferença entre 50% e 45% dela — 5% de
+     (100svh - altura-header), não 5% da tela inteira. Só a partir de
+     viewport com folga vertical, pra nunca cortar conteúdo em telas
+     baixas/estreitas.
+     max() limita o quanto esse nudge pode subir — mesmo teto usado no hero
+     da home (ver ConteudoHome.astro), pra nunca empurrar o conteúdo pra
+     debaixo do header em telas baixas com conteúdo alto. */
   @media (min-width: 40rem) {
     .lp-hero > * {
-      transform: translateY(-5svh);
+      transform: translateY(max(calc(var(--altura-header) * 0.05 - 5svh), -0.5rem));
     }
   }
 

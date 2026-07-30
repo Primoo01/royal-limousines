@@ -4,6 +4,8 @@
 // festas debutantes) e do fato real "São Paulo" já usado em outras páginas.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Botao from '../components/Botao.astro';
+import EntradaTitulo from '../components/EntradaTitulo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 
@@ -49,7 +51,7 @@ const servicos = [
 <BaseLayout title={dados.title} description={description}>
   <section class="u-container secao-servicos reveal">
     <p class="u-eyebrow">Serviços</p>
-    <h1 class="reveal-titulo">Serviços</h1>
+    <EntradaTitulo as="h1">Serviços</EntradaTitulo>
     <p class="u-prosa secao-servicos__lead">
       Para clientes que exigem modernidade associada ao luxo e conforto que
       só uma limousine pode oferecer.
@@ -72,10 +74,10 @@ const servicos = [
     </div>
 
     <div class="hero__cta">
-      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
+      <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.whatsapp}
-      </a>
+      </Botao>
     </div>
   </section>
 </BaseLayout>

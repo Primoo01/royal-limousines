@@ -6,6 +6,8 @@
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
 import ImagePlaceholder from './ImagePlaceholder.astro';
 import Marquee from './Marquee.astro';
+import Botao from './Botao.astro';
+import EntradaTitulo from './EntradaTitulo.astro';
 import site from '../config/site.js';
 
 const passos = [
@@ -30,7 +32,7 @@ const passos = [
 <section class="hero u-container reveal">
   <div class="hero__miolo">
     <p class="u-eyebrow">Royal Limousines</p>
-    <h1 class="reveal-titulo">Aluguel de Limousines para casamentos em SP</h1>
+    <EntradaTitulo as="h1">Aluguel de Limousines para casamentos em SP</EntradaTitulo>
     <div class="hero__texto u-prosa">
       <p>
         Aluguel de Limousines para casamentos em SP. Luxo e sofisticação para
@@ -51,17 +53,17 @@ const passos = [
       </p>
     </div>
     <div class="hero__cta">
-      <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-      <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
+      <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.whatsapp}
-      </a>
+      </Botao>
     </div>
   </div>
 </section>
 
 <section class="secao-frota u-container reveal">
   <div class="secao-frota__texto">
-    <h2 class="reveal-titulo">Limousine para Casamentos em SP</h2>
+    <EntradaTitulo as="h2">Limousine para Casamentos em SP</EntradaTitulo>
     <p class="secao-frota__lead">Sofisticação, elegância e conforto.</p>
     <p>
       Procurando por aluguel de limousines para casamentos? Ligue para a Royal
@@ -73,9 +75,7 @@ const passos = [
       projetada com base no contraste entre o clássico e o elegante.
     </p>
     <p>Feita para causar uma boa impressão.</p>
-    <a class="botao botao--terciario" href="/limousines/"
-      >Conhecer a frota <span class="botao__seta" aria-hidden="true">→</span></a
-    >
+    <Botao variante="terciario" href="/limousines/">Conhecer a frota</Botao>
   </div>
   <ImagePlaceholder label="Chrysler 300C branco — three-quarter frontal" aspectRatio="4/3" class="reveal" />
 </section>
@@ -84,7 +84,7 @@ const passos = [
 
 <section class="secao-passos u-container reveal">
   <p class="u-eyebrow">Segurança e confiança</p>
-  <h2 class="reveal-titulo">Uma contratação com informações claras desde o primeiro contato.</h2>
+  <EntradaTitulo as="h2">Uma contratação com informações claras desde o primeiro contato.</EntradaTitulo>
   <p class="u-prosa secao-passos__intro">
     A proposta é feita com base nas informações do evento. Isso evita
     dúvidas, organiza o roteiro e melhora a previsibilidade do atendimento.
@@ -107,7 +107,7 @@ const passos = [
 
 <section class="secao-galeria u-container reveal">
   <p class="u-eyebrow">Fotos</p>
-  <h2 class="reveal-titulo">A limousine em detalhe</h2>
+  <EntradaTitulo as="h2">A limousine em detalhe</EntradaTitulo>
   <div class="secao-galeria__grade reveal-grupo">
     <ImagePlaceholder label="Chrysler 300C branco — foto 1" aspectRatio="3/4" />
     <ImagePlaceholder label="Chrysler 300C branco — foto 2" aspectRatio="3/4" />
@@ -118,16 +118,16 @@ const passos = [
 
 <section class="secao-contato u-container reveal">
   <p class="u-eyebrow">Contato</p>
-  <h2 class="reveal-titulo">Faça um orçamento hoje mesmo</h2>
+  <EntradaTitulo as="h2">Faça um orçamento hoje mesmo</EntradaTitulo>
   <div class="secao-contato__dados">
     <p><a href={site.contato.telefone.link}>{site.contato.telefone.exibicao}</a></p>
     <p><a href={`mailto:${site.contato.email}`}>{site.contato.email}</a></p>
   </div>
   <div class="hero__cta">
-    <a class="botao botao--primario" href="/contato/">{site.cta.orcamento}</a>
-    <a class="botao botao--secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+    <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
+    <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
       {site.cta.whatsapp}
-    </a>
+    </Botao>
   </div>
 </section>
 
@@ -135,9 +135,11 @@ const passos = [
   .hero {
     min-height: 100svh;
     /* Compensa o header fixo — sem isso, o cálculo de centro considera uma
-       altura maior do que a realmente visível abaixo do header. */
+       altura maior do que a realmente visível abaixo do header. Só
+       padding-top: com padding-bottom também, o centro do flex passa a ser
+       o centro de uma área menor que a realmente disponível, e o conteúdo
+       fica alto demais, quase encostando no header. */
     padding-top: var(--altura-header);
-    padding-bottom: var(--espaco-6);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -147,12 +149,19 @@ const passos = [
     margin-top: var(--espaco-2);
   }
 
-  /* Centro óptico: ~45% da altura, não 50% — desloca levemente pra cima.
-     Só a partir de um viewport com folga vertical razoável, pra nunca
-     cortar conteúdo em telas baixas/estreitas. */
+  /* Centro óptico: ~45% da altura disponível ABAIXO do header, não 50%.
+     Sem padding-bottom, o centro natural do flex já é 50% dessa área; o
+     nudge desloca só a diferença entre 50% e 45% dela — 5% de
+     (100svh - altura-header), não 5% da tela inteira. Só a partir de um
+     viewport com folga vertical razoável, pra nunca cortar conteúdo em
+     telas baixas/estreitas.
+     max() limita o quanto esse nudge pode subir: em telas baixas (~768px)
+     com o hero de 4 parágrafos da home, o cálculo puro de 5% empurra o
+     eyebrow pra debaixo do header. -0.5rem é o teto testado — nunca sobe
+     mais que isso, mesmo quando o conteúdo quase preenche a área útil. */
   @media (min-width: 40rem) {
     .hero__miolo {
-      transform: translateY(-5svh);
+      transform: translateY(max(calc(var(--altura-header) * 0.05 - 5svh), -0.5rem));
     }
   }
 
