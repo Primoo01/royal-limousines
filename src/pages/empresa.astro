@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Botao from '../components/Botao.astro';
-import EntradaTitulo from '../components/EntradaTitulo.astro';
+import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 
@@ -16,15 +16,20 @@ const description =
 ---
 
 <BaseLayout title={dados.title} description={description}>
+  {/*
+    Linha de apoio realocada do corpo: era o primeiro parágrafo desta mesma
+    página. Saiu de baixo e subiu pro cabeçalho — não foi duplicada nem
+    reescrita.
+  */}
+  <CabecalhoConteudo
+    eyebrow="Empresa"
+    titulo="Limousines Royal"
+    apoio="Estamos desde 2008 oferecendo traslados especiais com limousines modernas e choffer's altamente qualificados."
+  />
+
   <section class="u-container secao-empresa reveal">
     <div class="secao-empresa__texto">
-      <p class="u-eyebrow">Empresa</p>
-      <EntradaTitulo as="h1">Limousines Royal</EntradaTitulo>
       <div class="u-prosa">
-        <p>
-          Estamos desde 2008 oferecendo traslados especiais com limousines
-          modernas e choffer's altamente qualificados.
-        </p>
         <p>
           Somos especializados em eventos sociais, principalmente focados em
           casamentos, bodas, jantares românticos e festas debutantes.
@@ -42,8 +47,9 @@ const description =
 </BaseLayout>
 
 <style>
+  /* Topo reduzido: o respiro inicial agora vem do CabecalhoConteudo. */
   .secao-empresa {
-    padding-block: var(--espaco-7) var(--espaco-6);
+    padding-block: var(--espaco-4) var(--espaco-6);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--espaco-5);

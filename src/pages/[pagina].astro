@@ -5,6 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
+import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
 import servicosRegiao from '../data/servicos-regiao.js';
 
@@ -29,13 +30,18 @@ const outrasPaginasCasamento =
 ---
 
 <BaseLayout title={dados.title} description={description}>
-  <section class="u-container secao-regiao reveal">
-    <p class="u-eyebrow">Royal Limousines</p>
-    <EntradaTitulo as="h1">{dados.h1}</EntradaTitulo>
+  {/*
+    A linha de apoio é a primeira frase de abertura da própria página
+    (curta, do tipo "Somos especializados em..."). Ela é REALOCADA, não
+    duplicada: o corpo abaixo começa em abertura[1]. Nenhuma palavra sai da
+    página — só muda de lugar.
+  */}
+  <CabecalhoConteudo eyebrow="Royal Limousines" titulo={dados.h1} apoio={dados.abertura[0]} />
 
+  <section class="u-container secao-regiao reveal">
     <div class="secao-regiao__grade">
       <div class="u-prosa">
-        {dados.abertura.map((paragrafo) => <p>{paragrafo}</p>)}
+        {dados.abertura.slice(1).map((paragrafo) => <p>{paragrafo}</p>)}
 
         {
           dados.disponibilidade && (
@@ -91,8 +97,10 @@ const outrasPaginasCasamento =
 </BaseLayout>
 
 <style>
+  /* Topo reduzido: quem dá o respiro do início da página agora é o
+     CabecalhoConteudo, com seus 60svh. */
   .secao-regiao {
-    padding-block: var(--espaco-7) var(--espaco-6);
+    padding-block: var(--espaco-4) var(--espaco-6);
   }
 
   .secao-regiao__grade {

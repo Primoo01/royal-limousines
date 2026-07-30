@@ -5,7 +5,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Botao from '../components/Botao.astro';
-import EntradaTitulo from '../components/EntradaTitulo.astro';
+import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 
@@ -49,14 +49,17 @@ const servicos = [
 ---
 
 <BaseLayout title={dados.title} description={description}>
-  <section class="u-container secao-servicos reveal">
-    <p class="u-eyebrow">Serviços</p>
-    <EntradaTitulo as="h1">Serviços</EntradaTitulo>
-    <p class="u-prosa secao-servicos__lead">
-      Para clientes que exigem modernidade associada ao luxo e conforto que
-      só uma limousine pode oferecer.
-    </p>
+  {/*
+    Linha de apoio realocada: era o parágrafo de lead logo abaixo do h1,
+    palavra por palavra. Saiu do corpo e virou a linha do cabeçalho.
+  */}
+  <CabecalhoConteudo
+    eyebrow="Serviços"
+    titulo="Serviços"
+    apoio="Para clientes que exigem modernidade associada ao luxo e conforto que só uma limousine pode oferecer."
+  />
 
+  <section class="u-container secao-servicos reveal">
     <div class="secao-servicos__grade reveal-grupo">
       {
         servicos.map((servico) => (
@@ -83,15 +86,9 @@ const servicos = [
 </BaseLayout>
 
 <style>
+  /* Topo reduzido: o respiro inicial agora vem do CabecalhoConteudo. */
   .secao-servicos {
-    padding-block: var(--espaco-7) var(--espaco-6);
-  }
-
-  .secao-servicos__lead {
-    margin-top: var(--espaco-3);
-    color: var(--texto-mut);
-    font-family: var(--fonte-serif);
-    font-size: 1.25rem;
+    padding-block: var(--espaco-4) var(--espaco-6);
   }
 
   .secao-servicos__grade {

@@ -1,0 +1,85 @@
+---
+// Cabeçalho das páginas de conteúdo (ver CLAUDE.md > Cabeçalho das páginas
+// de conteúdo). Vale para as 8 páginas de serviço/região, /empresa/,
+// /servicos/ e /contato/ — resolve o vazio no topo dessas páginas com uma
+// solução única.
+//
+// 60svh de propósito: menor que o hero da home (100svh), pra não competir
+// com ele. svh e não vh — vh quebra no mobile por causa da barra do
+// navegador (CLAUDE.md > Altura de seção).
+//
+// Mundo claro. Nenhuma variável de cor é definida aqui: as páginas de
+// conteúdo já vivem no mundo claro padrão do documento.
+//
+// A linha de apoio NUNCA é texto novo: cada página passa uma frase que já
+// existia no seu próprio conteúdo (regra inviolável 5 — não inventar
+// conteúdo). Quem chama é responsável por remover a frase do corpo, pra
+// realocar e não duplicar.
+//
+// Segurança: os dois efeitos daqui (EntradaTitulo e LinhaDesenhada) já
+// nascem visíveis no CSS. Quem esconde é o JS de Movimento.astro, e só em
+// elemento que ainda não entrou na viewport. Se o JS falhar, o h1, a linha
+// de apoio, a curva e o ponto continuam todos visíveis.
+import EntradaTitulo from './EntradaTitulo.astro';
+import LinhaDesenhada from './LinhaDesenhada.astro';
+
+interface Props {
+  /** Texto do eyebrow, acima do h1 */
+  eyebrow: string;
+  /** Conteúdo do h1 — é sinal de SEO, vem do backup e não pode ser alterado */
+  titulo: string;
+  /** Linha de apoio curta. Precisa ser frase que já existia na página. */
+  apoio: string;
+}
+
+const { eyebrow, titulo, apoio } = Astro.props;
+---
+
+<header class="cabecalho-conteudo u-container">
+  <p class="u-eyebrow">{eyebrow}</p>
+
+  {/*
+    EntradaTitulo e LinhaDesenhada são envolvidos por divs renderizadas AQUI,
+    em vez de receberem uma prop `class` estilizada por este arquivo. O
+    escopo de estilo do Astro só casa com elementos renderizados pelo próprio
+    componente: uma regra `.x` escrita aqui vira `.x[data-astro-cid-DESTE]`, e
+    o elemento filho carrega o cid do OUTRO componente — a regra nunca
+    aplicaria. A div intermediária é o que torna o espaçamento controlável
+    daqui.
+  */}
+  <div class="cabecalho-conteudo__titulo">
+    <EntradaTitulo as="h1">{titulo}</EntradaTitulo>
+  </div>
+
+  <p class="cabecalho-conteudo__apoio">{apoio}</p>
+
+  <div class="cabecalho-conteudo__linha">
+    <LinhaDesenhada />
+  </div>
+</header>
+
+<style>
+  .cabecalho-conteudo {
+    min-height: 60svh;
+    /* A barra do topo é fixa: sem esta reserva o eyebrow nasce por baixo dela. */
+    padding-top: calc(var(--altura-header) + var(--espaco-4));
+    padding-bottom: var(--espaco-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cabecalho-conteudo__titulo {
+    margin-top: var(--espaco-2);
+  }
+
+  .cabecalho-conteudo__apoio {
+    margin-top: var(--espaco-3);
+    max-width: 44ch;
+    color: var(--texto-mut);
+  }
+
+  .cabecalho-conteudo__linha {
+    margin-top: var(--espaco-4);
+  }
+</style>
