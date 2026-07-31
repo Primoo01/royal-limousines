@@ -3,10 +3,19 @@
 // (ver item 8 da rodada de refinamento). Só transform: translateX, CSS puro,
 // sem JS. Conteúdo duplicado (a cópia com aria-hidden) pra criar o loop sem
 // emenda visível. Pausa no hover; estática em prefers-reduced-motion.
+//
+// `tamanho="grande"` é a variante do hero da home: fonte muito maior e sem
+// os fios de borda, porque ali ele não é divisor de seção — é peça de
+// composição, atravessando por cima da borda da mídia.
+interface Props {
+  tamanho?: 'normal' | 'grande';
+}
+
+const { tamanho = 'normal' } = Astro.props;
 const texto = 'ROYAL LIMOUSINES · CASAMENTOS · DEBUTANTES · ANIVERSÁRIOS · EVENTOS · SÃO PAULO ·';
 ---
 
-<div class="marquee">
+<div class:list={['marquee', tamanho === 'grande' && 'marquee--grande']}>
   <div class="marquee__trilho">
     <span class="marquee__copia">{texto}</span>
     <span class="marquee__copia" aria-hidden="true">{texto}</span>
@@ -28,6 +37,26 @@ const texto = 'ROYAL LIMOUSINES · CASAMENTOS · DEBUTANTES · ANIVERSÁRIOS · 
 
   .marquee:hover .marquee__trilho {
     animation-play-state: paused;
+  }
+
+  /* Variante grande (hero da home): ~30% da altura da tela, sem os fios. */
+  .marquee--grande {
+    border-block: none;
+    padding-block: 0;
+    display: flex;
+    align-items: center;
+    height: 30svh;
+  }
+
+  .marquee--grande .marquee__copia {
+    font-family: var(--fonte-serif);
+    font-weight: 500;
+    font-size: clamp(2.25rem, 1rem + 5vw, 5.5rem);
+    letter-spacing: 0.02em;
+    /* Contorno em vez de preenchimento: atravessa por cima da borda da
+       mídia sem virar um bloco sólido que a esconde. */
+    color: transparent;
+    -webkit-text-stroke: 1px var(--ouro);
   }
 
   .marquee__copia {

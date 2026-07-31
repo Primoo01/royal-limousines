@@ -64,6 +64,10 @@
      centralização vertical, em vez de adivinhar um valor solto. */
   --altura-header: 4.5rem;
 
+  /* Duração base da cortina de luz do hero da home (CLAUDE.md > Fundos
+     animados). Exposta aqui pra permitir ajuste fino num lugar só. */
+  --cortina-dur: 3.5s;
+
   /* ---- Escala de z-index ----
      Conteúdo normal de página (texto, cards, imagens) não define z-index —
      fica no nível 0/auto, abaixo de tudo daqui. A partir daí, cada camada

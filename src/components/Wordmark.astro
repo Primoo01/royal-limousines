@@ -1,0 +1,59 @@
+---
+// Wordmark da assinatura (Estágio 2 do hero da home).
+//
+// ISOLADO DE PROPÓSITO: quando chegar a logo em SVG, troca-se só o miolo
+// deste arquivo. Nada fora daqui conhece a marcação interna — quem sequencia
+// a entrada usa o atributo `data-wordmark` na raiz.
+//
+// A revelação é por MÁSCARA: um clip-path que abre da esquerda pra direita.
+//
+// Segurança: o clip-path fica no FILHO, nunca na raiz observada. Aplicar
+// clip-path no próprio elemento observado faz o Chromium calcular razão de
+// interseção sempre zero — o observer nunca dispara e o conteúdo fica
+// invisível pra sempre. Além disso o texto é visível por padrão: quem
+// aplica a máscara é o JS, e só em elemento que ainda não entrou na
+// viewport. Se o JS falhar, o wordmark aparece inteiro.
+import site from '../config/site.js';
+---
+
+<p class="wordmark" data-wordmark>
+  <span class="wordmark__texto">{site.nome}</span>
+</p>
+
+<style>
+  .wordmark {
+    font-family: var(--fonte-serif);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 1.2rem + 6.5vw, 7rem);
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--texto);
+  }
+
+  .wordmark__texto {
+    display: inline-block;
+  }
+
+  /* Estado preparado: máscara fechada à esquerda. Só o JS aplica. */
+  .wordmark--preparado .wordmark__texto {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  /* Transição declarada nos dois estados, nunca no base — assim não sobra
+     transição fantasma em quem nunca anima. */
+  .wordmark--preparado .wordmark__texto,
+  .wordmark--visivel .wordmark__texto {
+    transition: clip-path 1.1s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .wordmark--visivel .wordmark__texto {
+    clip-path: inset(0 0 0 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark__texto {
+      clip-path: none !important;
+      transition: none !important;
+    }
+  }
+</style>

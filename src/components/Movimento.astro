@@ -102,6 +102,17 @@
     .estrada {
       display: none;
     }
+
+    /* No mobile o Estágio 1 do hero da home cresce além da tela (o conteúdo
+       empilha), e o chevron, que é fixo na base da viewport, acabaria por
+       cima da mídia. O CLAUDE.md pede ele "ancorado à base, sem sobrepor
+       conteúdo" — então nessa página, nessa largura, ele sai.
+       O seletor de atributo dentro do :has() não recebe o hash de escopo do
+       Astro (só o primeiro token recebe), então ele casa com o elemento
+       renderizado por outro componente. */
+    body:has([data-hero-estagio1]) .chevron-scroll {
+      display: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -200,6 +211,49 @@
         { threshold: 0.35 }
       );
       entradaPendentes.forEach((el) => entradaObserver.observe(el));
+    }
+
+    // 1b-bis) Wordmark do Estágio 2 (ver Wordmark.astro) -------------------
+    // Mesma regra de segurança: visível por padrão, o JS só prepara quem
+    // ainda não entrou na viewport. O clip-path fica no filho — aplicá-lo no
+    // próprio elemento observado faz o Chromium calcular interseção sempre
+    // zero, e o observer nunca dispararia.
+    const wordmark = document.querySelector<HTMLElement>('[data-wordmark]');
+    const wordmarkDepois = document.querySelector<HTMLElement>('[data-wordmark-depois]');
+
+    if (wordmark && proporcaoVisivel(wordmark) < 0.35) {
+      void wordmark.getBoundingClientRect();
+      wordmark.classList.add('wordmark--preparado');
+      if (wordmarkDepois) {
+        void wordmarkDepois.getBoundingClientRect();
+        wordmarkDepois.classList.add('wordmark-depois--preparado');
+      }
+
+      const wordmarkObserver = new IntersectionObserver(
+        (entradas) => {
+          entradas.forEach((entrada) => {
+            if (!entrada.isIntersecting) return;
+            const alvo = entrada.target as HTMLElement;
+            const texto = alvo.querySelector<HTMLElement>('.wordmark__texto');
+            alvo.classList.add('wordmark--visivel');
+
+            // A tagline entra DEPOIS que a máscara termina de abrir — é a
+            // procedência sustentando a marca, por isso vem por último.
+            if (wordmarkDepois && texto) {
+              const aoTerminar = (evento: TransitionEvent) => {
+                if (evento.propertyName !== 'clip-path') return;
+                void wordmarkDepois.getBoundingClientRect();
+                wordmarkDepois.classList.add('wordmark-depois--visivel');
+                texto.removeEventListener('transitionend', aoTerminar);
+              };
+              texto.addEventListener('transitionend', aoTerminar);
+            }
+            wordmarkObserver.unobserve(alvo);
+          });
+        },
+        { threshold: 0.35 }
+      );
+      wordmarkObserver.observe(wordmark);
     }
 
     // 1c) Linha que se desenha (ver LinhaDesenhada.astro) -------------------
@@ -311,7 +365,47 @@
       return `rgb(${r}, ${g}, ${b})`;
     }
 
+    // Fábrica da passagem entre mundos. A /limousines/ usa claro→escuro ao
+    // longo de três telas; o hero da home usa escuro→claro em uma seção só.
+    // Mesma conta de progresso, mesma interpolação — só muda o sentido, o
+    // elemento que mede e o elemento que recebe as variáveis.
+    function criarTransicaoDeMundo(
+      elementoProgresso: HTMLElement,
+      elementosAlvo: HTMLElement[],
+      direcao: 'claro-para-escuro' | 'escuro-para-claro'
+    ) {
+      return function atualizar(): number {
+        const rect = elementoProgresso.getBoundingClientRect();
+        const progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
+
+        for (const propriedade in paresDeCor) {
+          const [claro, escuro] = paresDeCor[propriedade];
+          const [de, para] = direcao === 'escuro-para-claro' ? [escuro, claro] : [claro, escuro];
+          const valor = interpolarCor(de, para, progresso);
+          elementosAlvo.forEach((alvo) => alvo.style.setProperty(propriedade, valor));
+        }
+        // Exposto pro CSS: é o que faz a mídia crescer durante a passagem.
+        elementosAlvo.forEach((alvo) => alvo.style.setProperty('--progresso-passagem', String(progresso)));
+        return progresso;
+      };
+    }
+
+    // A passagem do hero da home — só existe em "/"; nas demais páginas os
+    // querySelectors retornam null e o bloco não faz nada.
+    const heroEstagio1 = document.querySelector<HTMLElement>('[data-hero-estagio1]');
+    const heroDinamico = document.querySelector<HTMLElement>('[data-hero-dinamico]');
+    // Alvos: o wrapper do hero E a raiz do documento. A raiz entra porque o
+    // header é fixo e mora FORA do wrapper — sem isso ele ficaria uma barra
+    // clara por cima do hero escuro. Pintando a raiz, o header acompanha a
+    // passagem e chega no mundo claro junto com o resto. Abaixo do hero o
+    // progresso é 1, ou seja exatamente a paleta clara padrão do site.
+    const atualizarPassagemHero =
+      heroEstagio1 && heroDinamico
+        ? criarTransicaoDeMundo(heroEstagio1, [heroDinamico, document.documentElement], 'escuro-para-claro')
+        : null;
+
     function atualizarTransicaoDiaNoite() {
+      if (atualizarPassagemHero) atualizarPassagemHero();
       if (!transicao || !mundoDinamico) return;
 
       const rect = transicao.getBoundingClientRect();

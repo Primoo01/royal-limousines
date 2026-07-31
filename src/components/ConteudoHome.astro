@@ -6,6 +6,8 @@
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
 import ImagePlaceholder from './ImagePlaceholder.astro';
 import Carrossel from './Carrossel.astro';
+import CortinaDeLuz from './CortinaDeLuz.astro';
+import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
 import EntradaTitulo from './EntradaTitulo.astro';
@@ -42,35 +44,92 @@ const passos = [
 ];
 ---
 
-<section class="hero u-container reveal">
-  <div class="hero__miolo">
-    <p class="u-eyebrow">Royal Limousines</p>
-    <EntradaTitulo as="h1">Aluguel de Limousines para casamentos em SP</EntradaTitulo>
-    <div class="hero__texto u-prosa">
-      <p>
-        Aluguel de Limousines para casamentos em SP. Luxo e sofisticação para
-        momentos especiais, com a Royal Limousines.
-      </p>
-      <p>
-        Desde 2008, oferecemos aluguel de limousines em São Paulo para
-        casamentos, aniversários, eventos e jantares, com translados conduzidos
-        por chofferes qualificados.
-      </p>
-      <p>
-        Somos especializados em eventos sociais, com foco em casamentos, bodas,
-        jantares românticos e festas debutantes.
-      </p>
-      <p>
-        Atendemos pessoas que valorizam um ambiente familiar e elegante, ao
-        lado de amigos e parentes, em momentos que merecem ser lembrados.
-      </p>
+<!--
+  Hero da home em dois estágios (ver CLAUDE.md > Hero da home).
+
+  O wrapper nasce com os valores do mundo ESCURO inline: é o estado de
+  repouso do Estágio 1 e também o fallback se o JS não rodar. A passagem
+  interpola essas variáveis de escuro pra claro conforme o scroll — mesma
+  máquina da transição dia→noite da /limousines/, só que aqui dura uma
+  seção em vez de três telas, e fica atrás do conteúdo.
+
+  O Estágio 2 NUNCA depende dessas variáveis: tem sobrescrita própria pro
+  mundo claro no CSS. Sem JS ele nunca fica escuro nem ilegível — perde só
+  a transição animada entre os dois mundos.
+-->
+<div
+  class="hero-dinamico"
+  data-hero-dinamico
+  style="--bg:#141210;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;--progresso-passagem:0;"
+>
+  <section class="hero-estagio1" data-hero-estagio1>
+    <CortinaDeLuz />
+
+    <div class="hero-estagio1__grade u-container">
+      <div class="hero-estagio1__topo">
+        <p class="u-eyebrow">Royal Limousines</p>
+        <EntradaTitulo as="h1">Aluguel de Limousines para casamentos em SP</EntradaTitulo>
+        {/*
+          Parágrafo curto do hero (máximo duas linhas, conforme o CLAUDE.md).
+          É o parágrafo de abertura que já existia aqui — os três parágrafos
+          de conteúdo desceram inteiros para a seção logo abaixo.
+        */}
+        <p class="hero-estagio1__lead">
+          Aluguel de Limousines para casamentos em SP. Luxo e sofisticação
+          para momentos especiais, com a Royal Limousines.
+        </p>
+        <div class="hero__cta">
+          <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
+          <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+            {site.cta.whatsapp}
+          </Botao>
+        </div>
+      </div>
+
+      <div class="hero-estagio1__midia">
+        <ImagePlaceholder label="Chrysler 300C branco — chegada" aspectRatio="4/5" mundo="escuro" />
+      </div>
+
+      <div class="hero-estagio1__marquee">
+        <Marquee tamanho="grande" />
+      </div>
+
+      <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
     </div>
-    <div class="hero__cta">
-      <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
-      <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
-        {site.cta.whatsapp}
-      </Botao>
+  </section>
+
+  {/* Fundo em sangria total no elemento externo, conteúdo no container:
+      com o fundo claro no próprio .u-container, ele ficava limitado à
+      largura máxima e sobrava uma moldura do wrapper (ainda a meio caminho
+      da passagem) nas laterais. */}
+  <section class="hero-estagio2">
+    <div class="hero-estagio2__miolo u-container">
+      <Wordmark />
+      <p class="hero-estagio2__tagline" data-wordmark-depois>Desde 2008 · São Paulo</p>
     </div>
+  </section>
+</div>
+
+<!--
+  Os parágrafos de conteúdo que estavam dentro do hero. Foram MOVIDOS pra
+  cá, palavra por palavra — é este texto que carrega as palavras-chave da
+  home, e nenhuma delas pode sair da página.
+-->
+<section class="secao-abertura u-container reveal">
+  <div class="u-prosa secao-abertura__texto">
+    <p>
+      Desde 2008, oferecemos aluguel de limousines em São Paulo para
+      casamentos, aniversários, eventos e jantares, com translados conduzidos
+      por chofferes qualificados.
+    </p>
+    <p>
+      Somos especializados em eventos sociais, com foco em casamentos, bodas,
+      jantares românticos e festas debutantes.
+    </p>
+    <p>
+      Atendemos pessoas que valorizam um ambiente familiar e elegante, ao
+      lado de amigos e parentes, em momentos que merecem ser lembrados.
+    </p>
   </div>
 </section>
 
@@ -145,47 +204,201 @@ const passos = [
 </section>
 
 <style>
-  .hero {
-    min-height: 100svh;
-    /* Compensa o header fixo — sem isso, o cálculo de centro considera uma
-       altura maior do que a realmente visível abaixo do header. Só
-       padding-top: com padding-bottom também, o centro do flex passa a ser
-       o centro de uma área menor que a realmente disponível, e o conteúdo
-       fica alto demais, quase encostando no header. */
-    padding-top: var(--altura-header);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  /* ---- Hero em dois estágios ---------------------------------------- */
+
+  /* É este wrapper que pinta fundo e texto com as variáveis que o JS
+     interpola durante a passagem. */
+  .hero-dinamico {
+    background-color: var(--bg);
+    color: var(--texto);
   }
 
-  .hero__miolo h1 {
+  .hero-estagio1 {
+    position: relative;
+    min-height: 100svh;
+    padding-top: var(--altura-header);
+    padding-bottom: var(--espaco-4);
+    overflow: hidden;
+  }
+
+  .hero-estagio1__grade {
+    position: relative;
+    z-index: 1;
+    min-height: calc(100svh - var(--altura-header) - var(--espaco-4));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      'topo  midia'
+      '.     midia'
+      '.     nota';
+    gap: var(--espaco-3) var(--espaco-4);
+    align-items: start;
+  }
+
+  .hero-estagio1__topo {
+    grid-area: topo;
+    align-self: center;
+  }
+
+  .hero-estagio1__topo h1 {
     margin-top: var(--espaco-2);
   }
 
-  /* Centro óptico: ~45% da altura disponível ABAIXO do header, não 50%.
-     Sem padding-bottom, o centro natural do flex já é 50% dessa área; o
-     nudge desloca só a diferença entre 50% e 45% dela — 5% de
-     (100svh - altura-header), não 5% da tela inteira. Só a partir de um
-     viewport com folga vertical razoável, pra nunca cortar conteúdo em
-     telas baixas/estreitas.
-     max() limita o quanto esse nudge pode subir: em telas baixas (~768px)
-     com o hero de 4 parágrafos da home, o cálculo puro de 5% empurra o
-     eyebrow pra debaixo do header. -0.5rem é o teto testado — nunca sobe
-     mais que isso, mesmo quando o conteúdo quase preenche a área útil. */
-  @media (min-width: 40rem) {
-    .hero__miolo {
-      transform: translateY(max(calc(var(--altura-header) * 0.05 - 5svh), -0.5rem));
-    }
-  }
-
-  .hero__texto {
+  .hero-estagio1__lead {
     margin-top: var(--espaco-3);
-    display: flex;
-    flex-direction: column;
-    gap: var(--espaco-2);
+    max-width: 40ch;
     color: var(--texto-mut);
   }
 
+  .hero-estagio1__midia {
+    grid-area: midia;
+    align-self: center;
+    /* "À direita/centro", não encostada na borda: com a mídia colada na
+       direita, uma faixa de marquee de 50vw saindo da esquerda nunca
+       alcançaria a borda dela, e o cruzamento pedido pelo CLAUDE.md não
+       aconteceria em tela larga. O recuo negativo traz a mídia pra dentro
+       o suficiente pro marquee passar por cima. */
+    justify-self: start;
+    margin-left: calc(-1 * var(--espaco-5));
+    /* Tamanho moderado: a mídia não domina o Estágio 1 — ela cresce durante
+       a passagem, e é esse crescimento que faz "a chegada". */
+    width: min(30vw, 22rem);
+    transform: scale(calc(1 + var(--progresso-passagem, 0) * 0.42));
+    transform-origin: center right;
+    will-change: transform;
+  }
+
+  /* O marquee grande atravessa por cima da borda da mídia. Posicionado na
+     SEÇÃO, não numa célula do grid: dentro do grid, `50vw` de largura com
+     margem negativa resolve contra a largura da coluna, e a faixa acabava
+     começando fora da tela pela esquerda em vez de encostar na borda. */
+  .hero-estagio1__marquee {
+    position: absolute;
+    left: 0;
+    bottom: var(--espaco-5);
+    width: 50vw;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero-estagio1__nota {
+    grid-area: nota;
+    align-self: end;
+    justify-self: end;
+    font-family: var(--fonte-sans);
+    font-size: 0.8125rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--texto-mut);
+  }
+
+  /* Estágio 2 — a assinatura. Mundo claro SEMPRE, sem depender das variáveis
+     que o JS interpola: se o JS não rodar, ele nunca fica escuro. */
+  .hero-estagio2 {
+    --bg: var(--claro-bg);
+    --surface: var(--claro-surface);
+    --linha: var(--claro-linha);
+    --texto: var(--claro-texto);
+    --texto-mut: var(--claro-texto-mut);
+    --ouro: var(--ouro-claro);
+    background-color: var(--claro-bg);
+    color: var(--claro-texto);
+    min-height: 60svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: var(--espaco-6);
+  }
+
+  .hero-estagio2__miolo {
+    width: 100%;
+  }
+
+  .hero-estagio2__tagline {
+    margin-top: var(--espaco-3);
+    font-family: var(--fonte-sans);
+    font-size: 0.875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ouro-claro);
+  }
+
+  /* Entra DEPOIS do wordmark — quem dispara é o JS, no fim da máscara.
+     Visível por padrão: sem JS, aparece junto e nada some. */
+  .hero-estagio2__tagline.wordmark-depois--preparado {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  .hero-estagio2__tagline.wordmark-depois--preparado,
+  .hero-estagio2__tagline.wordmark-depois--visivel {
+    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .hero-estagio2__tagline.wordmark-depois--visivel {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .secao-abertura {
+    padding-block: var(--espaco-6);
+  }
+
+  .secao-abertura__texto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2);
+    max-width: 48rem;
+    color: var(--texto-mut);
+  }
+
+  @media (max-width: 56rem) {
+    .hero-estagio1__grade {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto auto auto;
+      grid-template-areas:
+        'topo'
+        'midia'
+        'nota';
+      gap: var(--espaco-4);
+      /* Espaço pro marquee, que continua ancorado na base da seção. */
+      padding-bottom: 30svh;
+    }
+
+    .hero-estagio1__midia {
+      justify-self: stretch;
+      margin-left: 0;
+      width: 100%;
+      max-width: 22rem;
+      transform-origin: center center;
+    }
+
+    .hero-estagio1__marquee {
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      padding-left: 0;
+    }
+
+    .hero-estagio1__nota {
+      justify-self: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-estagio1__midia {
+      transform: none !important;
+    }
+
+    .hero-estagio2__tagline {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* .hero, .hero__miolo e .hero__texto saíram junto com o hero antigo de uma
+     seção só — o Estágio 1 tem grade própria. .hero__cta continua, porque é
+     usado aqui e em outras seções. */
   .hero__cta {
     display: flex;
     flex-wrap: wrap;

@@ -1,0 +1,94 @@
+---
+// Cortina de luz — fundo animado do hero da home, mundo escuro
+// (ver CLAUDE.md > Fundos animados).
+//
+// 8 linhas verticais douradas que respiram em scaleY a partir do topo, com
+// atrasos escalonados, mais um véu radial escuro por cima que apaga as
+// linhas no centro e deixa o texto e a mídia legíveis.
+//
+// SVG com `vector-effect: non-scaling-stroke`: assim a espessura fica
+// travada em 1,4px reais, independente de quanto o viewBox é esticado pela
+// largura da tela. Com <rect> em preserveAspectRatio="none" a espessura
+// variaria junto com a viewport.
+//
+// Só transform e opacity — nada que cause layout. Desligado inteiro em
+// prefers-reduced-motion.
+const linhas = [6, 18, 30, 42, 56, 70, 82, 94];
+---
+
+<div class="cortina" aria-hidden="true">
+  <svg class="cortina__svg" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+    {
+      linhas.map((x, indice) => (
+        <line
+          class="cortina__linha"
+          x1={x}
+          y1="0"
+          x2={x}
+          y2="100"
+          vector-effect="non-scaling-stroke"
+          style={`--i: ${indice};`}
+        />
+      ))
+    }
+  </svg>
+  <div class="cortina__veu"></div>
+</div>
+
+<style>
+  .cortina {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cortina__svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .cortina__linha {
+    stroke: var(--ouro-escuro);
+    stroke-width: 1.4;
+    opacity: 0.34;
+    transform-box: fill-box;
+    transform-origin: top;
+    animation: cortina-respirar var(--cortina-dur) ease-in-out infinite alternate;
+    /* Escalonamento de ~700ms entre as linhas. O atraso é negativo pra que
+       todas já comecem em fases diferentes, sem esperar a fila andar. */
+    animation-delay: calc(var(--i) * -700ms);
+  }
+
+  @keyframes cortina-respirar {
+    from {
+      transform: scaleY(0.25);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  /* Véu radial: escuro e denso no centro, transparente nas bordas. É ele que
+     "limpa" o miolo pro texto e pra mídia, deixando as linhas aparecendo só
+     na periferia. */
+  .cortina__veu {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 70% 65% at 50% 45%,
+      rgba(20, 18, 16, 0.94) 0%,
+      rgba(20, 18, 16, 0.82) 40%,
+      rgba(20, 18, 16, 0.35) 70%,
+      rgba(20, 18, 16, 0) 100%
+    );
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cortina__linha {
+      animation: none;
+      transform: scaleY(0.7);
+    }
+  }
+</style>
