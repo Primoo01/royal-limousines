@@ -311,6 +311,105 @@
       });
     }
 
+    // Carrossel de fotos (ver Carrossel.astro e CLAUDE.md > Carrossel).
+    //
+    // Só o DESKTOP tem scroll conduzido. No mobile — e com
+    // prefers-reduced-motion — as setas apenas empurram o scroll horizontal
+    // NATIVO do trilho, e nada aqui toca no scroll vertical da página.
+    const carrosselDesktop = window.matchMedia('(min-width: 56rem)').matches && !reduzMovimento;
+    const atualizarCarrosseis: Array<() => void> = [];
+
+    document.querySelectorAll<HTMLElement>('[data-carrossel]').forEach((raiz) => {
+      const spacer = raiz.querySelector<HTMLElement>('[data-carrossel-spacer]');
+      const trilho = raiz.querySelector<HTMLElement>('[data-carrossel-trilho]');
+      const slides = Array.from(raiz.querySelectorAll<HTMLElement>('[data-carrossel-slide]'));
+      const botaoAnterior = raiz.querySelector<HTMLButtonElement>('[data-carrossel-anterior]');
+      const botaoProximo = raiz.querySelector<HTMLButtonElement>('[data-carrossel-proximo]');
+      if (!trilho || slides.length === 0) return;
+
+      // --- Mobile / reduced-motion: rolagem nativa, sem sequestro nenhum ---
+      if (!carrosselDesktop || !spacer) {
+        const passo = () => trilho.clientWidth * 0.9;
+        const comportamento: ScrollBehavior = reduzMovimento ? 'auto' : 'smooth';
+        botaoAnterior?.addEventListener('click', () => trilho.scrollBy({ left: -passo(), behavior: comportamento }));
+        botaoProximo?.addEventListener('click', () => trilho.scrollBy({ left: passo(), behavior: comportamento }));
+        return;
+      }
+
+      // --- Desktop: entrada (escala) + avanço horizontal, pelo scroll ---
+      // 45% → 92% da largura do slide (CLAUDE.md). O slide já nasce no
+      // tamanho final (os "92%"), então a entrada começa na razão 45/92.
+      const escalaInicial = 45 / 92;
+      let indiceAtual = 0;
+
+      function medidas() {
+        // Medir o layout de verdade em vez de recalcular 92vw: o slide tem
+        // `width: min(92vw, ...)`, então em tela larga ele é MENOR que 92vw.
+        // Recalculando pela viewport, o trilho andaria mais do que o
+        // conteúdo existente e o carrossel terminaria em tela vazia.
+        // offsetLeft/offsetWidth são medidas de layout — não sofrem efeito do
+        // transform que a gente mesmo aplica aqui, então podem ser lidas a
+        // qualquer momento sem realimentar o cálculo.
+        const deslocamentoMax = Math.max(0, slides[slides.length - 1].offsetLeft - slides[0].offsetLeft);
+        const alturaSpacer = (spacer as HTMLElement).getBoundingClientRect().height;
+        const fracaoEntrada = alturaSpacer > 0 ? window.innerHeight / alturaSpacer : 0;
+        return { deslocamentoMax, fracaoEntrada };
+      }
+
+      function aplicarEstado() {
+        const rect = (spacer as HTMLElement).getBoundingClientRect();
+        const alturaUtil = rect.height - window.innerHeight;
+        if (alturaUtil <= 0) return;
+        const progresso = Math.min(Math.max(-rect.top / alturaUtil, 0), 1);
+        const { deslocamentoMax, fracaoEntrada } = medidas();
+
+        if (progresso <= fracaoEntrada) {
+          const p = fracaoEntrada > 0 ? progresso / fracaoEntrada : 1;
+          (trilho as HTMLElement).style.transform = `scale(${escalaInicial + (1 - escalaInicial) * p})`;
+          indiceAtual = 0;
+        } else {
+          const p = (progresso - fracaoEntrada) / (1 - fracaoEntrada);
+          (trilho as HTMLElement).style.transform = `translateX(${-deslocamentoMax * p}px)`;
+          indiceAtual = Math.round(p * (slides.length - 1));
+        }
+      }
+
+      atualizarCarrosseis.push(aplicarEstado);
+      aplicarEstado();
+
+      // As setas no desktop movem o SCROLL DA PÁGINA até o ponto que
+      // corresponde ao slide desejado — é o scroll que comanda o carrossel,
+      // então mexer no transform direto dessincronizaria os dois.
+      function rolarAte(indice: number) {
+        const alvo = Math.min(Math.max(indice, 0), slides.length - 1);
+        const rect = (spacer as HTMLElement).getBoundingClientRect();
+        const alturaUtil = rect.height - window.innerHeight;
+        if (alturaUtil <= 0) return;
+        const { fracaoEntrada } = medidas();
+        const p = slides.length > 1 ? alvo / (slides.length - 1) : 0;
+        const progresso = fracaoEntrada + p * (1 - fracaoEntrada);
+        window.scrollTo({ top: rect.top + window.scrollY + progresso * alturaUtil, behavior: 'smooth' });
+      }
+
+      botaoAnterior?.addEventListener('click', () => rolarAte(indiceAtual - 1));
+      botaoProximo?.addEventListener('click', () => rolarAte(indiceAtual + 1));
+
+      // Acessível por teclado: setas ← → tanto no trilho focado quanto nos
+      // próprios botões.
+      const aoTeclar = (evento: KeyboardEvent) => {
+        if (evento.key === 'ArrowLeft') {
+          evento.preventDefault();
+          rolarAte(indiceAtual - 1);
+        } else if (evento.key === 'ArrowRight') {
+          evento.preventDefault();
+          rolarAte(indiceAtual + 1);
+        }
+      };
+      trilho.addEventListener('keydown', aoTeclar);
+      botaoAnterior?.addEventListener('keydown', aoTeclar);
+      botaoProximo?.addEventListener('keydown', aoTeclar);
+    });
+
     // Header some ao descer, aparece ao subir (ver CLAUDE.md > Navegação).
     const header = document.querySelector<HTMLElement>('[data-header]');
     let ultimoScrollY = window.scrollY;
@@ -349,6 +448,7 @@
 
       if (!reduzMovimento) {
         atualizarTransicaoDiaNoite();
+        atualizarCarrosseis.forEach((fn) => fn());
       }
     }
 

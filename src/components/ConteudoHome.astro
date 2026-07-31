@@ -5,10 +5,23 @@
 // backup original foi preservada — ver comparação de keywords no relatório
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
 import ImagePlaceholder from './ImagePlaceholder.astro';
+import Carrossel from './Carrossel.astro';
 import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
 import EntradaTitulo from './EntradaTitulo.astro';
 import site from '../config/site.js';
+
+// Placeholders, não fotos reais: as 6 fotos que chegaram são do 300C PRETO
+// (o sedan) e ficam restritas à seção do sedan em /limousines/. A home é
+// sobre a limousine BRANCA — usar as fotos do preto aqui seria mostrar o
+// produto errado. O rótulo de cada uma descreve a foto que falta, servindo
+// de pauta pro dono na hora de fotografar.
+const fotosGaleriaHome = [
+  { alt: 'Chrysler 300C branco — frente em três quartos', legenda: 'Chrysler 300C branco — frente em três quartos' },
+  { alt: 'Chrysler 300C branco — lateral, carro inteiro', legenda: 'Chrysler 300C branco — lateral, carro inteiro' },
+  { alt: 'Chrysler 300C branco — salão de passageiros', legenda: 'Chrysler 300C branco — salão de passageiros' },
+  { alt: 'Chrysler 300C branco — detalhe do acabamento', legenda: 'Chrysler 300C branco — detalhe do acabamento' },
+];
 
 const passos = [
   {
@@ -105,14 +118,14 @@ const passos = [
   </ol>
 </section>
 
-<section class="secao-galeria u-container reveal">
-  <p class="u-eyebrow">Fotos</p>
-  <EntradaTitulo as="h2">A limousine em detalhe</EntradaTitulo>
-  <div class="secao-galeria__grade reveal-grupo">
-    <ImagePlaceholder label="Chrysler 300C branco — foto 1" aspectRatio="3/4" />
-    <ImagePlaceholder label="Chrysler 300C branco — foto 2" aspectRatio="3/4" />
-    <ImagePlaceholder label="Chrysler 300C branco — foto 3" aspectRatio="3/4" />
-    <ImagePlaceholder label="Chrysler 300C branco — foto 4" aspectRatio="3/4" />
+<section class="secao-galeria reveal">
+  <div class="u-container">
+    <p class="u-eyebrow">Fotos</p>
+    <EntradaTitulo as="h2">A limousine em detalhe</EntradaTitulo>
+  </div>
+  {/* Sangria total, então fora do u-container. */}
+  <div class="secao-galeria__carrossel">
+    <Carrossel fotos={fotosGaleriaHome} />
   </div>
 </section>
 
@@ -250,11 +263,8 @@ const passos = [
     font-size: 0.9375rem;
   }
 
-  .secao-galeria__grade {
+  .secao-galeria__carrossel {
     margin-top: var(--espaco-4);
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--espaco-2);
   }
 
   .secao-contato__dados {
@@ -282,8 +292,5 @@ const passos = [
       grid-template-columns: 1fr;
     }
 
-    .secao-galeria__grade {
-      grid-template-columns: repeat(2, 1fr);
-    }
   }
 </style>

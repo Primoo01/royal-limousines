@@ -15,9 +15,11 @@ import ImagePlaceholder from '../components/ImagePlaceholder.astro';
 import Marquee from '../components/Marquee.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
+import Carrossel from '../components/Carrossel.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 import sedanPreto from '../data/sedan-preto.js';
+import { fichaSegura, fotosSedan } from '../data/sedan.js';
 
 const dados = paginas.paginas.find((p) => p.url === '/limousines/');
 // O backup não tinha meta description nesta página. Escrita a partir de fatos
@@ -25,6 +27,20 @@ const dados = paginas.paginas.find((p) => p.url === '/limousines/');
 // passageiros, casamentos/aniversários/eventos, São Paulo).
 const description =
   'Aluguel de limousine em São Paulo: conheça o Chrysler 300C branco, com 8 metros e capacidade para 8 passageiros, para casamentos, aniversários e eventos.';
+
+// As 6 fotos reais são do 300C PRETO e só aparecem na seção do sedan, aqui.
+// Nunca na home, que é sobre a limousine branca — seria mostrar o produto
+// errado. import.meta.glob resolve os arquivos de src/assets pra que o
+// astro:assets consiga processá-los; o nome do arquivo é a chave que liga
+// cada foto à sua legenda em sedan.js.
+const imagensSedan = import.meta.glob<{ default: ImageMetadata }>('/src/assets/sedan-preto/*.jpeg', {
+  eager: true,
+});
+const fotosCarrosselSedan = fotosSedan.map((foto) => ({
+  imagem: imagensSedan[`/src/assets/sedan-preto/${foto.arquivo}`].default,
+  alt: foto.legenda,
+  legenda: foto.legenda,
+}));
 ---
 
 <BaseLayout title={dados.title} description={description}>
@@ -116,6 +132,15 @@ const description =
         {site.cta.whatsapp}
       </Botao>
     </div>
+
+    {/* Ponte para a seção do sedan. O scroll suave vem do
+        `html { scroll-behavior: smooth }` que já existe em global.css — não
+        precisa de JS, e vira instantâneo sozinho em prefers-reduced-motion. */}
+    <p class="bloco-frota__ponte">
+      Para traslados mais discretos, sem a exposição de um carro de festa, a
+      frota também tem o Chrysler 300C preto.
+    </p>
+    <Botao variante="terciario" href="#sedan">Conhecer o sedan 300C preto</Botao>
   </section>
 
   <Marquee />
@@ -145,29 +170,40 @@ const description =
       <span class="ponto-luz" style="top: 88%; left: 60%;"></span>
     </div>
 
-    <section class="u-container bloco-frota bloco-frota--escuro reveal">
+    <section id="sedan" class="u-container bloco-frota bloco-frota--escuro reveal">
       <p class="u-eyebrow">{sedanPreto.eyebrow}</p>
       <EntradaTitulo as="h2">{sedanPreto.titulo}</EntradaTitulo>
-      <div class="bloco-frota__grade bloco-frota__grade--inverso">
-        <div>
-          <div class="u-prosa">
-            {sedanPreto.paragrafos.map((paragrafo) => <p>{paragrafo}</p>)}
-          </div>
-          <div class="cta-veiculo">
-            <Botao variante="barra" href="/contato/">{site.cta.orcamento}</Botao>
-            <Botao variante="barra" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
-              {site.cta.whatsapp}
-            </Botao>
-          </div>
+
+      <div class="bloco-frota--escuro__corpo">
+        <div class="u-prosa">
+          {sedanPreto.paragrafos.map((paragrafo) => <p>{paragrafo}</p>)}
         </div>
-        <ImagePlaceholder
-          label="Chrysler 300C preto — three-quarter frontal, à noite"
-          class="reveal"
-          aspectRatio="4/3"
-          mundo="escuro"
-        />
+
+        {/* Só a ficha SEGURA. Os campos por confirmar (ano, versão, motor,
+            potência, capacidade, itens de série, atendimento fora de SP)
+            existem em sedan.js mas não são importados aqui de propósito. */}
+        <dl class="ficha-tecnica">
+          {
+            fichaSegura.map((item) => (
+              <div class="ficha-tecnica__item">
+                <dt>{item.rotulo}</dt>
+                <dd>{item.valor}</dd>
+              </div>
+            ))
+          }
+        </dl>
+
+        <div class="cta-veiculo">
+          <Botao variante="barra" href="/contato/">{site.cta.orcamento}</Botao>
+          <Botao variante="barra" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+            {site.cta.whatsapp}
+          </Botao>
+        </div>
       </div>
     </section>
+
+    {/* Fora do u-container: o carrossel é de sangria total. */}
+    <Carrossel fotos={fotosCarrosselSedan} mundo="escuro" />
   </div>
 </BaseLayout>
 
@@ -238,33 +274,70 @@ const description =
     border-top: none;
   }
 
-  /* Item 3: a seção do sedan resolve por peso visual, não por texto — tela
-     cheia, título bem maior, muito mais respiro. A contenção do texto é
+  /* Ponte pro sedan, no fim da seção branca. */
+  .bloco-frota__ponte {
+    margin-top: var(--espaco-6);
+    padding-top: var(--espaco-4);
+    border-top: 1px solid var(--linha);
+    max-width: 34rem;
+    color: var(--texto-mut);
+  }
+
+  .bloco-frota__ponte + :global(.botao) {
+    margin-top: var(--espaco-2);
+  }
+
+  /* A seção do sedan resolve por PESO VISUAL, não por quantidade de texto:
+     tela cheia, título bem maior, muito mais respiro. A contenção do texto é
      proposital (branco = espetáculo, preto = discrição). */
   .bloco-frota--escuro {
+    min-height: 100svh;
     padding-block: var(--espaco-7);
+    /* Alvo do link "#sedan": sem isto o título nasce por baixo do header. */
+    scroll-margin-top: var(--altura-header);
   }
 
   .bloco-frota--escuro > .u-eyebrow {
-    margin-bottom: var(--espaco-3);
+    margin-bottom: var(--espaco-4);
   }
 
   .bloco-frota--escuro h2 {
-    font-size: clamp(3rem, 2.1rem + 5.5vw, 6.5rem);
-    max-width: 18ch;
+    font-size: clamp(3.5rem, 2rem + 7.5vw, 8rem);
+    max-width: 16ch;
   }
 
-  .bloco-frota--escuro .bloco-frota__grade {
+  .bloco-frota--escuro__corpo {
     margin-top: var(--espaco-7);
-    gap: var(--espaco-6);
+    max-width: 40rem;
   }
 
   .bloco-frota--escuro .u-prosa p {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 
   .bloco-frota--escuro .u-prosa p + p {
     margin-top: var(--espaco-3);
+  }
+
+  .ficha-tecnica {
+    margin-top: var(--espaco-6);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espaco-3) var(--espaco-4);
+  }
+
+  .ficha-tecnica dt {
+    font-family: var(--fonte-sans);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ouro);
+  }
+
+  .ficha-tecnica dd {
+    margin-top: var(--espaco-1);
+    font-family: var(--fonte-serif);
+    font-size: 1.125rem;
   }
 
   .bloco-frota--escuro .cta-veiculo {
@@ -297,6 +370,10 @@ const description =
   @media (max-width: 56rem) {
     .bloco-frota__grade,
     .bloco-frota__grade--inverso {
+      grid-template-columns: 1fr;
+    }
+
+    .ficha-tecnica {
       grid-template-columns: 1fr;
     }
 
