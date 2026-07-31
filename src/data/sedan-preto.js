@@ -13,7 +13,7 @@ export const sedanPreto = {
   eyebrow: 'Para a noite, para o evento',
   titulo: 'Chrysler 300C preto',
   paragrafos: [
-    'O sedan da frota Royal Limousines — para quem busca discrição e conforto.',
+    'O sedan da frota Royal Limousines, para quem busca discrição e conforto.',
     'Também usado para viagens e translados, sem a exposição de um veículo de festa.',
   ],
 };

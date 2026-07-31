@@ -41,8 +41,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal — chegada da noiva' },
-      { arquivo: '6957459_orig.jpg', rotulo: 'Limousine Royal — detalhe do casamento' },
+      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
+      { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
     ],
   },
   {
@@ -78,8 +78,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Leste, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal — chegada da noiva' },
-      { arquivo: '6957459_orig.jpg', rotulo: 'Limousine Royal — detalhe do casamento' },
+      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
+      { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
     ],
   },
   {
@@ -116,8 +116,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Norte, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal — chegada da noiva' },
-      { arquivo: '6957459_orig.jpg', rotulo: 'Limousine Royal — detalhe do casamento' },
+      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
+      { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
     ],
   },
   {
@@ -153,8 +153,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Oeste, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal — chegada da noiva' },
-      { arquivo: '6957459_orig.jpg', rotulo: 'Limousine Royal — detalhe do casamento' },
+      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
+      { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
     ],
   },
   {
@@ -190,8 +190,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Sul, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal — chegada da noiva' },
-      { arquivo: '6957459_orig.jpg', rotulo: 'Limousine Royal — detalhe do casamento' },
+      { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
+      { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
     ],
   },
   {
@@ -225,8 +225,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre aluguel de limousines para debutantes em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'Women-in-Limo.jpg', rotulo: 'Limousine Royal — festa de debutante' },
-      { arquivo: 'limo-girls.jpg', rotulo: 'Limousine Royal — debutante e convidadas' },
+      { arquivo: 'Women-in-Limo.jpg', rotulo: 'Limousine Royal em festa de debutante' },
+      { arquivo: 'limo-girls.jpg', rotulo: 'Limousine Royal com a debutante e as convidadas' },
     ],
   },
   {
@@ -261,8 +261,8 @@ export const servicosRegiao = [
     ],
     fraseTelefone: 'Para saber mais sobre Limousines para aniversários em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: 'hgfhf.jpg', rotulo: 'Limousine Royal — aniversário' },
-      { arquivo: '4640854_orig.jpg', rotulo: 'Limousine Royal — festa de aniversário' },
+      { arquivo: 'hgfhf.jpg', rotulo: 'Limousine Royal em aniversário' },
+      { arquivo: '4640854_orig.jpg', rotulo: 'Limousine Royal em festa de aniversário' },
     ],
   },
   {
@@ -298,8 +298,8 @@ export const servicosRegiao = [
     fraseTelefone:
       'Para saber mais sobre aluguel de Limousines para Jantares românticos em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
     imagens: [
-      { arquivo: '1121.jpg', rotulo: 'Limousine Royal — jantar romântico' },
-      { arquivo: 'ir.ashx_808.jpg', rotulo: 'Limousine Royal — casal em jantar romântico' },
+      { arquivo: '1121.jpg', rotulo: 'Limousine Royal em jantar romântico' },
+      { arquivo: 'ir.ashx_808.jpg', rotulo: 'Casal em jantar romântico com a Limousine Royal' },
     ],
   },
 ];

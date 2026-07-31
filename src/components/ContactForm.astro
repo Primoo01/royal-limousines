@@ -22,7 +22,7 @@ const redirectUrl = new URL('/contato/?enviado=1', site.url).toString();
   data-form-contato
 >
   <input type="hidden" name="access_key" value={accessKey} />
-  <input type="hidden" name="subject" value={`Novo pedido de orçamento — ${site.nome}`} />
+  <input type="hidden" name="subject" value={`Novo pedido de orçamento no site ${site.nome}`} />
   <input type="hidden" name="from_name" value={site.nome} />
   <input type="hidden" name="redirect" value={redirectUrl} />
   <input type="checkbox" name="botcheck" class="u-visually-hidden" tabindex="-1" autocomplete="off" />

@@ -46,27 +46,27 @@ export const fichaAConfirmar = [
 export const fotosSedan = [
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.09.jpeg',
-    legenda: 'Chrysler 300C preto — frente em três quartos, com o teto solar aberto',
+    legenda: 'Chrysler 300C preto visto de frente em três quartos, com o teto solar aberto',
   },
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.08 (2).jpeg',
-    legenda: 'Chrysler 300C preto — traseira em três quartos',
+    legenda: 'Chrysler 300C preto visto de traseira em três quartos',
   },
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.05 (3).jpeg',
-    legenda: 'Chrysler 300C preto — traseira, com a placa decorativa de casamento',
+    legenda: 'Chrysler 300C preto visto de traseira, com a placa decorativa de casamento',
   },
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.08 (1).jpeg',
-    legenda: 'Chrysler 300C preto — porta traseira aberta, banco em couro claro',
+    legenda: 'Chrysler 300C preto com a porta traseira aberta, banco em couro claro',
   },
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.05 (1).jpeg',
-    legenda: 'Chrysler 300C preto — volante e painel',
+    legenda: 'Volante e painel do Chrysler 300C preto',
   },
   {
     arquivo: 'WhatsApp Image 2026-07-23 at 19.42.07.jpeg',
-    legenda: 'Chrysler 300C preto — teto solar aberto, visto do banco traseiro',
+    legenda: 'Chrysler 300C preto com o teto solar aberto, visto do banco traseiro',
   },
 ];
 

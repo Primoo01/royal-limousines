@@ -33,9 +33,11 @@ interface FotoCarrossel {
 interface Props {
   fotos: FotoCarrossel[];
   mundo?: 'claro' | 'escuro';
+  /** Mostra a legenda sobre a foto. Falso na seção do sedan, onde fica só a imagem. */
+  legendas?: boolean;
 }
 
-const { fotos, mundo = 'claro' } = Astro.props;
+const { fotos, mundo = 'claro', legendas = true } = Astro.props;
 
 // Distância de scroll: uma tela pra entrada + 70svh por avanço entre fotos.
 // Calculado no servidor, então o tamanho está certo mesmo antes de o JS rodar.
@@ -69,7 +71,7 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
               ) : (
                 <ImagePlaceholder label={foto.alt} aspectRatio="4/5" mundo={mundo} />
               )}
-              <figcaption class="carrossel__legenda">{foto.legenda}</figcaption>
+              {legendas && <figcaption class="carrossel__legenda">{foto.legenda}</figcaption>}
             </figure>
           ))
         }
