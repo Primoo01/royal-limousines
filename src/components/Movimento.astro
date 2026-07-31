@@ -120,23 +120,41 @@
   const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // 1) Revelação no scroll ------------------------------------------------
-  // .reveal (seções) e .reveal-grupo (escalonamento entre irmãos) usam
-  // IntersectionObserver normalmente.
+  // .reveal (seções) e .reveal-grupo (escalonamento entre irmãos).
+  //
+  // Mesma regra de segurança do vocabulário de entrada: o conteúdo é visível
+  // por padrão no CSS, e o JS só PREPARA (esconde) elementos que ainda não
+  // entraram na viewport. Quem já está visível no carregamento não é tocado.
+  // Se o JS não rodar, nada fica permanentemente invisível.
   function proporcaoVisivel(el: HTMLElement) {
     const rect = el.getBoundingClientRect();
     const alturaVisivel = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
     return rect.height > 0 ? alturaVisivel / rect.height : 0;
   }
 
-  const elementosReveal = document.querySelectorAll<HTMLElement>('.reveal, .reveal-grupo');
+  const elementosReveal = Array.from(document.querySelectorAll<HTMLElement>('.reveal, .reveal-grupo'));
 
-  if (reduzMovimento || !('IntersectionObserver' in window)) {
-    elementosReveal.forEach((el) => el.classList.add('reveal--visivel'));
-  } else {
+  // Com prefers-reduced-motion, ou sem IntersectionObserver, não há nada a
+  // fazer aqui: o conteúdo já nasce visível.
+  if (!reduzMovimento && 'IntersectionObserver' in window) {
+    // O mesmo limiar do observer abaixo, pra não preparar um elemento que o
+    // observer já consideraria visível (o que o deixaria escondido até o
+    // próximo scroll).
+    const revealPendentes = elementosReveal.filter((el) => proporcaoVisivel(el) < 0.15);
+
+    revealPendentes.forEach((el) => {
+      // Força o navegador a "commitar" o estado atual (visível, sem classe)
+      // antes de aplicar a que traz opacity:0 + transition no mesmo
+      // elemento — sem isso a mudança pode não virar uma transição de fato.
+      void el.getBoundingClientRect();
+      el.classList.add('reveal--preparado');
+    });
+
     const observer = new IntersectionObserver(
       (entradas) => {
         entradas.forEach((entrada) => {
           if (entrada.isIntersecting) {
+            entrada.target.classList.remove('reveal--preparado');
             entrada.target.classList.add('reveal--visivel');
             observer.unobserve(entrada.target);
           }
@@ -145,7 +163,7 @@
       { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
     );
 
-    elementosReveal.forEach((el) => observer.observe(el));
+    revealPendentes.forEach((el) => observer.observe(el));
 
     // 1b) Vocabulário de entrada (ver EntradaTitulo.astro) -----------------
     // Regra de segurança (CLAUDE.md > Vocabulário de entrada): o texto é
@@ -337,23 +355,34 @@
       }
 
       // --- Desktop: entrada (escala) + avanço horizontal, pelo scroll ---
-      // 45% → 92% da largura do slide (CLAUDE.md). O slide já nasce no
-      // tamanho final (os "92%"), então a entrada começa na razão 45/92.
-      const escalaInicial = 45 / 92;
+      // A entrada começa em metade do tamanho final e cresce até 100%. O
+      // tamanho final é definido no CSS (--carrossel-altura, ~80% da ALTURA
+      // da tela) — aqui só se aplica a proporção.
+      const escalaInicial = 0.5;
+      // O painel é o pai do trilho e também o offsetParent dos slides (é ele
+      // que tem position: sticky), então offsetLeft e clientWidth abaixo
+      // estão no mesmo sistema de coordenadas.
+      const painel = trilho.parentElement as HTMLElement;
       let indiceAtual = 0;
 
       function medidas() {
-        // Medir o layout de verdade em vez de recalcular 92vw: o slide tem
-        // `width: min(92vw, ...)`, então em tela larga ele é MENOR que 92vw.
-        // Recalculando pela viewport, o trilho andaria mais do que o
-        // conteúdo existente e o carrossel terminaria em tela vazia.
-        // offsetLeft/offsetWidth são medidas de layout — não sofrem efeito do
-        // transform que a gente mesmo aplica aqui, então podem ser lidas a
-        // qualquer momento sem realimentar o cálculo.
-        const deslocamentoMax = Math.max(0, slides[slides.length - 1].offsetLeft - slides[0].offsetLeft);
+        // Medir o layout de verdade em vez de recalcular a partir da
+        // viewport: o slide tem teto de largura, e no desktop cabem DOIS por
+        // vez. offsetLeft/offsetWidth são medidas de layout — não sofrem
+        // efeito do transform que a gente mesmo aplica aqui, então podem ser
+        // lidas a qualquer momento sem realimentar o cálculo.
+        const ultimo = slides[slides.length - 1];
+        const recuoDireita = parseFloat(getComputedStyle(trilho as HTMLElement).paddingRight) || 0;
+        const fimConteudo = ultimo.offsetLeft + ultimo.offsetWidth + recuoDireita;
+        // Para quando o fim do conteúdo encosta na borda direita do painel.
+        // Assim funciona com 1 ou 2 slides à vista, sem precisar saber
+        // quantos cabem — e nunca sobra tela vazia no fim.
+        const deslocamentoMax = Math.max(0, fimConteudo - painel.clientWidth);
+        // Distância de um slide para o próximo (largura + gap).
+        const passo = slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : 0;
         const alturaSpacer = (spacer as HTMLElement).getBoundingClientRect().height;
         const fracaoEntrada = alturaSpacer > 0 ? window.innerHeight / alturaSpacer : 0;
-        return { deslocamentoMax, fracaoEntrada };
+        return { deslocamentoMax, passo, fracaoEntrada };
       }
 
       function aplicarEstado() {
@@ -361,7 +390,7 @@
         const alturaUtil = rect.height - window.innerHeight;
         if (alturaUtil <= 0) return;
         const progresso = Math.min(Math.max(-rect.top / alturaUtil, 0), 1);
-        const { deslocamentoMax, fracaoEntrada } = medidas();
+        const { deslocamentoMax, passo, fracaoEntrada } = medidas();
 
         if (progresso <= fracaoEntrada) {
           const p = fracaoEntrada > 0 ? progresso / fracaoEntrada : 1;
@@ -369,8 +398,12 @@
           indiceAtual = 0;
         } else {
           const p = (progresso - fracaoEntrada) / (1 - fracaoEntrada);
-          (trilho as HTMLElement).style.transform = `translateX(${-deslocamentoMax * p}px)`;
-          indiceAtual = Math.round(p * (slides.length - 1));
+          const deslocamento = deslocamentoMax * p;
+          (trilho as HTMLElement).style.transform = `translateX(${-deslocamento}px)`;
+          // O índice vem da distância percorrida, não de uma fração do total:
+          // com 2 slides à vista o trilho para antes do último slide chegar
+          // à primeira posição, então dividir o progresso por (n-1) erraria.
+          indiceAtual = passo > 0 ? Math.min(Math.round(deslocamento / passo), slides.length - 1) : 0;
         }
       }
 
@@ -385,8 +418,10 @@
         const rect = (spacer as HTMLElement).getBoundingClientRect();
         const alturaUtil = rect.height - window.innerHeight;
         if (alturaUtil <= 0) return;
-        const { fracaoEntrada } = medidas();
-        const p = slides.length > 1 ? alvo / (slides.length - 1) : 0;
+        const { deslocamentoMax, passo, fracaoEntrada } = medidas();
+        // Mesma conta do estado, ao contrário: quanto de scroll corresponde a
+        // deixar o slide `alvo` na primeira posição visível.
+        const p = deslocamentoMax > 0 ? Math.min((alvo * passo) / deslocamentoMax, 1) : 0;
         const progresso = fracaoEntrada + p * (1 - fracaoEntrada);
         window.scrollTo({ top: rect.top + window.scrollY + progresso * alturaUtil, behavior: 'smooth' });
       }

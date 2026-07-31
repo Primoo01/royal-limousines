@@ -60,14 +60,14 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
                   src={foto.imagem}
                   alt={foto.alt}
                   width={900}
-                  height={675}
+                  height={1125}
                   fit="cover"
                   position="center"
                   format="webp"
                   loading={indice === 0 ? 'eager' : 'lazy'}
                 />
               ) : (
-                <ImagePlaceholder label={foto.alt} aspectRatio="4/3" mundo={mundo} />
+                <ImagePlaceholder label={foto.alt} aspectRatio="4/5" mundo={mundo} />
               )}
               <figcaption class="carrossel__legenda">{foto.legenda}</figcaption>
             </figure>
@@ -106,9 +106,12 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
 <style>
   .carrossel {
     --carrossel-botao: 2.75rem;
-    /* Teto de altura do slide. Sem ele, 92vw numa tela larga geraria uma foto
-       mais alta que a viewport, e o painel cortaria o topo e a base. */
-    --carrossel-altura: 78svh;
+    /* O slide é dimensionado pela ALTURA: cresce até ~80% da altura da tela,
+       e a largura sai da proporção 4/5. As fotos são verticais — um slide
+       4/3 descartava 42% da altura de cada uma no recorte.
+       O teto de 52vw é o que garante que DOIS slides caibam lado a lado no
+       desktop mesmo em tela baixa e estreita (2 × 0,8 × 52vw + gap < 92vw). */
+    --carrossel-altura: min(80svh, 52vw);
   }
 
   .carrossel__spacer {
@@ -142,9 +145,11 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
     position: relative;
     flex-shrink: 0;
     /* Proporção fixa + object-fit: cover aceita foto de qualquer orientação
-       sem distorcer (as 6 do sedan são retrato 9:16 e entram recortadas). */
-    aspect-ratio: 4 / 3;
-    width: min(92vw, calc(var(--carrossel-altura) * 4 / 3));
+       sem distorcer. 4/5 (retrato) porque as 6 fotos do sedan são verticais
+       9:16 — assim o recorte preserva 70% da altura original em vez de 42%. */
+    aspect-ratio: 4 / 5;
+    height: var(--carrossel-altura);
+    width: calc(var(--carrossel-altura) * 4 / 5);
     margin: 0;
     overflow: hidden;
   }
@@ -240,8 +245,11 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
       display: none;
     }
 
+    /* No mobile é um slide por vez, medido pela LARGURA da tela — a altura
+       volta a sair da proporção. */
     .carrossel__slide {
       width: 85vw;
+      height: auto;
       scroll-snap-align: center;
     }
 

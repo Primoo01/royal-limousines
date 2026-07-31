@@ -534,12 +534,26 @@ p + p {
 /* ---------------------------------------------------------------- */
 
 /* Revelação no scroll — Movimento.astro observa estes elementos com
-   IntersectionObserver e adiciona .reveal--visivel uma vez.
+   IntersectionObserver.
    Curva mais lenta e com mais deslocamento que uma fade simples, mas sem
-   overshoot — elegante, não um salto. */
-.reveal {
+   overshoot — elegante, não um salto.
+
+   REGRA DE SEGURANÇA (a mesma do vocabulário de entrada, ver
+   EntradaTitulo.astro): o conteúdo é VISÍVEL POR PADRÃO aqui. Não existe
+   `opacity: 0` no estado base. Quem esconde é o JS, adicionando
+   .reveal--preparado, e só em elemento que ainda não entrou na viewport.
+   Elemento já visível no carregamento nunca é tocado — aparece na hora, sem
+   animação. Se o JS falhar ou demorar, nada fica invisível.
+
+   A transição é declarada nos DOIS estados (preparado e visível), nunca no
+   estado base: assim não sobra transição fantasma em quem nunca anima. */
+.reveal.reveal--preparado {
   opacity: 0;
   transform: translateY(56px);
+}
+
+.reveal.reveal--preparado,
+.reveal.reveal--visivel {
   transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1), transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -548,11 +562,16 @@ p + p {
   transform: translateY(0);
 }
 
-/* Grupo com escalonamento entre irmãos — o pai é quem é observado; os
-   filhos herdam a transição e cada nth-child ganha um atraso próprio. */
-.reveal-grupo > * {
+/* Grupo com escalonamento entre irmãos — o pai é quem é observado e quem
+   recebe a classe; os filhos herdam a transição e cada nth-child ganha um
+   atraso próprio. Mesma regra: sem a classe do pai, os filhos estão visíveis. */
+.reveal-grupo.reveal--preparado > * {
   opacity: 0;
   transform: translateY(40px);
+}
+
+.reveal-grupo.reveal--preparado > *,
+.reveal-grupo.reveal--visivel > * {
   transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -604,9 +623,13 @@ p + p {
     scroll-behavior: auto !important;
   }
 
-  /* Conteúdo sempre no estado final — nunca depende de JS rodar. */
+  /* Conteúdo sempre no estado final — nunca depende de JS rodar. Com o
+     padrão já visível, isto virou rede de segurança: cobre o caso de o JS
+     ter preparado um elemento antes de o usuário ligar reduced-motion. */
   .reveal,
-  .reveal-grupo > * {
+  .reveal.reveal--preparado,
+  .reveal-grupo > *,
+  .reveal-grupo.reveal--preparado > * {
     opacity: 1 !important;
     transform: none !important;
   }
