@@ -103,15 +103,20 @@
       display: none;
     }
 
-    /* No mobile o Estágio 1 do hero da home cresce além da tela (o conteúdo
-       empilha), e o chevron, que é fixo na base da viewport, acabaria por
-       cima da mídia. O CLAUDE.md pede ele "ancorado à base, sem sobrepor
-       conteúdo" — então nessa página, nessa largura, ele sai.
-       O seletor de atributo dentro do :has() não recebe o hash de escopo do
-       Astro (só o primeiro token recebe), então ele casa com o elemento
-       renderizado por outro componente. */
+    /* O chevron continua visível no hero da home: o bloco de conteúdo do
+       Estágio 1 reserva folga na base da primeira tela (ver ConteudoHome),
+       então ele pousa em área livre em vez de cair por cima da mídia. */
+  }
+
+  /* No hero da home em desktop, o chevron sai do centro. O marquee ocupa a
+     metade ESQUERDA da faixa inferior e nada pode se sobrepor a ele; como o
+     chevron é fixo na viewport e a seção pode ficar mais alta que a tela,
+     não existe altura em que ele fique garantidamente abaixo da faixa.
+     Deslocá-lo pra metade direita resolve por geometria, em qualquer altura
+     de tela, e ele continua ancorado à base. */
+  @media (min-width: 56.25rem) {
     body:has([data-hero-estagio1]) .chevron-scroll {
-      display: none;
+      left: 75%;
     }
   }
 

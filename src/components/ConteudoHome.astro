@@ -66,8 +66,9 @@ const passos = [
     <CortinaDeLuz />
 
     <div class="hero-estagio1__grade u-container">
+      {/* Sem eyebrow: "Royal Limousines" já aparece no logo do header, logo
+          acima. Repetir ali era redundância, não hierarquia. */}
       <div class="hero-estagio1__topo">
-        <p class="u-eyebrow">Royal Limousines</p>
         <EntradaTitulo as="h1">Aluguel de Limousines para casamentos em SP</EntradaTitulo>
         {/*
           Parágrafo curto do hero (máximo duas linhas, conforme o CLAUDE.md).
@@ -89,13 +90,17 @@ const passos = [
       <div class="hero-estagio1__midia">
         <ImagePlaceholder label="Chrysler 300C branco — chegada" aspectRatio="4/5" mundo="escuro" />
       </div>
-
-      <div class="hero-estagio1__marquee">
-        <Marquee tamanho="grande" />
-      </div>
-
-      <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
     </div>
+
+    {/* Marquee e nota ficam FORA do grid, como irmãos: no desktop a faixa do
+        marquee é uma linha reservada da seção (nada entra nela), e no mobile
+        eles são simplesmente os dois últimos itens da coluna, na ordem certa
+        — mídia, marquee, nota. */}
+    <div class="hero-estagio1__marquee">
+      <Marquee tamanho="grande" />
+    </div>
+
+    <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
   </section>
 
   {/* Fundo em sangria total no elemento externo, conteúdo no container:
@@ -217,8 +222,12 @@ const passos = [
     position: relative;
     min-height: 100svh;
     padding-top: var(--altura-header);
-    padding-bottom: var(--espaco-4);
+    /* Folga suficiente na base pro chevron (fixo na viewport) ficar ABAIXO
+       da faixa do marquee em vez de dentro dela. */
+    padding-bottom: var(--espaco-6);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .hero-estagio1__grade {
@@ -227,13 +236,15 @@ const passos = [
     min-height: calc(100svh - var(--altura-header) - var(--espaco-4));
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr;
     grid-template-areas:
       'topo  midia'
-      '.     midia'
-      '.     nota';
+      '.     midia';
     gap: var(--espaco-3) var(--espaco-4);
     align-items: start;
+    /* Ocupa o que sobra acima da faixa do marquee. */
+    flex: 1;
+    min-height: 0;
   }
 
   .hero-estagio1__topo {
@@ -254,38 +265,42 @@ const passos = [
   .hero-estagio1__midia {
     grid-area: midia;
     align-self: center;
-    /* "À direita/centro", não encostada na borda: com a mídia colada na
-       direita, uma faixa de marquee de 50vw saindo da esquerda nunca
-       alcançaria a borda dela, e o cruzamento pedido pelo CLAUDE.md não
-       aconteceria em tela larga. O recuo negativo traz a mídia pra dentro
-       o suficiente pro marquee passar por cima. */
-    justify-self: start;
-    margin-left: calc(-1 * var(--espaco-5));
+    /* De volta à direita. O recuo negativo que existia aqui só servia pro
+       marquee conseguir cruzar a borda da mídia; agora que nada pode se
+       sobrepor ao marquee, ele perdeu a função. */
+    justify-self: end;
     /* Tamanho moderado: a mídia não domina o Estágio 1 — ela cresce durante
-       a passagem, e é esse crescimento que faz "a chegada". */
-    width: min(30vw, 22rem);
+       a passagem, e é esse crescimento que faz "a chegada". 21rem é o teto
+       que faz o conteúdo caber na área acima da faixa do marquee sem que a
+       seção estoure 100svh (e sem que o chevron, fixo na base da viewport,
+       acabe caindo dentro da faixa). */
+    width: min(30vw, 21rem);
     transform: scale(calc(1 + var(--progresso-passagem, 0) * 0.42));
     transform-origin: center right;
     will-change: transform;
   }
 
-  /* O marquee grande atravessa por cima da borda da mídia. Posicionado na
-     SEÇÃO, não numa célula do grid: dentro do grid, `50vw` de largura com
-     margem negativa resolve contra a largura da coluna, e a faixa acabava
-     começando fora da tela pela esquerda em vez de encostar na borda. */
+  /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
+     último item do flex e o grid acima ocupa o resto, nada consegue entrar
+     aqui — a folga de 40px é a margem, não uma coincidência de posição. */
   .hero-estagio1__marquee {
-    position: absolute;
-    left: 0;
-    bottom: var(--espaco-5);
+    flex: none;
+    margin-top: 40px;
     width: 50vw;
     z-index: 2;
     pointer-events: none;
   }
 
+  /* Fora do fluxo: no fluxo ela somaria altura e empurraria a faixa do
+     marquee pra cima. Ancorada na seção, divide a altura da faixa mas fica
+     na metade direita, onde o marquee (50vw a partir da esquerda) não chega. */
   .hero-estagio1__nota {
-    grid-area: nota;
-    align-self: end;
-    justify-self: end;
+    position: absolute;
+    /* Caixa do tamanho do texto, não da largura do container: com a caixa
+       larga ela cruzaria a faixa do marquee mesmo com o texto à direita. */
+    width: max-content;
+    right: var(--espaco-3);
+    bottom: var(--espaco-6);
     font-family: var(--fonte-sans);
     font-size: 0.8125rem;
     letter-spacing: 0.14em;
@@ -353,35 +368,59 @@ const passos = [
     color: var(--texto-mut);
   }
 
-  @media (max-width: 56rem) {
-    .hero-estagio1__grade {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto auto auto auto;
-      grid-template-areas:
-        'topo'
-        'midia'
-        'nota';
+  /* ---- Mobile: layout próprio, não uma adaptação do desktop -----------
+     Abaixo de 900px a composição do desktop (grid de duas colunas + marquee
+     posicionado por cima) NÃO é reaproveitada. Vira coluna única, tudo no
+     fluxo normal, sem posicionamento absoluto: a ordem visual passa a ser
+     simplesmente a ordem do DOM — h1, parágrafo, botões, mídia, marquee,
+     nota. Era o posicionamento absoluto que desmontava aqui. */
+  @media (max-width: 56.25rem) {
+    .hero-estagio1 {
+      /* O conteúdo empilhado passa de uma tela; forçar 100svh só cortaria. */
+      min-height: 0;
+      padding-bottom: var(--espaco-5);
       gap: var(--espaco-4);
-      /* Espaço pro marquee, que continua ancorado na base da seção. */
-      padding-bottom: 30svh;
+    }
+
+    .hero-estagio1__grade {
+      display: flex;
+      flex-direction: column;
+      flex: none;
+      min-height: 0;
+      gap: var(--espaco-4);
+    }
+
+    /* O bloco de texto ocupa a primeira tela inteira, com o conteúdo
+       centrado nela. Assim a mídia só começa depois da dobra, e o chevron —
+       que é fixo na base da viewport — pousa na folga abaixo do texto, sem
+       cair em cima de nada. */
+    .hero-estagio1__topo {
+      min-height: calc(100svh - var(--altura-header));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .hero-estagio1__midia {
-      justify-self: stretch;
-      margin-left: 0;
+      /* Largura total, proporção 4:5 vinda do próprio placeholder — nunca
+         uma faixa sem altura útil. Sem transform: no mobile a mídia não
+         cresce na passagem (largura total já é o tamanho final, e escalar
+         só geraria vazamento horizontal). */
       width: 100%;
-      max-width: 22rem;
-      transform-origin: center center;
+      max-width: none;
+      margin-left: 0;
+      transform: none;
     }
 
     .hero-estagio1__marquee {
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      padding-left: 0;
+      width: 100%;
+      margin-top: 0;
     }
 
+    /* De volta ao fluxo: no mobile ela é apenas o último item da coluna. */
     .hero-estagio1__nota {
-      justify-self: start;
+      position: static;
+      text-align: left;
     }
   }
 

@@ -85,6 +85,21 @@ const linhas = [6, 18, 30, 42, 56, 70, 82, 94];
     );
   }
 
+  /* No mobile o véu sai. A elipse é medida contra o elemento, e ali o hero
+     é muito mais alto que largo: ela virava uma mancha cinza com borda
+     visível atravessando a coluna, em vez de um degradê suave. Sem o véu, as
+     linhas ficam mais discretas — a legibilidade vem daí e do fundo opaco
+     da própria mídia, não de uma camada por cima. */
+  @media (max-width: 56.25rem) {
+    .cortina__veu {
+      display: none;
+    }
+
+    .cortina__linha {
+      opacity: 0.16;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .cortina__linha {
       animation: none;

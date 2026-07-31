@@ -70,6 +70,19 @@ const texto = 'ROYAL LIMOUSINES · CASAMENTOS · DEBUTANTES · ANIVERSÁRIOS · 
     color: var(--ouro);
   }
 
+  /* No mobile a faixa grande encolhe: no máximo 12% da altura da tela, com
+     a fonte proporcional. Em 30svh ela dominava a coluna e encostava no que
+     vinha antes e depois. */
+  @media (max-width: 56.25rem) {
+    .marquee--grande {
+      height: 12svh;
+    }
+
+    .marquee--grande .marquee__copia {
+      font-size: clamp(1.375rem, 0.9rem + 3.4vw, 2.5rem);
+    }
+  }
+
   @keyframes marquee-deslocar {
     from {
       transform: translateX(0);
