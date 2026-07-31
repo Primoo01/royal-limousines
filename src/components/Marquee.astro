@@ -39,19 +39,29 @@ const texto = 'ROYAL LIMOUSINES · CASAMENTOS · DEBUTANTES · ANIVERSÁRIOS · 
     animation-play-state: paused;
   }
 
-  /* Variante grande (hero da home): ~30% da altura da tela, sem os fios. */
+  /* Variante grande (hero da home): ~30% da altura da tela, sem os fios.
+     A faixa é o último item do hero, e o hero é min-height (cresce com o
+     conteúdo, nunca corta). Em tela baixa a soma header + texto + folga +
+     30svh passava de uma tela e a faixa caía metade abaixo da dobra.
+     O teto passa a ser o que sobra da tela depois do resto do Estágio 1:
+     ~620px = header (72) + bloco de texto (~435) + folga de 40 + base (64).
+     Em tela alta o cálculo ultrapassa 30svh e o clamp segura nos 30% do
+     projeto; em tela baixa ele encolhe a faixa, com piso de 6rem pra letra
+     continuar legível. */
   .marquee--grande {
     border-block: none;
     padding-block: 0;
     display: flex;
     align-items: center;
-    height: 30svh;
+    height: clamp(6rem, calc(100svh - 620px), 30svh);
   }
 
   .marquee--grande .marquee__copia {
     font-family: var(--fonte-serif);
     font-weight: 500;
-    font-size: clamp(2.25rem, 1rem + 5vw, 5.5rem);
+    /* Teto de 4.5rem (72px) pra caber inteira mesmo quando a faixa está no
+       piso de 6rem (96px). Em 5.5rem a letra estourava a faixa encolhida. */
+    font-size: clamp(2rem, 0.8rem + 4vw, 4.5rem);
     letter-spacing: 0.02em;
     /* Contorno em vez de preenchimento: atravessa por cima da borda da
        mídia sem virar um bloco sólido que a esconde. */

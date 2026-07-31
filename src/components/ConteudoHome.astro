@@ -234,9 +234,12 @@ const passos = [
     position: relative;
     min-height: 100svh;
     padding-top: var(--altura-header);
-    /* Folga suficiente na base pro chevron (fixo na viewport) ficar ABAIXO
-       da faixa do marquee em vez de dentro dela. */
-    padding-bottom: var(--espaco-6);
+    /* Folga na base pro chevron (fixo na viewport) ficar ABAIXO da faixa do
+       marquee em vez de dentro dela. Reduzida de --espaco-6 pra --espaco-5:
+       a seção é min-height (cresce com o conteúdo, nunca corta), então essa
+       folga é o que sobra entre o fim da faixa e a borda de baixo quando a
+       soma passa de 100svh. Ver a conta em Marquee.astro > .marquee--grande. */
+    padding-bottom: var(--espaco-5);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -245,7 +248,6 @@ const passos = [
   .hero-estagio1__grade {
     position: relative;
     z-index: 1;
-    min-height: calc(100svh - var(--altura-header) - var(--espaco-4));
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
@@ -390,30 +392,67 @@ const passos = [
     .hero-estagio1 {
       /* O conteúdo empilhado passa de uma tela; forçar 100svh só cortaria. */
       min-height: 0;
+      /* Folga CONSTANTE abaixo do header fixo. O header é position: fixed,
+         então o padding-top compensa a barra uma única vez — o respiro
+         visível é só o --espaco-3 somado aqui. */
+      padding-top: calc(var(--altura-header) + var(--espaco-3));
       padding-bottom: var(--espaco-5);
       gap: var(--espaco-4);
     }
 
+    /* A grade deixa de ser caixa pra que topo, marquee, nota e mídia virem
+       irmãos diretos da seção e possam ser reordenados: o marquee precisa
+       entrar logo abaixo dos botões, antes da mídia. Como o box do
+       .u-container some junto, a margem lateral e o z-index (que punham o
+       conteúdo acima da cortina) voltam item a item abaixo. */
     .hero-estagio1__grade {
-      display: flex;
-      flex-direction: column;
-      flex: none;
-      min-height: 0;
-      gap: var(--espaco-4);
+      display: contents;
     }
 
-    /* O bloco de texto ocupa a primeira tela inteira, com o conteúdo
-       centrado nela. Assim a mídia só começa depois da dobra, e o chevron —
-       que é fixo na base da viewport — pousa na folga abaixo do texto, sem
-       cair em cima de nada. */
+    .hero-estagio1__topo,
+    .hero-estagio1__midia {
+      position: relative;
+      z-index: 1;
+      /* Mesma margem lateral do .u-container, que deixou de envolvê-los. */
+      padding-inline: var(--espaco-3);
+      /* A seção é flex column: sem isto o align-self: center herdado do
+         desktop encolheria a caixa no eixo horizontal. */
+      align-self: stretch;
+    }
+
     .hero-estagio1__topo {
-      min-height: calc(100svh - var(--altura-header));
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      order: 1;
+      /* Sem tela cheia e sem centralização vertical: era daí que vinha o
+         vazio grande e variável entre o header e o h1. O bloco agora
+         encosta no topo e a folga é só o padding da seção. */
+      min-height: 0;
+      display: block;
+    }
+
+    .hero-estagio1__marquee {
+      order: 2;
+      width: 100%;
+      margin-top: 0;
+      /* Espaço onde o chevron (fixo na base da viewport) pousa, em vez de
+         cair sobre a mídia que vem logo depois. */
+      margin-bottom: var(--espaco-5);
+    }
+
+    /* Abaixo do marquee, alinhada à esquerda junto com o h1. Sai do
+       posicionamento absoluto do desktop: `inset: auto` zera o right/bottom
+       daquela regra, que com position: relative viraria deslocamento. */
+    .hero-estagio1__nota {
+      order: 3;
+      position: relative;
+      inset: auto;
+      z-index: 1;
+      width: auto;
+      padding-inline: var(--espaco-3);
+      text-align: left;
     }
 
     .hero-estagio1__midia {
+      order: 4;
       /* Largura total, proporção 4:5 vinda do próprio placeholder — nunca
          uma faixa sem altura útil. Sem transform: no mobile a mídia não
          cresce na passagem (largura total já é o tamanho final, e escalar
@@ -424,15 +463,11 @@ const passos = [
       transform: none;
     }
 
-    .hero-estagio1__marquee {
-      width: 100%;
-      margin-top: 0;
-    }
-
-    /* De volta ao fluxo: no mobile ela é apenas o último item da coluna. */
-    .hero-estagio1__nota {
-      position: static;
-      text-align: left;
+    /* A assinatura hugs o próprio conteúdo. Em 60svh sobrava meia tela clara
+       vazia embaixo do wordmark, e a seção seguinte só começava depois dela. */
+    .hero-estagio2 {
+      min-height: 0;
+      padding-block: var(--espaco-5);
     }
   }
 

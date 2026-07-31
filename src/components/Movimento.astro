@@ -377,11 +377,21 @@
     function criarTransicaoDeMundo(
       elementoProgresso: HTMLElement,
       elementosAlvo: HTMLElement[],
-      direcao: 'claro-para-escuro' | 'escuro-para-claro'
+      direcao: 'claro-para-escuro' | 'escuro-para-claro',
+      // Opcional. Enquanto a media query CASAR, a passagem deixa de
+      // interpolar e vira um corte limpo: 0 (mundo de origem) enquanto a
+      // seção ainda cobre a barra do topo, 1 (mundo de destino) depois.
+      // Sem valor intermediário. Só o hero da home usa; a /limousines/
+      // chama sem este argumento e não muda em nada.
+      corteLimpo?: { media: MediaQueryList; alturaBarra: number }
     ) {
       return function atualizar(): number {
         const rect = elementoProgresso.getBoundingClientRect();
-        const progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
+        let progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
+
+        if (corteLimpo?.media.matches) {
+          progresso = rect.bottom <= corteLimpo.alturaBarra ? 1 : 0;
+        }
 
         for (const propriedade in paresDeCor) {
           const [claro, escuro] = paresDeCor[propriedade];
@@ -404,9 +414,24 @@
     // clara por cima do hero escuro. Pintando a raiz, o header acompanha a
     // passagem e chega no mundo claro junto com o resto. Abaixo do hero o
     // progresso é 1, ou seja exatamente a paleta clara padrão do site.
+    // Até 900px a passagem NÃO é animada: ali o hero é uma coluna alta e o
+    // scroll acabava antes de a interpolação chegar em 1, deixando o fundo
+    // parado num cinza intermediário entre os dois mundos. Vira um corte
+    // limpo — hero escuro do começo ao fim, mundo claro a partir do
+    // Estágio 2. A consulta é a MESMA do CSS do hero (max-width: 56.25rem),
+    // escrita no mesmo sentido de propósito: com `min-width` invertido, em
+    // exatamente 900px o CSS já seria mobile e o JS ainda animaria — que é
+    // justamente o par que produzia a faixa cinza.
+    // A barra do topo entra na conta porque ela é fixed e mora fora do
+    // wrapper: é ela que precisa virar clara junto com o resto.
+    const mediaCorteLimpo = window.matchMedia('(max-width: 56.25rem)');
+    const alturaBarraHeader = document.querySelector<HTMLElement>('[data-header]')?.offsetHeight ?? 0;
     const atualizarPassagemHero =
       heroEstagio1 && heroDinamico
-        ? criarTransicaoDeMundo(heroEstagio1, [heroDinamico, document.documentElement], 'escuro-para-claro')
+        ? criarTransicaoDeMundo(heroEstagio1, [heroDinamico, document.documentElement], 'escuro-para-claro', {
+            media: mediaCorteLimpo,
+            alturaBarra: alturaBarraHeader,
+          })
         : null;
 
     function atualizarTransicaoDiaNoite() {
