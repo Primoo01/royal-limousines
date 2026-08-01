@@ -453,115 +453,135 @@
       });
     }
 
-    // Carrossel de fotos (ver Carrossel.astro e CLAUDE.md > Carrossel).
+    // Galeria horizontal por scroll (ver Carrossel.astro).
     //
-    // Só o DESKTOP tem scroll conduzido. No mobile — e com
-    // prefers-reduced-motion — as setas apenas empurram o scroll horizontal
-    // NATIVO do trilho, e nada aqui toca no scroll vertical da página.
-    const carrosselDesktop = window.matchMedia('(min-width: 56rem)').matches && !reduzMovimento;
+    // O "prender na tela" é o `position: sticky` do painel, CSS puro — não
+    // existe pin em JavaScript aqui. O que este bloco faz é só:
+    //
+    //   1. MEDIR a tira e escrever a altura do trilho:
+    //        distancia = trilho.scrollWidth - painel.clientWidth
+    //        altura    = innerHeight + distancia
+    //   2. CONVERTER scroll vertical em translateX, sem interpolação.
+    //
+    // Como a altura útil do spacer (altura - innerHeight) é exatamente
+    // `distancia`, 1px de scroll vale 1px de deslocamento. A tira termina no
+    // mesmo instante em que o sticky solta. A suavidade vem do Lenis.
+    //
+    // O modo conduzido é OPT-IN: sem ele o CSS deixa a tira em rolagem
+    // horizontal nativa, então nenhuma foto fica inalcançável se o JS falhar.
+    const mediaGaleriaConduzida = window.matchMedia('(min-width: 56.25rem)');
     const atualizarCarrosseis: Array<() => void> = [];
 
     document.querySelectorAll<HTMLElement>('[data-carrossel]').forEach((raiz) => {
       const spacer = raiz.querySelector<HTMLElement>('[data-carrossel-spacer]');
+      const painel = raiz.querySelector<HTMLElement>('[data-carrossel-painel]');
       const trilho = raiz.querySelector<HTMLElement>('[data-carrossel-trilho]');
       const slides = Array.from(raiz.querySelectorAll<HTMLElement>('[data-carrossel-slide]'));
       const botaoAnterior = raiz.querySelector<HTMLButtonElement>('[data-carrossel-anterior]');
       const botaoProximo = raiz.querySelector<HTMLButtonElement>('[data-carrossel-proximo]');
-      if (!trilho || slides.length === 0) return;
+      if (!spacer || !painel || !trilho || slides.length === 0) return;
 
-      // --- Mobile / reduced-motion: rolagem nativa, sem sequestro nenhum ---
-      if (!carrosselDesktop || !spacer) {
-        const passo = () => trilho.clientWidth * 0.9;
-        const comportamento: ScrollBehavior = reduzMovimento ? 'auto' : 'smooth';
-        botaoAnterior?.addEventListener('click', () => trilho.scrollBy({ left: -passo(), behavior: comportamento }));
-        botaoProximo?.addEventListener('click', () => trilho.scrollBy({ left: passo(), behavior: comportamento }));
-        return;
+      let distancia = 0;
+      let conduzido = false;
+
+      function aplicar() {
+        if (!conduzido || distancia <= 0) return;
+        // Uma única leitura de layout por frame. Todo o resto vem do cache
+        // preenchido em medir().
+        const topo = spacer!.getBoundingClientRect().top;
+        const deslocamento = Math.min(Math.max(-topo, 0), distancia);
+        trilho!.style.transform = `translate3d(${-deslocamento}px, 0, 0)`;
       }
 
-      // --- Desktop: entrada (escala) + avanço horizontal, pelo scroll ---
-      // A entrada começa em metade do tamanho final e cresce até 100%. O
-      // tamanho final é definido no CSS (--carrossel-altura, ~80% da ALTURA
-      // da tela) — aqui só se aplica a proporção.
-      const escalaInicial = 0.5;
-      // O painel é o pai do trilho e também o offsetParent dos slides (é ele
-      // que tem position: sticky), então offsetLeft e clientWidth abaixo
-      // estão no mesmo sistema de coordenadas.
-      const painel = trilho.parentElement as HTMLElement;
-      let indiceAtual = 0;
-
-      function medidas() {
-        // Medir o layout de verdade em vez de recalcular a partir da
-        // viewport: o slide tem teto de largura, e no desktop cabem DOIS por
-        // vez. offsetLeft/offsetWidth são medidas de layout — não sofrem
-        // efeito do transform que a gente mesmo aplica aqui, então podem ser
-        // lidas a qualquer momento sem realimentar o cálculo.
-        const ultimo = slides[slides.length - 1];
-        const recuoDireita = parseFloat(getComputedStyle(trilho as HTMLElement).paddingRight) || 0;
-        const fimConteudo = ultimo.offsetLeft + ultimo.offsetWidth + recuoDireita;
-        // Para quando o fim do conteúdo encosta na borda direita do painel.
-        // Assim funciona com 1 ou 2 slides à vista, sem precisar saber
-        // quantos cabem — e nunca sobra tela vazia no fim.
-        const deslocamentoMax = Math.max(0, fimConteudo - painel.clientWidth);
-        // Distância de um slide para o próximo (largura + gap).
-        const passo = slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : 0;
-        const alturaSpacer = (spacer as HTMLElement).getBoundingClientRect().height;
-        const fracaoEntrada = alturaSpacer > 0 ? window.innerHeight / alturaSpacer : 0;
-        return { deslocamentoMax, passo, fracaoEntrada };
-      }
-
-      function aplicarEstado() {
-        const rect = (spacer as HTMLElement).getBoundingClientRect();
-        const alturaUtil = rect.height - window.innerHeight;
-        if (alturaUtil <= 0) return;
-        const progresso = Math.min(Math.max(-rect.top / alturaUtil, 0), 1);
-        const { deslocamentoMax, passo, fracaoEntrada } = medidas();
-
-        if (progresso <= fracaoEntrada) {
-          const p = fracaoEntrada > 0 ? progresso / fracaoEntrada : 1;
-          (trilho as HTMLElement).style.transform = `scale(${escalaInicial + (1 - escalaInicial) * p})`;
-          indiceAtual = 0;
-        } else {
-          const p = (progresso - fracaoEntrada) / (1 - fracaoEntrada);
-          const deslocamento = deslocamentoMax * p;
-          (trilho as HTMLElement).style.transform = `translateX(${-deslocamento}px)`;
-          // O índice vem da distância percorrida, não de uma fração do total:
-          // com 2 slides à vista o trilho para antes do último slide chegar
-          // à primeira posição, então dividir o progresso por (n-1) erraria.
-          indiceAtual = passo > 0 ? Math.min(Math.round(deslocamento / passo), slides.length - 1) : 0;
+      function medir() {
+        if (!conduzido) {
+          spacer!.style.height = '';
+          trilho!.style.transform = '';
+          distancia = 0;
+          return;
         }
+        // scrollWidth já inclui os gaps e o padding-inline do trilho. O
+        // transform que aplicamos não afeta layout, então pode ser lido a
+        // qualquer momento sem realimentar a conta.
+        distancia = Math.max(0, trilho!.scrollWidth - painel!.clientWidth);
+        const altura = window.innerHeight + distancia;
+        // Só escreve se mudou de verdade: escrever a altura muda a altura do
+        // documento, que em tese pode mexer na barra de rolagem e disparar o
+        // ResizeObserver de novo. O limiar de 1px corta qualquer oscilação.
+        if (Math.abs(parseFloat(spacer!.style.height || '0') - altura) > 1) {
+          spacer!.style.height = `${altura}px`;
+        }
+        aplicar();
       }
 
-      atualizarCarrosseis.push(aplicarEstado);
-      aplicarEstado();
+      function avaliarModo() {
+        const novo = mediaGaleriaConduzida.matches && !reduzMovimento;
+        if (novo === conduzido) return;
+        conduzido = novo;
+        raiz.setAttribute('data-conduzido', String(conduzido));
+      }
 
-      // As setas no desktop movem o SCROLL DA PÁGINA até o ponto que
-      // corresponde ao slide desejado — é o scroll que comanda o carrossel,
-      // então mexer no transform direto dessincronizaria os dois.
-      function rolarAte(indice: number) {
+      avaliarModo();
+      medir();
+      atualizarCarrosseis.push(aplicar);
+
+      // Recalcula quando a TIRA muda de tamanho por qualquer motivo: imagem
+      // que terminou de carregar, fonte que trocou, layout que mexeu. É esta
+      // linha que resolve o "medir antes das imagens carregarem dá conta
+      // errada" — em vez de escutar o load de cada <img> e torcer pra não
+      // esquecer nenhuma, observamos a consequência.
+      new ResizeObserver(() => medir()).observe(trilho);
+
+      // O observer acima não enxerga mudança de innerHeight, e ela entra na
+      // altura do spacer. O resize também pode atravessar o breakpoint.
+      window.addEventListener('resize', () => {
+        avaliarModo();
+        medir();
+      });
+      window.addEventListener('load', () => medir());
+
+      // --- Setas ---
+      // Passo de um slide pro próximo (largura + gap), medido do layout.
+      const passo = () => (slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : 0);
+
+      function indiceAtual() {
+        const p = passo();
+        if (p <= 0) return 0;
+        const topo = spacer!.getBoundingClientRect().top;
+        const deslocamento = Math.min(Math.max(-topo, 0), distancia);
+        return Math.round(deslocamento / p);
+      }
+
+      function irPara(indice: number) {
         const alvo = Math.min(Math.max(indice, 0), slides.length - 1);
-        const rect = (spacer as HTMLElement).getBoundingClientRect();
-        const alturaUtil = rect.height - window.innerHeight;
-        if (alturaUtil <= 0) return;
-        const { deslocamentoMax, passo, fracaoEntrada } = medidas();
-        // Mesma conta do estado, ao contrário: quanto de scroll corresponde a
-        // deixar o slide `alvo` na primeira posição visível.
-        const p = deslocamentoMax > 0 ? Math.min((alvo * passo) / deslocamentoMax, 1) : 0;
-        const progresso = fracaoEntrada + p * (1 - fracaoEntrada);
-        window.scrollTo({ top: rect.top + window.scrollY + progresso * alturaUtil, behavior: 'smooth' });
+
+        if (!conduzido) {
+          // Rolagem nativa: empurra o próprio trilho, sem tocar na página.
+          const comportamento: ScrollBehavior = reduzMovimento ? 'auto' : 'smooth';
+          trilho!.scrollTo({ left: alvo * (passo() || trilho!.clientWidth * 0.9), behavior: comportamento });
+          return;
+        }
+
+        // No modo conduzido quem manda é o scroll da página. Como o
+        // mapeamento é 1:1, a posição de scroll do slide `alvo` é
+        // simplesmente o topo do spacer mais o deslocamento desejado.
+        const deslocamento = Math.min(alvo * passo(), distancia);
+        const topoSpacer = spacer!.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: topoSpacer + deslocamento, behavior: 'smooth' });
       }
 
-      botaoAnterior?.addEventListener('click', () => rolarAte(indiceAtual - 1));
-      botaoProximo?.addEventListener('click', () => rolarAte(indiceAtual + 1));
+      botaoAnterior?.addEventListener('click', () => irPara(indiceAtual() - 1));
+      botaoProximo?.addEventListener('click', () => irPara(indiceAtual() + 1));
 
       // Acessível por teclado: setas ← → tanto no trilho focado quanto nos
       // próprios botões.
       const aoTeclar = (evento: KeyboardEvent) => {
         if (evento.key === 'ArrowLeft') {
           evento.preventDefault();
-          rolarAte(indiceAtual - 1);
+          irPara(indiceAtual() - 1);
         } else if (evento.key === 'ArrowRight') {
           evento.preventDefault();
-          rolarAte(indiceAtual + 1);
+          irPara(indiceAtual() + 1);
         }
       };
       trilho.addEventListener('keydown', aoTeclar);
