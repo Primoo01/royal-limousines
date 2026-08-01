@@ -1,0 +1,74 @@
+---
+// Foto real do cliente, no lugar onde antes havia <ImagePlaceholder>.
+//
+// Mesma API de posicionamento do placeholder (aspectRatio + class), pra que a
+// troca em cada página seja mecânica e nenhum layout mude: o container já
+// tinha aspect-ratio definido, então não há CLS na substituição.
+//
+// O recorte é sempre CENTRAL (object-fit: cover + object-position: center).
+// Várias fotos são retrato 9:16 entrando em espaços largos; cover recorta,
+// nunca distorce (ver CLAUDE.md > Imagens).
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: ImageMetadata;
+  /** Obrigatório: toda imagem do site leva alt descritivo. */
+  alt: string;
+  /** Proporção do container, ex.: "16/9", "4/3", "3/4", "4/5" */
+  aspectRatio?: string;
+  /** Largura máxima que a foto será servida. Teto de 1600px do CLAUDE.md. */
+  larguraServida?: number;
+  /**
+   * Quanto do viewport a foto ocupa, por breakpoint. Precisa bater com o CSS
+   * real do espaço: um `sizes` largo demais faz o navegador baixar um arquivo
+   * muito maior do que o que cabe na tela. O padrão serve pros blocos de meia
+   * largura; o hero, que é estreito no desktop, passa o seu.
+   */
+  sizes?: string;
+  /** Só o hero carrega adiantado; o resto é lazy. */
+  prioridade?: boolean;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  aspectRatio = '4/3',
+  larguraServida = 1200,
+  sizes = '(max-width: 56.25rem) 100vw, 50vw',
+  prioridade = false,
+  class: className,
+} = Astro.props;
+---
+
+<div class:list={['foto', className]} style={`aspect-ratio: ${aspectRatio};`}>
+  <Image
+    src={src}
+    alt={alt}
+    widths={[480, 800, larguraServida]}
+    sizes={sizes}
+    format="webp"
+    loading={prioridade ? 'eager' : 'lazy'}
+    fetchpriority={prioridade ? 'high' : 'auto'}
+    decoding={prioridade ? 'sync' : 'async'}
+  />
+</div>
+
+<style>
+  .foto {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--surface);
+  }
+
+  /* :global porque a <img> é renderizada pelo astro:assets, não por este
+     arquivo — o escopo daqui não alcança elemento que ele não emite. */
+  .foto :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+</style>

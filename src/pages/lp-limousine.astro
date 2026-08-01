@@ -5,7 +5,8 @@
 // Página nunca indexada: noindex,follow, fora do sitemap, sem canonical
 // (o conteúdo agora é único, então um canonical pra "/" seria informação falsa).
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Foto from '../components/Foto.astro';
+import { fotosLimo } from '../data/fotos-limo.js';
 import Faq from '../components/Faq.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
@@ -88,7 +89,13 @@ const passosOrcamento = [
     </div>
 
     <aside class="lp-hero__card glass-fake">
-      <ImagePlaceholder label="Chrysler Limousine Royal" aspectRatio="4/3" class="reveal" />
+      <Foto
+        src={fotosLimo.tresQuartosFrontalDark2.src}
+        alt={fotosLimo.tresQuartosFrontalDark2.alt}
+        aspectRatio="4/3"
+        prioridade
+        class="reveal"
+      />
       <div class="lp-hero__consulta">
         <EntradaTitulo as="h2">Consulte sua data</EntradaTitulo>
         <p>Para receber uma cotação correta, envie os principais dados do evento.</p>
@@ -163,7 +170,7 @@ const passosOrcamento = [
   </section>
 
   <section class="u-container lp-secao lp-veiculo reveal">
-    <ImagePlaceholder label="Chrysler Limousine Royal em perfil lateral" aspectRatio="16/9" class="reveal" />
+    <Foto src={fotosLimo.lateral.src} alt={fotosLimo.lateral.alt} aspectRatio="16/9" class="reveal" />
     <div>
       <p class="u-eyebrow">A limousine</p>
       <EntradaTitulo as="h2">Chrysler Limousine: clássica, elegante e confortável.</EntradaTitulo>

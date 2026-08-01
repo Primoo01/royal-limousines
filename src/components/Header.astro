@@ -1,11 +1,14 @@
 ---
 import site from '../config/site.js';
 import MenuOverlay from './MenuOverlay.astro';
+// Inline (?raw + set:html) e não <img>: só inlinada a logo enxerga o
+// currentColor e acompanha a cor do mundo durante a passagem do hero.
+import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
 ---
 
 <header class="header glass-real" data-header>
   <div class="header__conteudo u-container">
-    <a href="/" class="header__marca">{site.nome}</a>
+    <a href="/" class="header__marca" aria-label={site.nome}><span class="header__logo" set:html={logoHorizontal} /></a>
 
     <div class="header__acoes">
       <a
@@ -98,15 +101,23 @@ import MenuOverlay from './MenuOverlay.astro';
   }
 
   .header__marca {
-    font-family: var(--fonte-serif);
-    font-weight: 600;
-    font-size: 1.375rem;
-    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
     text-decoration: none;
     color: var(--texto);
     opacity: 1;
     transition: opacity 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* :global porque o SVG entra por set:html — o escopo do Astro não alcança
+     marcação que este arquivo não emite literalmente.
+     A altura substitui a do texto que estava aqui (Cormorant 1.375rem); a
+     largura sai sozinha do viewBox 405×114, então a logo nunca distorce. */
+  .header__logo :global(svg) {
+    display: block;
+    height: 1.75rem;
+    width: auto;
   }
 
   /* Nunca muda de peso — só uma leve queda de opacidade. */
@@ -203,33 +214,17 @@ import MenuOverlay from './MenuOverlay.astro';
     return 'a[href], button:not([disabled])';
   }
 
-  // Mídia do painel esquerdo (ver CLAUDE.md > Navegação e > Mídia pesada):
-  // troca em crossfade no hover, vídeo só carrega na primeira abertura e
-  // pausa ao fechar. Sem vídeo real ainda, isso fica pronto e inerte.
-  const reduzMovimentoMenu = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Mídia do painel esquerdo (ver CLAUDE.md > Navegação): troca em crossfade
+  // no hover. São fotos, não vídeo — o carregamento sob demanda e o
+  // pause/play saíram junto com o vídeo, que foi descartado (ver
+  // menu-midia.js). O `loading="lazy"` das imagens já segura o download até
+  // o painel entrar em cena.
   const camadasMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-camada]')) : [];
   const gruposComMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-grupo]')) : [];
-  let midiaCarregada = false;
 
   function ativarMidia(grupo: string) {
     camadasMidia.forEach((camada) => {
-      const ativa = camada.getAttribute('data-midia-camada') === grupo;
-      camada.setAttribute('data-ativa', String(ativa));
-      const video = camada.querySelector('video');
-      if (!video) return;
-      if (ativa && !reduzMovimentoMenu) video.play().catch(() => {});
-      else video.pause();
-    });
-  }
-
-  function carregarMidiaNaPrimeiraAbertura() {
-    if (midiaCarregada) return;
-    midiaCarregada = true;
-    camadasMidia.forEach((camada) => {
-      const video = camada.querySelector<HTMLVideoElement>('video[data-src]');
-      if (!video) return;
-      video.src = video.dataset.src ?? '';
-      video.load();
+      camada.setAttribute('data-ativa', String(camada.getAttribute('data-midia-camada') === grupo));
     });
   }
 
@@ -275,7 +270,6 @@ import MenuOverlay from './MenuOverlay.astro';
     botaoMenu.setAttribute('aria-expanded', 'true');
     botaoMenu.setAttribute('aria-label', 'Fechar menu');
     document.body.style.overflow = 'hidden';
-    carregarMidiaNaPrimeiraAbertura();
     const primeiroFocavel = overlay.querySelector<HTMLElement>(seletorFocavel());
     primeiroFocavel?.focus();
     document.addEventListener('keydown', aoTeclar);
@@ -288,7 +282,6 @@ import MenuOverlay from './MenuOverlay.astro';
     botaoMenu.setAttribute('aria-label', 'Abrir menu');
     document.body.style.overflow = '';
     document.removeEventListener('keydown', aoTeclar);
-    camadasMidia.forEach((camada) => camada.querySelector('video')?.pause());
     ativarMidia('padrao');
     fecharAcordeaoServicos();
     (ultimoFoco ?? botaoMenu).focus();

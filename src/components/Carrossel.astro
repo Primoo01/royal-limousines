@@ -66,7 +66,11 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
                   fit="cover"
                   position="center"
                   format="webp"
-                  loading={indice === 0 ? 'eager' : 'lazy'}
+                  {/* Lazy inclusive no primeiro slide: o carrossel nunca é o
+                      hero (na home e na /limousines/ ele fica abaixo da
+                      dobra), e o eager aqui somava ~154 KB ao primeiro load
+                      de uma imagem que ninguém vê ainda. */}
+                  loading="lazy"
                 />
               ) : (
                 <ImagePlaceholder label={foto.alt} aspectRatio="4/5" mundo={mundo} />

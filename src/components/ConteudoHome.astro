@@ -4,8 +4,9 @@
 // sóbrio, inspirado na /lp-limousine/, mas toda frase com palavra-chave do
 // backup original foi preservada — ver comparação de keywords no relatório
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
-import ImagePlaceholder from './ImagePlaceholder.astro';
+import Foto from './Foto.astro';
 import Carrossel from './Carrossel.astro';
+import { fotosLimo } from '../data/fotos-limo.js';
 import CortinaDeLuz from './CortinaDeLuz.astro';
 import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
@@ -13,28 +14,17 @@ import Botao from './Botao.astro';
 import EntradaTitulo from './EntradaTitulo.astro';
 import site from '../config/site.js';
 
-// Placeholders, não fotos reais: as 6 fotos que chegaram são do 300C PRETO
-// (o sedan) e ficam restritas à seção do sedan em /limousines/. A home é
-// sobre a limousine BRANCA — usar as fotos do preto aqui seria mostrar o
-// produto errado. O rótulo de cada uma descreve a foto que falta, servindo
-// de pauta pro dono na hora de fotografar.
+// Fotos reais da limousine BRANCA. As do 300C preto (o sedan) ficam
+// restritas à seção do sedan em /limousines/: a home é sobre a branca, e
+// misturar as duas aqui mostraria o produto errado.
+//
+// `interna` é a última de propósito: é a de menor resolução (640×640) e
+// nunca deve abrir o carrossel, onde o slide aparece maior.
 const fotosGaleriaHome = [
-  {
-    alt: 'Chrysler 300C branco visto de frente em três quartos',
-    legenda: 'Chrysler 300C branco visto de frente em três quartos',
-  },
-  {
-    alt: 'Chrysler 300C branco de lateral, com o carro inteiro no quadro',
-    legenda: 'Chrysler 300C branco de lateral, com o carro inteiro no quadro',
-  },
-  {
-    alt: 'Salão de passageiros do Chrysler 300C branco',
-    legenda: 'Salão de passageiros do Chrysler 300C branco',
-  },
-  {
-    alt: 'Detalhe do acabamento do Chrysler 300C branco',
-    legenda: 'Detalhe do acabamento do Chrysler 300C branco',
-  },
+  { imagem: fotosLimo.tresQuartosFrontal.src, alt: fotosLimo.tresQuartosFrontal.alt, legenda: fotosLimo.tresQuartosFrontal.alt },
+  { imagem: fotosLimo.lateral.src, alt: fotosLimo.lateral.alt, legenda: fotosLimo.lateral.alt },
+  { imagem: fotosLimo.tresQuartosTraseira.src, alt: fotosLimo.tresQuartosTraseira.alt, legenda: fotosLimo.tresQuartosTraseira.alt },
+  { imagem: fotosLimo.interna.src, alt: fotosLimo.interna.alt, legenda: fotosLimo.interna.alt },
 ];
 
 const passos = [
@@ -100,7 +90,14 @@ const passos = [
       </div>
 
       <div class="hero-estagio1__midia">
-        <ImagePlaceholder label="Chrysler 300C branco na chegada" aspectRatio="4/5" mundo="escuro" />
+        <Foto
+          src={fotosLimo.tresQuartosFrontalDark.src}
+          alt={fotosLimo.tresQuartosFrontalDark.alt}
+          aspectRatio="4/5"
+          larguraServida={900}
+          sizes="(max-width: 56.25rem) 100vw, 21rem"
+          prioridade
+        />
       </div>
     </div>
 
@@ -166,7 +163,12 @@ const passos = [
     <p>Feita para causar uma boa impressão.</p>
     <Botao variante="terciario" href="/limousines/">Conhecer a frota</Botao>
   </div>
-  <ImagePlaceholder label="Chrysler 300C branco em three-quarter frontal" aspectRatio="4/3" class="reveal" />
+  <Foto
+    src={fotosLimo.tresQuartosFrontal.src}
+    alt={fotosLimo.tresQuartosFrontal.alt}
+    aspectRatio="4/3"
+    class="reveal"
+  />
 </section>
 
 <Marquee />

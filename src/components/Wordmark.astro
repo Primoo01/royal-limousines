@@ -13,25 +13,37 @@
 // invisível pra sempre. Além disso o texto é visível por padrão: quem
 // aplica a máscara é o JS, e só em elemento que ainda não entrou na
 // viewport. Se o JS falhar, o wordmark aparece inteiro.
+// A logo é 100% de FORMAS PREENCHIDAS (27 paths + 3 rects em fill, zero
+// stroke), então o efeito certo é a revelação por máscara — que já era o
+// desta assinatura. stroke-dasharray + getTotalLength() não teria o que
+// desenhar: em forma preenchida ele animaria um contorno invisível.
+// Inline por ?raw pra que o fill=currentColor herde a cor do mundo.
 import site from '../config/site.js';
+import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
 ---
 
-<p class="wordmark" data-wordmark>
-  <span class="wordmark__texto">{site.nome}</span>
+<p class="wordmark" data-wordmark role="img" aria-label={site.nome}>
+  <span class="wordmark__texto" set:html={logoHorizontal} />
 </p>
 
 <style>
   .wordmark {
-    font-family: var(--fonte-serif);
-    font-weight: 500;
-    font-size: clamp(2.5rem, 1.2rem + 6.5vw, 7rem);
-    line-height: 1;
-    letter-spacing: -0.01em;
     color: var(--texto);
   }
 
   .wordmark__texto {
-    display: inline-block;
+    display: block;
+  }
+
+  /* :global: o SVG entra por set:html. Dimensionada pela LARGURA, não pela
+     altura: a logo é 3,55:1 e, se fosse presa à altura do texto que estava
+     aqui (7rem), sairia com 398px de largura num container de 1200px, ou
+     seja pequena demais pra uma assinatura. A proporção vem do viewBox, então
+     ela cresce sem esticar. */
+  .wordmark__texto :global(svg) {
+    display: block;
+    width: min(100%, 40rem);
+    height: auto;
   }
 
   /* Estado preparado: máscara fechada à esquerda. Só o JS aplica. */

@@ -11,7 +11,8 @@
 // src/data/sedan-preto.js pra ser completado quando o cliente confirmar mais
 // detalhes (capacidade, itens de série, ano, serviços).
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Foto from '../components/Foto.astro';
+import { fotosLimo } from '../data/fotos-limo.js';
 import Marquee from '../components/Marquee.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
@@ -33,7 +34,7 @@ const description =
 // errado. import.meta.glob resolve os arquivos de src/assets pra que o
 // astro:assets consiga processá-los; o nome do arquivo é a chave que liga
 // cada foto à sua legenda em sedan.js.
-const imagensSedan = import.meta.glob<{ default: ImageMetadata }>('/src/assets/sedan-preto/*.jpeg', {
+const imagensSedan = import.meta.glob<{ default: ImageMetadata }>('/src/assets/sedan-preto/*.jpg', {
   eager: true,
 });
 const fotosCarrosselSedan = fotosSedan.map((foto) => ({
@@ -60,7 +61,12 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     </div>
 
     <div class="bloco-frota__grade">
-      <ImagePlaceholder label="Chrysler 300C branco em three-quarter frontal" aspectRatio="4/3" class="reveal" />
+      <Foto
+        src={fotosLimo.tresQuartosFrontal.src}
+        alt={fotosLimo.tresQuartosFrontal.alt}
+        aspectRatio="4/3"
+        class="reveal"
+      />
       <div>
         <EntradaTitulo as="h2">Limousine para Casamentos Chrysler 300C</EntradaTitulo>
         <div class="u-prosa">

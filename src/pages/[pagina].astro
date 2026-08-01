@@ -2,21 +2,34 @@
 // Template único para as 8 páginas de serviço/região do Mapa de páginas.
 // Os slugs e o conteúdo (reaproveitado do backup) vêm de src/data/servicos-regiao.js.
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Foto from '../components/Foto.astro';
+import { fotosLimo } from '../data/fotos-limo.js';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
 import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
 import servicosRegiao from '../data/servicos-regiao.js';
 
+// Três pares de fotos revezados entre as 8 páginas (CLAUDE.md > Imagens:
+// nenhuma foto exclusiva por página — o acervo real não dá pra isso, e
+// repetir com rodízio é honesto). O primeiro de cada par é o espaço retrato
+// (3/4) e o segundo o paisagem (4/3); a escolha priorizou quem já nasce
+// perto da proporção do espaço, pra o recorte central tirar o mínimo.
+const paresDeFoto = [
+  [fotosLimo.tresQuartosFrontal, fotosLimo.frontal],
+  [fotosLimo.lateral, fotosLimo.tresQuartosFrontal],
+  [fotosLimo.tresQuartosTraseira, fotosLimo.lateral],
+];
+
 export function getStaticPaths() {
-  return servicosRegiao.map((item) => ({
+  return servicosRegiao.map((item, indice) => ({
     params: { pagina: item.slug },
-    props: { dados: item },
+    props: { dados: item, indice },
   }));
 }
 
-const { dados } = Astro.props;
+const { dados, indice } = Astro.props;
+const [fotoRetrato, fotoPaisagem] = paresDeFoto[indice % paresDeFoto.length];
 // Zona Norte não tinha meta description no backup — usa a primeira frase
 // real do corpo da própria página como fallback, em vez de inventar uma.
 const description = dados.description ?? dados.abertura[0];
@@ -67,11 +80,11 @@ const outrasPaginasCasamento =
         </div>
       </div>
 
-      <ImagePlaceholder label={dados.imagens[0].rotulo} aspectRatio="3/4" class="reveal" />
+      <Foto src={fotoRetrato.src} alt={fotoRetrato.alt} aspectRatio="3/4" class="reveal" />
     </div>
 
     <div class="secao-regiao__grade secao-regiao__grade--inverso">
-      <ImagePlaceholder label={dados.imagens[1].rotulo} aspectRatio="4/3" class="reveal" />
+      <Foto src={fotoPaisagem.src} alt={fotoPaisagem.alt} aspectRatio="4/3" class="reveal" />
 
       <div class="u-prosa">
         <EntradaTitulo as="h2">{dados.h2}</EntradaTitulo>

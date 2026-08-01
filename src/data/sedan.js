@@ -36,37 +36,35 @@ export const fichaAConfirmar = [
   { rotulo: 'Atendimento fora de São Paulo', valor: 'CONFIRMAR' },
 ];
 
-// As 6 fotos reais do sedan, em src/assets/sedan-preto.
+// As fotos reais do sedan, em src/assets/sedan-preto.
 //
-// A ORDEM DO ARRAY É A ORDEM DO CARROSSEL: exteriores primeiro, a porta
-// aberta como transição, interiores no fim. Os nomes de arquivo são os
-// originais do WhatsApp e não dizem nada sobre o conteúdo — cada legenda
-// abaixo foi escrita ABRINDO a foto correspondente e olhando. Se trocar um
-// arquivo, abra a foto nova e confira a legenda de novo.
+// A ORDEM DO ARRAY É A ORDEM DO CARROSSEL: exteriores primeiro, o interior
+// no fim. Cada legenda foi escrita ABRINDO a foto correspondente e olhando.
+// Se trocar um arquivo, abra a foto nova e confira a legenda de novo.
+//
+// Os três exteriores são as versões EDITADAS: a placa original saiu e entrou
+// a placa institucional Royal. Nenhuma placa legível permanece.
+//
+// FALTAM DUAS, seguradas de propósito: "volante e painel" e "teto solar
+// visto do banco traseiro" ainda mostram uma garrafa de água no porta-copos.
+// Elas voltam pra cá assim que chegar a versão sem o objeto — é só somar
+// duas entradas neste array, nada mais muda.
 export const fotosSedan = [
   {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.09.jpeg',
+    arquivo: 'sedan-frente-tres-quartos.jpg',
     legenda: 'Chrysler 300C preto visto de frente em três quartos, com o teto solar aberto',
   },
   {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.08 (2).jpeg',
+    arquivo: 'sedan-traseira-tres-quartos.jpg',
     legenda: 'Chrysler 300C preto visto de traseira em três quartos',
   },
   {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.05 (3).jpeg',
-    legenda: 'Chrysler 300C preto visto de traseira, com a placa decorativa de casamento',
+    arquivo: 'sedan-traseira-placa-royal.jpg',
+    legenda: 'Chrysler 300C preto visto de traseira, com a placa Royal Limousines',
   },
   {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.08 (1).jpeg',
+    arquivo: 'sedan-porta-traseira-aberta.jpg',
     legenda: 'Chrysler 300C preto com a porta traseira aberta, banco em couro claro',
-  },
-  {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.05 (1).jpeg',
-    legenda: 'Volante e painel do Chrysler 300C preto',
-  },
-  {
-    arquivo: 'WhatsApp Image 2026-07-23 at 19.42.07.jpeg',
-    legenda: 'Chrysler 300C preto com o teto solar aberto, visto do banco traseiro',
   },
 ];
 

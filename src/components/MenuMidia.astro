@@ -1,9 +1,11 @@
 ---
-// Painel de mídia do menu (ver CLAUDE.md > Navegação e > Mídia pesada).
+// Painel de mídia do menu (ver CLAUDE.md > Navegação).
 // Uma camada por grupo, empilhadas, trocando em crossfade (opacity) via
 // data-ativa — o Header.astro liga isso ao hover dos links.
-// Vídeo: preload="none", sem <source> no HTML — o Header.astro só define a
-// fonte e chama .load() na primeira abertura do menu.
+//
+// Sem vídeo: são fotos com um zoom lento e contínuo (ver menu-midia.js pra
+// por quê). O movimento é só transform, e some inteiro em reduced-motion.
+import { Image } from 'astro:assets';
 import menuMidiaData from '../data/menu-midia.js';
 
 const grupos = Object.entries(menuMidiaData);
@@ -13,11 +15,14 @@ const grupos = Object.entries(menuMidiaData);
   {
     grupos.map(([chave, item]) => (
       <div class="menu-midia__camada" data-midia-camada={chave} data-ativa={chave === 'padrao' ? 'true' : 'false'}>
-        {item.src && item.tipo === 'imagem' && <img src={item.src} alt="" loading="lazy" />}
-        {item.src && item.tipo === 'video' && (
-          <video muted loop playsinline preload="none" poster={item.poster ?? undefined} data-src={item.src} />
-        )}
-        {!item.src && <div class={`menu-midia__gradiente menu-midia__gradiente--${item.tom}`} />}
+        <Image
+          src={item.src}
+          alt=""
+          widths={[640, 1080]}
+          sizes="(max-width: 56rem) 100vw, 40vw"
+          format="webp"
+          loading="lazy"
+        />
       </div>
     ))
   }
@@ -46,73 +51,41 @@ const grupos = Object.entries(menuMidiaData);
     opacity: 1;
   }
 
-  .menu-midia__camada img,
-  .menu-midia__camada video {
+  .menu-midia__camada :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    display: block;
+    /* Zoom lento de aproximação: 1 → 1.08 em 6s. `alternate` faz a volta
+       pelo mesmo caminho, então não existe salto no recomeço do ciclo.
+       Só transform, como todo movimento do site. */
+    animation: menu-midia-zoom 6s ease-in-out infinite alternate;
   }
 
-  .menu-midia__gradiente {
-    position: absolute;
-    inset: -20%;
-    animation: menu-midia-flutuar 50s ease-in-out infinite;
-  }
-
-  .menu-midia__gradiente--champagne {
-    background: radial-gradient(circle at 30% 30%, #c6a25e, #3a342a 70%);
-  }
-
-  .menu-midia__gradiente--aurora {
-    background: linear-gradient(135deg, #c6a25e, #6b3d2e 60%, #211e18);
-    animation-duration: 40s;
-  }
-
-  .menu-midia__gradiente--grafite {
-    background: linear-gradient(120deg, #3a4048, #14161a 70%);
-    animation-name: menu-midia-deslizar;
-    animation-duration: 55s;
-  }
-
-  .menu-midia__gradiente--linho {
-    background: radial-gradient(circle at 70% 40%, #efe6d8, #a89f8c 80%);
-    animation-duration: 60s;
-  }
-
-  .menu-midia__gradiente--carvao {
-    background: linear-gradient(160deg, #211e18, #050403 75%);
-    animation-duration: 65s;
-  }
-
-  @keyframes menu-midia-flutuar {
-    0%,
-    100% {
-      transform: translate(0, 0) rotate(0deg);
+  @keyframes menu-midia-zoom {
+    from {
+      transform: scale(1);
     }
-    50% {
-      transform: translate(-3%, 2%) rotate(3deg);
+    to {
+      transform: scale(1.08);
     }
   }
 
-  @keyframes menu-midia-deslizar {
-    0%,
-    100% {
-      transform: translate(0, 0) scale(1);
-    }
-    50% {
-      transform: translate(3%, -2%) scale(1.05);
-    }
-  }
-
+  /* O painel é do mundo escuro e quatro das seis fotos são do carro branco
+     em plena luz. Este véu é o que sustenta o contraste do texto do menu:
+     no desktop o texto fica AO LADO da mídia, mas no mobile ele fica POR
+     CIMA, e é lá que o véu precisa ser pesado. Ver a medição de contraste
+     na resposta da rodada de inserção de mídias. */
   .menu-midia__escrim {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, rgba(20, 18, 16, 0.15), rgba(20, 18, 16, 0.55));
+    background: linear-gradient(to right, rgba(20, 18, 16, 0.3), rgba(20, 18, 16, 0.65));
     pointer-events: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .menu-midia__gradiente {
+    .menu-midia__camada :global(img) {
       animation: none;
     }
 
@@ -122,14 +95,15 @@ const grupos = Object.entries(menuMidiaData);
   }
 
   /* Mobile: sem painel — a mídia vira fundo atrás dos links (ver Header.astro
-     / MenuOverlay.astro pra como o container é reposicionado). */
+     / MenuOverlay.astro pra como o container é reposicionado). Aqui o texto
+     corre POR CIMA da foto, então o véu sobe bastante. */
   @media (max-width: 56rem) {
     .menu-midia__escrim {
       background: linear-gradient(
         to bottom,
-        rgba(20, 18, 16, 0.55),
-        rgba(20, 18, 16, 0.8) 40%,
-        rgba(20, 18, 16, 0.92)
+        rgba(20, 18, 16, 0.72),
+        rgba(20, 18, 16, 0.88) 40%,
+        rgba(20, 18, 16, 0.95)
       );
     }
   }

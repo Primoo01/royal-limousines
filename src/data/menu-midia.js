@@ -1,58 +1,25 @@
 // Mídia do painel esquerdo do menu (ver CLAUDE.md > Navegação).
 // Uma entrada por item principal da lista vertical do menu: Início, Frota,
 // Serviços, A Royal, Contato (as páginas de casamento por região não têm
-// grupo próprio — não aparecem no menu, só no rodapé).
+// grupo próprio, não aparecem no menu, só no rodapé), mais o estado padrão.
 //
-// Enquanto `src` for null, o painel mostra uma textura CSS abstrata (gradiente
-// + leve movimento) usando o tom indicado em `tom`. Quando a mídia real
-// chegar, preencha `src` (e `poster`, se for vídeo) — nada de markup muda.
+// SÃO FOTOS, NÃO VÍDEO. O vídeo foi descartado: os arquivos disponíveis
+// ficavam muito acima do teto de 1,5 MB do CLAUDE.md, e a foto com zoom lento
+// entrega o mesmo movimento por alguns KB. O painel é do MUNDO ESCURO, então
+// o escurecimento sobre as fotos claras é o que garante o contraste do texto
+// (ver MenuMidia.astro > .menu-midia__escrim).
 //
-// tipo: 'imagem' | 'video'
-// tom: só usado enquanto `src` for null — controla o gradiente placeholder.
+// Os enquadramentos foram escolhidos pra serem bem diferentes entre si: o
+// crossfade no hover só tem graça se a troca for perceptível.
+import { fotosLimo } from './fotos-limo.js';
 
 export const menuMidia = {
-  padrao: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'champagne',
-    alt: 'Textura abstrata dourada',
-  },
-  inicio: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'aurora',
-    alt: 'Luz quente abstrata',
-  },
-  frota: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'grafite',
-    alt: 'Reflexo metálico abstrato, tom frio',
-  },
-  servicos: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'linho',
-    alt: 'Textura têxtil abstrata, tom claro',
-  },
-  royal: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'carvao',
-    alt: 'Textura escura abstrata, tom carvão',
-  },
-  contato: {
-    tipo: 'imagem',
-    src: null,
-    poster: null,
-    tom: 'aurora',
-    alt: 'Luz quente abstrata',
-  },
+  padrao: fotosLimo.tresQuartosFrontalDark,
+  inicio: fotosLimo.tresQuartosFrontal,
+  frota: fotosLimo.lateral,
+  servicos: fotosLimo.interna,
+  royal: fotosLimo.tresQuartosTraseira,
+  contato: fotosLimo.tresQuartosFrontalDark2,
 };
 
 export default menuMidia;

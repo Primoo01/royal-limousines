@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ImagePlaceholder from '../components/ImagePlaceholder.astro';
+import Foto from '../components/Foto.astro';
+import { fotosLimo } from '../data/fotos-limo.js';
 import Botao from '../components/Botao.astro';
 import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
@@ -42,7 +43,7 @@ const description =
       </div>
       <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
     </div>
-    <ImagePlaceholder label="Royal Limousines com a frota em evento" aspectRatio="4/3" class="reveal" />
+    <Foto src={fotosLimo.frontal.src} alt={fotosLimo.frontal.alt} aspectRatio="4/3" class="reveal" />
   </section>
 </BaseLayout>
 
