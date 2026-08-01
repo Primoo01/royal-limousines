@@ -92,39 +92,58 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     </div>
 
     <div class="bloco-frota__interior">
-      <h3>Espaço interno</h3>
-      <div class="u-prosa">
-        <p>
-          Nossas limousines têm sistema de iluminação party, com canhões de
-          laser e neon, poltronas em couro marfim com detalhes em marrom.
-        </p>
-        <p>
-          O interior da limousine, apesar de high-tech, dispõe de todo luxo e
-          conforto que você deseja.
-        </p>
-        <p>
-          Variedade de bebidas finas dispostas em seu bar, frigobar, 3 telas
-          de vídeo (uma de 20” de plasma e duas de 8,5” LCD), ar condicionado
-          bilateral, sistema completo de player (DVD, MP3, CD e foto)
-          integrado ao seu sistema especial de áudio, saída interna de 110
-          watts, comunicação com chofer através de head free e sistema party
-          de decoração.
-        </p>
-        <p>Tudo isso com total privacidade com seu insulfim black out.</p>
+      <div class="bloco-frota__interior-texto">
+        <h3>Espaço interno</h3>
+        <div class="u-prosa">
+          <p>
+            Nossas limousines têm sistema de iluminação party, com canhões de
+            laser e neon, poltronas em couro marfim com detalhes em marrom.
+          </p>
+          <p>
+            O interior da limousine, apesar de high-tech, dispõe de todo luxo e
+            conforto que você deseja.
+          </p>
+          <p>
+            Variedade de bebidas finas dispostas em seu bar, frigobar, 3 telas
+            de vídeo (uma de 20” de plasma e duas de 8,5” LCD), ar condicionado
+            bilateral, sistema completo de player (DVD, MP3, CD e foto)
+            integrado ao seu sistema especial de áudio, saída interna de 110
+            watts, comunicação com chofer através de head free e sistema party
+            de decoração.
+          </p>
+          <p>Tudo isso com total privacidade com seu insulfim black out.</p>
+        </div>
       </div>
+
+      {/* A foto do salão de passageiros: é exatamente o que os parágrafos ao
+          lado descrevem (bar, couro claro, iluminação de festa). */}
+      <Foto
+        src={fotosLimo.interna.src}
+        alt={fotosLimo.interna.alt}
+        aspectRatio="4/5"
+        larguraServida={900}
+        sizes="(max-width: 56rem) 100vw, 45vw"
+        class="bloco-frota__interior-midia reveal"
+      />
     </div>
 
     <div class="u-prosa bloco-frota__fechamento">
+      {/*
+        Reescrito na rodada "lote 2". A versão anterior repetia "limousine
+        para X" oito vezes seguidas — keyword stuffing, que hoje o Google
+        penaliza em vez de premiar. NENHUM termo foi removido: casamentos,
+        festas, eventos, despedida de solteiro, debutantes, aluguel, locação,
+        televisão, São Paulo, SP, 2008, preço justo e garantia continuam
+        todos aqui, redistribuídos em frases que se leem. Ver a comparação
+        termo a termo na resposta da rodada.
+      */}
       <p>
         As melhores limousines para locação você só encontra na Royal
-        Limousine. Nossa empresa já está desde 2008 no mercado de
-        limousines. Somos líderes em aluguel de limousine para casamentos,
-        limousine para festas, limousine para eventos, limousine para
-        despedida de solteiro, limousine casamento, limousine pra
-        debutantes, limousine aluguel, limousine locação eventos, limousine
-        para eventos, limousine para televisão, limousine para festas em SP.
-        Nossas limousines são diferenciadas do mercado. Trabalhamos com
-        preço justo e garantia.
+        Limousine, que está no mercado de limousines desde 2008. Somos
+        líderes em aluguel de limousine para casamentos e festas em SP, e
+        atendemos também eventos, despedida de solteiro, debutantes e
+        televisão em São Paulo. Nossas limousines são diferenciadas do
+        mercado, e trabalhamos com preço justo e garantia.
       </p>
       <p>
         Entre em contato com a Royal Limousine e solicite o seu orçamento
@@ -239,7 +258,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     display: flex;
     flex-direction: column;
     gap: var(--espaco-2);
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .bloco-frota__grade {
@@ -255,13 +274,30 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
   }
 
   .bloco-frota__grade .u-prosa p {
-    color: var(--texto-mut);
+    color: var(--texto);
     margin-top: var(--espaco-2);
   }
 
+  /* Texto à esquerda, foto à direita sangrando até a borda da tela. */
   .bloco-frota__interior {
     margin-top: var(--espaco-5);
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: var(--espaco-5);
+    /* Foto alinhada ao TOPO do texto, não centralizada na linha. */
+    align-items: start;
+  }
+
+  .bloco-frota__interior-texto {
     max-width: 44rem;
+  }
+
+  /* Sangria só à direita: a seção é .u-container (centralizada, teto de
+     --largura-container), então a distância da borda do conteúdo até a
+     borda da tela é o padding do container mais a metade da sobra. É essa
+     distância que a margem negativa devolve. */
+  .bloco-frota__interior-midia {
+    margin-right: calc(-1 * (var(--espaco-3) + max(0px, (100vw - var(--largura-container)) / 2)));
   }
 
   .bloco-frota__interior .u-prosa {
@@ -269,7 +305,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     display: flex;
     flex-direction: column;
     gap: var(--espaco-2);
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .bloco-frota__fechamento {
@@ -277,7 +313,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     display: flex;
     flex-direction: column;
     gap: var(--espaco-2);
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   /* Duas barras de fim de seção empilhadas (uma por ação) — a de baixo não
@@ -298,7 +334,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     padding-top: var(--espaco-4);
     border-top: 1px solid var(--linha);
     max-width: 34rem;
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .bloco-frota__ponte + :global(.botao) {
@@ -409,6 +445,16 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     .bloco-frota__grade,
     .bloco-frota__grade--inverso {
       grid-template-columns: 1fr;
+    }
+
+    /* Coluna única: a foto empilha ABAIXO do texto, em largura total, e a
+       sangria lateral perde a função. */
+    .bloco-frota__interior {
+      grid-template-columns: 1fr;
+    }
+
+    .bloco-frota__interior-midia {
+      margin-right: 0;
     }
 
     .ficha-tecnica {
