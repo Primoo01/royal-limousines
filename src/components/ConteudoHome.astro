@@ -4,9 +4,11 @@
 // sóbrio, inspirado na /lp-limousine/, mas toda frase com palavra-chave do
 // backup original foi preservada — ver comparação de keywords no relatório
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
+import { Image } from 'astro:assets';
 import Foto from './Foto.astro';
 import Carrossel from './Carrossel.astro';
 import { fotosLimo } from '../data/fotos-limo.js';
+import silhuetaLimo from '../assets/fundos/300c-limo-silhueta.png';
 import CortinaDeLuz from './CortinaDeLuz.astro';
 import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
@@ -20,12 +22,9 @@ import site from '../config/site.js';
 //
 // `interna` é a última de propósito: é a de menor resolução (640×640) e
 // nunca deve abrir o carrossel, onde o slide aparece maior.
-const fotosGaleriaHome = [
-  { imagem: fotosLimo.tresQuartosFrontal.src, alt: fotosLimo.tresQuartosFrontal.alt, legenda: fotosLimo.tresQuartosFrontal.alt },
-  { imagem: fotosLimo.lateral.src, alt: fotosLimo.lateral.alt, legenda: fotosLimo.lateral.alt },
-  { imagem: fotosLimo.tresQuartosTraseira.src, alt: fotosLimo.tresQuartosTraseira.alt, legenda: fotosLimo.tresQuartosTraseira.alt },
-  { imagem: fotosLimo.interna.src, alt: fotosLimo.interna.alt, legenda: fotosLimo.interna.alt },
-];
+const fotosGaleriaHome = [fotosLimo.tresQuartosFrontal, fotosLimo.lateral, fotosLimo.tresQuartosTraseira, fotosLimo.interna].map(
+  (foto) => ({ imagem: foto.src, alt: foto.alt, posicao: foto.posicao })
+);
 
 const passos = [
   {
@@ -83,7 +82,7 @@ const passos = [
         </p>
         <div class="hero__cta">
           <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
-          <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
             {site.cta.whatsapp}
           </Botao>
         </div>
@@ -117,6 +116,16 @@ const passos = [
       largura máxima e sobrava uma moldura do wrapper (ainda a meio caminho
       da passagem) nas laterais. */}
   <section class="hero-estagio2">
+    <Image
+      class="silhueta-fundo silhueta-fundo--claro"
+      src={silhuetaLimo}
+      alt=""
+      aria-hidden="true"
+      widths={[700, 1400]}
+      sizes="50vw"
+      format="webp"
+      loading="lazy"
+    />
     <div class="hero-estagio2__miolo u-container">
       <Wordmark />
       <p class="hero-estagio2__tagline" data-wordmark-depois>Desde 2008 · São Paulo</p>
@@ -166,6 +175,7 @@ const passos = [
   <Foto
     src={fotosLimo.tresQuartosFrontal.src}
     alt={fotosLimo.tresQuartosFrontal.alt}
+    posicao={fotosLimo.tresQuartosFrontal.posicao}
     aspectRatio="4/3"
     class="reveal"
   />
@@ -216,7 +226,7 @@ const passos = [
   </div>
   <div class="hero__cta">
     <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
-    <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+    <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
       {site.cta.whatsapp}
     </Botao>
   </div>
@@ -342,7 +352,14 @@ const passos = [
     padding-block: var(--espaco-6);
   }
 
+  .hero-estagio2 {
+    position: relative;
+    overflow: hidden;
+  }
+
   .hero-estagio2__miolo {
+    position: relative;
+    z-index: 1;
     width: 100%;
   }
 

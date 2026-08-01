@@ -22,6 +22,7 @@ const grupos = Object.entries(menuMidiaData);
           sizes="(max-width: 56rem) 100vw, 40vw"
           format="webp"
           loading="lazy"
+          style={item.posicao ? `object-position: ${item.posicao};` : undefined}
         />
       </div>
     ))

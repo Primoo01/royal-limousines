@@ -27,6 +27,8 @@ interface Props {
   sizes?: string;
   /** Só o hero carrega adiantado; o resto é lazy. */
   prioridade?: boolean;
+  /** object-position, quando o recorte central não é o certo pra esta foto. */
+  posicao?: string;
   class?: string;
 }
 
@@ -37,6 +39,7 @@ const {
   larguraServida = 1200,
   sizes = '(max-width: 56.25rem) 100vw, 50vw',
   prioridade = false,
+  posicao,
   class: className,
 } = Astro.props;
 ---
@@ -51,6 +54,7 @@ const {
     loading={prioridade ? 'eager' : 'lazy'}
     fetchpriority={prioridade ? 'high' : 'auto'}
     decoding={prioridade ? 'sync' : 'async'}
+    style={posicao ? `object-position: ${posicao};` : undefined}
   />
 </div>
 

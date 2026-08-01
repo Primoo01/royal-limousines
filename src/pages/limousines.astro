@@ -17,6 +17,8 @@ import Marquee from '../components/Marquee.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
 import Carrossel from '../components/Carrossel.astro';
+import { Image } from 'astro:assets';
+import silhuetaSedan from '../assets/fundos/300c-sedan-silhueta.png';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 import sedanPreto from '../data/sedan-preto.js';
@@ -40,7 +42,6 @@ const imagensSedan = import.meta.glob<{ default: ImageMetadata }>('/src/assets/s
 const fotosCarrosselSedan = fotosSedan.map((foto) => ({
   imagem: imagensSedan[`/src/assets/sedan-preto/${foto.arquivo}`].default,
   alt: foto.legenda,
-  legenda: foto.legenda,
 }));
 ---
 
@@ -64,6 +65,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
       <Foto
         src={fotosLimo.tresQuartosFrontal.src}
         alt={fotosLimo.tresQuartosFrontal.alt}
+        posicao={fotosLimo.tresQuartosFrontal.posicao}
         aspectRatio="4/3"
         class="reveal"
       />
@@ -177,6 +179,16 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     </div>
 
     <section id="sedan" class="u-container bloco-frota bloco-frota--escuro reveal">
+      <Image
+        class="silhueta-fundo silhueta-fundo--escuro"
+        src={silhuetaSedan}
+        alt=""
+        aria-hidden="true"
+        widths={[700, 1400]}
+        sizes="60vw"
+        format="webp"
+        loading="lazy"
+      />
       <p class="u-eyebrow">{sedanPreto.eyebrow}</p>
       <EntradaTitulo as="h2">{sedanPreto.titulo}</EntradaTitulo>
 
@@ -209,7 +221,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     </section>
 
     {/* Fora do u-container: o carrossel é de sangria total. */}
-    <Carrossel fotos={fotosCarrosselSedan} mundo="escuro" legendas={false} />
+    <Carrossel fotos={fotosCarrosselSedan} mundo="escuro" class="fotos-sedan" />
   </div>
 </BaseLayout>
 
@@ -297,10 +309,30 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
      tela cheia, título bem maior, muito mais respiro. A contenção do texto é
      proposital (branco = espetáculo, preto = discrição). */
   .bloco-frota--escuro {
+    position: relative;
     min-height: 100svh;
     padding-block: var(--espaco-7);
     /* Alvo do link "#sedan": sem isto o título nasce por baixo do header. */
     scroll-margin-top: var(--altura-header);
+    /* Recorta a silhueta que sangra pela borda direita. */
+    overflow: hidden;
+  }
+
+  /* Preto do sedan, mais fundo que o --escuro-bg do resto do mundo escuro.
+     Sangria total: a seção é .u-container (largura máxima), então pintar o
+     background-color dela deixaria duas faixas do fundo antigo nas laterais.
+     A camada abaixo escapa do container com a técnica dos 50vw. */
+  .bloco-frota--escuro::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    background-color: #020202;
+    pointer-events: none;
   }
 
   .bloco-frota--escuro > .u-eyebrow {

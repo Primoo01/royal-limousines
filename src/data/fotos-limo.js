@@ -20,6 +20,11 @@ export const fotosLimo = {
   tresQuartosFrontal: {
     src: tresQuartosFrontal,
     alt: 'Limousine Chrysler 300C branca em três quartos, parada na entrada de um salão de eventos ao anoitecer',
+    // O recorte central cortava a base do carro (as rodas e a frente ficavam
+    // fora). Ancorando embaixo, a base da foto encosta na base do contêiner e
+    // o carro aparece inteiro. Viaja com a foto, não com o espaço: vale em
+    // todos os lugares onde ela entra.
+    posicao: 'center bottom',
   },
   tresQuartosFrontalDark: {
     src: tresQuartosFrontalDark,

@@ -23,6 +23,21 @@
   --ouro-claro: #a8823c;
   --ouro-escuro: #c6a25e;
 
+  /* ---- Verde oficial do WhatsApp ----
+     Única cor do site fora da paleta dos dois mundos. Existe só para o
+     ícone ser reconhecido de imediato: usada no botão flutuante e no ícone
+     do header, em nenhum outro lugar. */
+  --verde-whatsapp: #25d366;
+
+  /* ---- Correção de exposição das fotos do 300C preto ----
+     As fotos do sedan saíram subexpostas em relação às da limousine branca.
+     Ajuste fino num lugar só: mude aqui e vale para todas de uma vez.
+     Filtro ESTÁTICO — a propriedade filter nunca é animada nem transicionada
+     (CLAUDE.md > Filosofia). */
+  --sedan-brilho: 1.08;
+  --sedan-contraste: 1.05;
+  --sedan-saturacao: 1.02;
+
   /* ---- Tokens semânticos ----
      Toda página nasce no mundo claro por padrão.
      A seção .mundo-escuro (usada em /limousines/ na transição dia→noite)
@@ -302,28 +317,86 @@ p + p {
   transition: transform 0.15s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-/* ---- Primário — moldura em colchete ----
-   Repouso: 4 colchetes de 11px nos cantos. Hover: os colchetes crescem
-   (scaleX/scaleY) até se encontrarem, fechando a moldura, e um preenchimento
-   dourado sobe de baixo pra cima. Ver componente Botao.astro para o markup
-   (4 spans de canto + 1 de preenchimento) exigido por esta técnica. */
+/* ---- Primário — sólido, com elevação no hover ----
+   Preenchido no dourado do mundo, texto na cor de fundo do mundo.
+
+   A elevação NÃO anima box-shadow (CLAUDE.md > Filosofia proíbe: é uma das
+   propriedades caras). São duas camadas de sombra empilhadas, e o que anima
+   é a OPACIDADE de uma delas mais um translateY — as duas propriedades
+   baratas de sempre. Visualmente é idêntico a uma sombra que cresce. */
 .botao--primario {
   padding: 1.1em 2em;
-  overflow: hidden;
+  /* Tinta escura FIXA, não var(--bg). O dourado é um meio-tom nos dois
+     mundos, então no mundo claro o texto na cor de fundo (#F4F1EB sobre
+     #A8823C) dava 3.14:1 e reprovava — o rótulo tem 12px, que exige 4.5:1.
+     Com a tinta escura fica 4.95:1 no claro e 7.26:1 no escuro. */
+  color: var(--claro-texto);
   isolation: isolate;
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* Camada de repouso: é ela que carrega o fundo sólido e a sombra leve. */
+.botao--primario::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--ouro);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+/* Camada de hover: só sombra, sem fundo. Entra por opacidade. */
+.botao--primario::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26), 0 3px 8px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.botao--primario:hover,
+.botao--primario:focus-visible {
+  transform: translateY(-2px);
+}
+
+.botao--primario:hover::after,
+.botao--primario:focus-visible::after {
+  opacity: 1;
 }
 
 .botao--primario:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
 }
 
 .botao--primario .botao__texto {
   position: relative;
   z-index: 2;
+}
+
+/* ---- Secundário — moldura em colchete ----
+   Repouso: 4 colchetes de 11px nos cantos. Hover: os colchetes crescem
+   (scaleX/scaleY) até se encontrarem, fechando a moldura, e um preenchimento
+   dourado sobe de baixo pra cima. Ver componente Botao.astro para o markup
+   (4 spans de canto + 1 de preenchimento) exigido por esta técnica. */
+.botao--secundario {
+  padding: 1.1em 2em;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.botao--secundario:active {
+  transform: scale(0.98);
+}
+
+.botao--secundario .botao__texto {
+  position: relative;
+  z-index: 2;
   transition: color 0.3s ease;
 }
 
-.botao--primario .botao__preenchimento {
+.botao--secundario .botao__preenchimento {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -333,13 +406,13 @@ p + p {
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
-.botao--primario:hover .botao__preenchimento,
-.botao--primario:focus-visible .botao__preenchimento {
+.botao--secundario:hover .botao__preenchimento,
+.botao--secundario:focus-visible .botao__preenchimento {
   transform: scaleY(1);
 }
 
-.botao--primario:hover .botao__texto,
-.botao--primario:focus-visible .botao__texto {
+.botao--secundario:hover .botao__texto,
+.botao--secundario:focus-visible .botao__texto {
   color: var(--bg);
 }
 
@@ -433,13 +506,13 @@ p + p {
   transform-origin: bottom;
 }
 
-.botao--primario:hover .botao__colchete::before,
-.botao--primario:focus-visible .botao__colchete::before {
+.botao--secundario:hover .botao__colchete::before,
+.botao--secundario:focus-visible .botao__colchete::before {
   transform: scaleX(60);
 }
 
-.botao--primario:hover .botao__colchete::after,
-.botao--primario:focus-visible .botao__colchete::after {
+.botao--secundario:hover .botao__colchete::after,
+.botao--secundario:focus-visible .botao__colchete::after {
   transform: scaleY(60);
 }
 
@@ -514,6 +587,64 @@ p + p {
 }
 
 /* ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------- */
+/* Silhueta de fundo — desenho técnico do carro, decorativo           */
+/* ---------------------------------------------------------------- */
+/* Metade direita, sangrando pela borda (52% + 62% = 114% da largura),
+   atrás de tudo e sem capturar ponteiro. O contêiner precisa ser
+   position: relative + overflow: hidden.
+
+   As duas artes vêm com fundo chapado (creme na da limousine, quase preto
+   na do sedan). Em vez de recortar o fundo no arquivo, o blend resolve:
+   `multiply` some com o creme no mundo claro e `screen` some com o preto no
+   mundo escuro. Sobra só o traço, que é o que interessa. */
+.silhueta-fundo {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  /* 56% + 60% = 116%: começa depois da coluna de texto (que termina em
+     40rem) e ainda sangra 16% pela borda direita. Em 52% o desenho tocava
+     os últimos 16px das linhas mais longas da seção do sedan. */
+  left: 56%;
+  width: 60%;
+  height: auto;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.silhueta-fundo--claro {
+  mix-blend-mode: multiply;
+}
+
+.silhueta-fundo--escuro {
+  mix-blend-mode: screen;
+}
+
+/* Some no mobile. Ali não existe "metade direita": a coluna é única e o texto
+   corre por cima do desenho. Medido: a tagline dourada do Hero 2 sobre um
+   traço da silhueta dá 1.38:1 (e 1.97:1 mesmo baixando a opacidade pra 0.3),
+   contra os 4.5:1 exigidos. Como a silhueta é puramente decorativa, sumir é
+   melhor que degradar a leitura. No desktop ela fica intacta, com os 50%
+   pedidos — lá o texto termina em 370px e o desenho só começa em 749px. */
+@media (max-width: 56.25rem) {
+  .silhueta-fundo {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Fotos do 300C preto — correção de exposição                       */
+/* ---------------------------------------------------------------- */
+/* Filtro ESTÁTICO. Não existe transition nem animation em `filter`
+   nesta regra, e não deve passar a existir: é uma das propriedades que o
+   CLAUDE.md proíbe animar. Os três valores moram em :root, no topo deste
+   arquivo, pra ajuste num lugar só. */
+.fotos-sedan img {
+  filter: brightness(var(--sedan-brilho)) contrast(var(--sedan-contraste)) saturate(var(--sedan-saturacao));
+}
+
 /* Glass — ver regra em CLAUDE.md                                     */
 /* "Glass real" (backdrop-filter) é permitido em NO MÁXIMO dois       */
 /* lugares do site inteiro: a nav fixa e o botão de WhatsApp.         */

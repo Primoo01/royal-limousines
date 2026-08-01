@@ -65,7 +65,13 @@ const servicos = [
       {
         servicos.map((servico) => (
           <article class="servico-card">
-            <Foto src={servico.imagem.src} alt={servico.imagem.alt} aspectRatio="16/9" larguraServida={800} />
+            <Foto
+              src={servico.imagem.src}
+              alt={servico.imagem.alt}
+              posicao={servico.imagem.posicao}
+              aspectRatio="16/9"
+              larguraServida={800}
+            />
             <h2>{servico.titulo}</h2>
             <ul>
               {servico.itens.map((item) => (
@@ -79,7 +85,7 @@ const servicos = [
 
     <div class="hero__cta">
       <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
-      <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+      <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.whatsapp}
       </Botao>
     </div>

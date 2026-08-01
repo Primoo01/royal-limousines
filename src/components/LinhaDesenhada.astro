@@ -1,25 +1,52 @@
 ---
-// Linha que se desenha — curva única e suave terminando num ponto marcado
-// (ver CLAUDE.md > Linha que se desenha). O comprimento do traçado é medido
-// com getTotalLength() em Movimento.astro, nunca chutado.
+// Linha que se desenha (ver CLAUDE.md > Linha que se desenha). O comprimento
+// do traçado é medido com getTotalLength() em Movimento.astro, nunca chutado.
+//
+// Duas variantes:
+//
+// - 'curva' (padrão): a curva única e suave terminando num ponto marcado.
+//   É a das 10 páginas de conteúdo.
+// - 'assinatura': gesto de rubrica, usado só na /contato/. Duas ondulações em
+//   alturas diferentes (a primeira mais alta e ampla, a segunda mais baixa e
+//   curta) e um arremate curto subindo no fim. Traço mais grosso e SEM o
+//   ponto: quem fecha o gesto é o arremate.
 //
 // Regra de segurança (mesmo princípio do vocabulário de entrada): sem
-// dasharray/dashoffset definidos, a curva do SVG aparece inteira e o ponto
-// é visível por padrão. Só ficam escondidos quando o JS decide preparar o
+// dasharray/dashoffset definidos, o traçado aparece inteiro e o ponto é
+// visível por padrão. Só ficam escondidos quando o JS decide preparar o
 // elemento pra animar — nunca por padrão do CSS.
 interface Props {
+  variante?: 'curva' | 'assinatura';
   class?: string;
 }
 
-const { class: className } = Astro.props;
-const classes = ['linha-desenhada', className].filter(Boolean).join(' ');
+const { variante = 'curva', class: className } = Astro.props;
+const assinatura = variante === 'assinatura';
+const classes = ['linha-desenhada', assinatura && 'linha-desenhada--assinatura', className]
+  .filter(Boolean)
+  .join(' ');
 ---
 
 <div class={classes} data-linha-desenhada aria-hidden="true">
-  <svg viewBox="0 0 200 24" preserveAspectRatio="none" focusable="false">
-    <path class="linha-desenhada__curva" d="M2 18 C 55 2, 145 2, 198 16" fill="none" />
-  </svg>
-  <span class="linha-desenhada__ponto" data-linha-ponto></span>
+  {
+    assinatura ? (
+      // preserveAspectRatio "meet" e não "none": com "none" a caixa esticava
+      // o traço junto e a espessura deformava, o que num gesto de 2.4px fica
+      // visível. Aqui o desenho mantém a proporção.
+      <svg viewBox="0 0 200 32" preserveAspectRatio="xMidYMid meet" focusable="false">
+        <path
+          class="linha-desenhada__curva"
+          d="M3 22 C 22 4, 44 6, 58 18 C 70 28, 86 28, 98 17 C 112 4, 134 6, 150 16 C 162 23, 174 24, 184 19 L 197 7"
+          fill="none"
+        />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 200 24" preserveAspectRatio="none" focusable="false">
+        <path class="linha-desenhada__curva" d="M2 18 C 55 2, 145 2, 198 16" fill="none" />
+      </svg>
+    )
+  }
+  {!assinatura && <span class="linha-desenhada__ponto" data-linha-ponto />}
 </div>
 
 <style>
@@ -28,6 +55,13 @@ const classes = ['linha-desenhada', className].filter(Boolean).join(' ');
     width: 100%;
     max-width: 11rem;
     height: 1.5rem;
+  }
+
+  /* O gesto ocupa mais área que a curva simples: é mais alto (duas
+     ondulações + arremate) e um pouco mais largo. */
+  .linha-desenhada--assinatura {
+    max-width: 13rem;
+    height: 2.1rem;
   }
 
   .linha-desenhada svg {
@@ -42,6 +76,11 @@ const classes = ['linha-desenhada', className].filter(Boolean).join(' ');
     stroke-width: 1.5;
     stroke-linecap: round;
     fill: none;
+  }
+
+  .linha-desenhada--assinatura .linha-desenhada__curva {
+    stroke-width: 2.4;
+    stroke-linejoin: round;
   }
 
   /* Só existe transição quando o JS decidiu preparar este elemento —

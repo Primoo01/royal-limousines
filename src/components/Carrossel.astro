@@ -22,22 +22,22 @@ import { Image } from 'astro:assets';
 import ImagePlaceholder from './ImagePlaceholder.astro';
 
 interface FotoCarrossel {
-  /** Legenda visível, que troca junto com a foto */
-  legenda: string;
-  /** Texto alternativo. Igual à legenda por padrão em quem chama. */
+  /** Texto alternativo descritivo. */
   alt: string;
   /** Foto real. Sem ela, entra um placeholder no lugar. */
   imagem?: ImageMetadata;
+  /** object-position, quando o recorte central não é o certo pra esta foto. */
+  posicao?: string;
 }
 
 interface Props {
   fotos: FotoCarrossel[];
   mundo?: 'claro' | 'escuro';
-  /** Mostra a legenda sobre a foto. Falso na seção do sedan, onde fica só a imagem. */
-  legendas?: boolean;
+  /** Classe no elemento raiz — usada pra aplicar o filtro das fotos do sedan. */
+  class?: string;
 }
 
-const { fotos, mundo = 'claro', legendas = true } = Astro.props;
+const { fotos, mundo = 'claro', class: className } = Astro.props;
 
 // Distância de scroll: uma tela pra entrada + 70svh por avanço entre fotos.
 // Calculado no servidor, então o tamanho está certo mesmo antes de o JS rodar.
@@ -45,7 +45,7 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
 ---
 
 <div
-  class:list={['carrossel', mundo === 'escuro' && 'carrossel--escuro']}
+  class:list={['carrossel', mundo === 'escuro' && 'carrossel--escuro', className]}
   data-carrossel
   role="group"
   aria-roledescription="carrossel"
@@ -71,11 +71,11 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
                       dobra), e o eager aqui somava ~154 KB ao primeiro load
                       de uma imagem que ninguém vê ainda. */}
                   loading="lazy"
+                  style={foto.posicao ? `object-position: ${foto.posicao};` : undefined}
                 />
               ) : (
                 <ImagePlaceholder label={foto.alt} aspectRatio="4/5" mundo={mundo} />
               )}
-              {legendas && <figcaption class="carrossel__legenda">{foto.legenda}</figcaption>}
             </figure>
           ))
         }
@@ -170,24 +170,6 @@ const alturaSpacer = `calc(100svh + ${(fotos.length - 1) * 70}svh)`;
     object-fit: cover;
     object-position: center;
     display: block;
-  }
-
-  /* Legenda no ALTO e botões embaixo à direita: assim os dois nunca se
-     cruzam, em largura nenhuma. Reservar padding na legenda não resolveria —
-     o slide é mais largo que a tela e, no meio do avanço, a borda direita da
-     legenda fica fora da viewport, então os botões cairiam sobre o MEIO do
-     texto, não sobre a ponta. */
-  .carrossel__legenda {
-    position: absolute;
-    inset-inline: 0;
-    top: 0;
-    padding: var(--espaco-3);
-    padding-bottom: var(--espaco-5);
-    background: linear-gradient(to bottom, rgba(10, 9, 8, 0.7), transparent);
-    color: #ede7db;
-    font-family: var(--fonte-sans);
-    font-size: 0.875rem;
-    letter-spacing: 0.03em;
   }
 
   .carrossel__controles {

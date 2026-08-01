@@ -29,7 +29,10 @@ import site from '../config/site.js';
     width: 3.25rem;
     height: 3.25rem;
     border-radius: 50%;
-    color: var(--ouro);
+    /* Verde oficial do WhatsApp. É a única cor do site fora da paleta dos
+       dois mundos, e é de propósito: o ícone precisa ser reconhecido na
+       hora. Não usar var(--ouro) aqui. */
+    color: var(--verde-whatsapp);
     text-decoration: none;
     transition: transform 0.25s ease;
   }

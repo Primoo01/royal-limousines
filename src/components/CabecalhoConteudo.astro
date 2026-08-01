@@ -30,9 +30,11 @@ interface Props {
   titulo: string;
   /** Linha de apoio curta. Precisa ser frase que já existia na página. */
   apoio: string;
+  /** Variante do traço. 'assinatura' é exclusiva da /contato/. */
+  linha?: 'curva' | 'assinatura';
 }
 
-const { eyebrow, titulo, apoio } = Astro.props;
+const { eyebrow, titulo, apoio, linha = 'curva' } = Astro.props;
 ---
 
 <header class="cabecalho-conteudo u-container">
@@ -54,7 +56,7 @@ const { eyebrow, titulo, apoio } = Astro.props;
   <p class="cabecalho-conteudo__apoio">{apoio}</p>
 
   <div class="cabecalho-conteudo__linha">
-    <LinhaDesenhada />
+    <LinhaDesenhada variante={linha} />
   </div>
 </header>
 

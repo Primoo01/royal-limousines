@@ -74,17 +74,17 @@ const outrasPaginasCasamento =
 
         <div class="hero__cta">
           <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
-          <Botao variante="primario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
+          <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
             {site.cta.whatsapp}
           </Botao>
         </div>
       </div>
 
-      <Foto src={fotoRetrato.src} alt={fotoRetrato.alt} aspectRatio="3/4" class="reveal" />
+      <Foto src={fotoRetrato.src} alt={fotoRetrato.alt} posicao={fotoRetrato.posicao} aspectRatio="3/4" class="reveal" />
     </div>
 
     <div class="secao-regiao__grade secao-regiao__grade--inverso">
-      <Foto src={fotoPaisagem.src} alt={fotoPaisagem.alt} aspectRatio="4/3" class="reveal" />
+      <Foto src={fotoPaisagem.src} alt={fotoPaisagem.alt} posicao={fotoPaisagem.posicao} aspectRatio="4/3" class="reveal" />
 
       <div class="u-prosa">
         <EntradaTitulo as="h2">{dados.h2}</EntradaTitulo>

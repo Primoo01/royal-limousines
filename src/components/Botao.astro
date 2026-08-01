@@ -4,10 +4,13 @@
 // de canto (colchetes) + 1 de preenchimento — que seria fácil de errar ou
 // deixar inconsistente copiando à mão em cada página que usa o botão.
 //
-// variante: 'primario' | 'barra' | 'terciario'
+// variante: 'primario' | 'secundario' | 'barra' | 'terciario'
+// O primário é sólido e não precisa de marcação extra (as duas camadas de
+// sombra são ::before/::after). Quem exige os 4 spans de canto agora é o
+// SECUNDÁRIO, que herdou a moldura em colchete.
 // href presente → renderiza <a>. Ausente → <button type={type ?? 'button'}>.
 interface Props {
-  variante: 'primario' | 'barra' | 'terciario';
+  variante: 'primario' | 'secundario' | 'barra' | 'terciario';
   href?: string;
   target?: string;
   rel?: string;
@@ -30,7 +33,7 @@ const classes = ['botao', `botao--${variante}`, className].filter(Boolean).join(
   aria-label={ariaLabel}
 >
   {
-    variante === 'primario' && (
+    variante === 'secundario' && (
       <>
         <span class="botao__colchete botao__colchete--tl" aria-hidden="true" />
         <span class="botao__colchete botao__colchete--tr" aria-hidden="true" />
