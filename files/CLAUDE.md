@@ -111,21 +111,44 @@ Geradas por **um template só** + arquivo de dados. Não crie 8 arquivos `.astro
 
 ## Design
 
-### Carrossel de fotos
+### Hero 2 — a assinatura
 
-Um componente só, reutilizado em todos os lugares.
+Mundo claro. Três camadas:
 
-**Entrada:** a primeira foto começa à esquerda ocupando cerca de 45% da largura e **cresce conforme o scroll** até ~92% da tela. Terminada a entrada, o carrossel horizontal começa.
+1. **Fundo:** a silhueta da limousine, grande, ocupando a metade direita e sangrando pela borda. Opacidade 50%, pointer-events none, atrás de tudo.
+2. **Assinatura, à esquerda:** a logo em tamanho grande e, abaixo, DESDE 2008 · SÃO PAULO em Space Grotesk, caixa alta, dourado.
+3. **Três palavras**, entrando depois da assinatura, separadas por ponto médio: Pontualidade · Discrição · Elegância.
 
-**Desktop:** avanço horizontal conduzido pelo scroll vertical.
-**Mobile:** rolagem horizontal nativa com `scroll-snap`. Nunca sequestre o scroll no mobile — quebra a expectativa do toque e é ruim de usar.
+Sem vão morto: o conteúdo seguinte começa logo após a seção.
 
-- Legenda própria por foto, trocando junto.
-- As fotos precisam aparecer grandes e fáceis de ver.
-- Proporção de slide fixa, com `object-fit: cover`, para aceitar foto de qualquer orientação sem quebrar o layout.
-- Acessível por teclado (setas) e com `aria-label` nos controles.
-- Barra de rolagem invisível, como no resto do site.
+---
 
+
+### Galeria horizontal por scroll
+
+Vale para a seção de fotos da home e para a seção do 300C em /limousines/. Mesmo componente nos dois lugares.
+
+**Desktop (acima de 900px).** A seção fica presa na tela enquanto o usuário rola, e nesse período a tira de imagens desliza para a esquerda. Terminada a tira, a página volta a rolar normalmente.
+
+Estrutura:
+- `.galeria` — o trilho. Altura definida em JS: 100vh + (larguraDaTira − larguraDaJanela).
+- `.galeria__sticky` — position sticky, top 0, height 100vh, overflow hidden. O "prender na tela" é CSS puro, sem JS.
+- `.galeria__tira` — display flex, flex-wrap nowrap, will-change transform.
+- `.galeria__item` — largura 33vw, padding 2rem, box-sizing content-box.
+- A imagem: width 100%, object-fit cover, aspect-ratio 4/5 (as fotos são verticais; quadrado descartaria altura demais).
+
+Cálculo:
+- distancia = tira.scrollWidth − window.innerWidth
+- progresso = clamp((scrollY − topoDaSecao) / (alturaDoTrilho − window.innerHeight), 0, 1)
+- tira.style.transform = translate3d(−progresso × distancia px, 0, 0)
+
+Sincronia direta, SEM interpolação: a suavidade já vem do Lenis. (Diferente das persianas, que usam arrasto de propósito.)
+
+Recalcular distancia e altura do trilho no resize E depois que as imagens carregarem, senão a medida sai errada.
+
+**Mobile (abaixo de 900px).** Nada de prender a tela. Rolagem horizontal nativa com scroll-snap-type x mandatory e scroll-snap-align center. Item com 78vw. Sequestrar o scroll no toque quebra a expectativa e é ruim de usar.
+
+**Regras.** Apenas transform. Sem biblioteca. Barra de rolagem invisível. Navegável por teclado. Em prefers-reduced-motion, vira grade estática empilhada.
 ---
 
 ### Cabeçalho das páginas de conteúdo
@@ -172,25 +195,22 @@ Narrativa: **noite (expectativa) → a chegada (espetáculo) → dia (celebraç�
 
 ### Botões
 
-Todos em Space Grotesk, caixa alta, letter-spacing .14em, 12px. Cantos retos.
+Space Grotesk, caixa alta, letter-spacing .14em, 12px. Cantos retos.
 Easing padrão: cubic-bezier(.2,.7,.3,1).
 
-**Primário — moldura em colchete.** Botão isolado, dentro de seções.
-- Repouso: quatro colchetes de 11px nos cantos (borda de 1px na cor dourada do mundo), fundo transparente, texto na cor de texto do mundo.
-- Hover: os quatro colchetes crescem ao mesmo tempo até se encontrarem, fechando a moldura completa (450ms), E um preenchimento dourado sobe de baixo para cima (450ms). O texto inverte para a cor de fundo do mundo.
-- Clique: scale(.98) com retorno imediato.
-- Implementação obrigatória: colchetes crescem com transform: scaleX/scaleY sobre linhas finas, com transform-origin no canto. O preenchimento é uma camada com transform: scaleY(0) → scaleY(1), origin bottom. **Nunca width/height.**
+**Primário — sólido.** É o botão que precisa dar vontade de clicar.
+- Mundo escuro: fundo #EDE7DB, texto #141210.
+- Mundo claro: fundo #1A1815, texto #F4F1EB. (Bege sobre bege desapareceria; o sólido escuro mantém a mesma presença.)
+- Sombra em repouso: 0 2px 10px rgba(0,0,0,.22). Discreta, só para dar volume.
+- Hover: sobe 2px, sombra cresce para 0 6px 20px rgba(0,0,0,.3), fundo ganha leve tom dourado.
+- Clique: volta a translateY(0) com scale(.98).
+- Anime apenas transform, box-shadow e background-color.
 
-**Barra de fim de seção.** Largura total, fecha seções.
-- Repouso: fio fino acima e abaixo, texto à esquerda, seta à direita na cor dourada.
-- Hover: preenchimento dourado varre da esquerda para a direita (550ms, transform: scaleX, transform-origin: left). Texto e seta invertem para a cor de fundo.
-- Clique: scale(.995).
+**Secundário — moldura em colchete.** O estilo atual, rebaixado para ações de menor peso. Quatro colchetes de 11px nos cantos que crescem no hover até fechar a moldura.
 
-**Terciário — link em texto.** Dentro de parágrafos.
-- Texto com seta discreta que avança ~6px no hover (transform: translateX).
+**Terciário — link em texto.** Seta que avança ~6px no hover.
 
-Em todos: foco de teclado visível. Em prefers-reduced-motion, as transições são removidas e o estado final permanece legível.
-
+**WhatsApp.** O botão flutuante e o ícone do header usam o verde oficial #25D366. Reconhecimento vale mais que paleta aqui. Nenhum outro elemento do site muda de cor.
 ---
 
 ### Conceito
@@ -249,6 +269,36 @@ O cliente gosta do efeito translúcido tipo iOS, **mas o site precisa ser leve**
 ---
 
 ## Movimento
+
+### Persianas horizontais — revelação por scroll
+
+Substitui a passagem do Hero 1 para o Hero 2 na home. Técnica do tutorial de Hiroki Watanabe (Codrops, licença MIT), reimplementada sem GSAP.
+
+**Estrutura.** Um SVG sobre a imagem, com viewBox "0 0 100 vbHeight", onde vbHeight = (innerHeight / innerWidth) × 100. Unidades virtuais, nunca pixels: é isso que mantém o cálculo consistente em qualquer tela. Recalcular no resize.
+
+Dentro do SVG: um <mask> com um retângulo preto do tamanho total (esconde tudo) e, sobre ele, os retângulos brancos das persianas (revelam). A <image> recebe essa máscara.
+
+**As persianas.** 30 pares. Para cada par i:
+- h = vbHeight / 30
+- centerY = vbHeight − (i × h + h/2) — calculado a partir da base, por isso abre de baixo para cima
+- Dois <rect> com x=0, width=100, height=0, fill="white", shape-rendering="crispEdges", ambos em y = centerY
+
+**A abertura.** Conforme o progresso avança, os dois retângulos crescem em direções opostas a partir da linha central:
+- o de cima: y → centerY − h/2 e height → h/2 + 0.01
+- o de baixo: y permanece em centerY e height → h/2 + 0.01
+
+O +0.01 é intencional: faz retângulos vizinhos se sobreporem levemente e elimina falhas de subpixel.
+
+**Defasagem.** Cada par começa depois do anterior, com passo relativo equivalente a 0,02s. Normalize para que o último par termine exatamente no fim do progresso.
+
+**Easing.** power3.out, ou seja 1 − Math.pow(1 − t, 3), aplicado ao progresso local de cada par.
+
+**O arrasto.** Não use o progresso do scroll direto. Interpole a cada quadro dentro de um requestAnimationFrame: atual += (alvo − atual) × 0.12. É isso que produz o rastro de movimento que a referência obtém com o scrub do ScrollTrigger, e é o que faz o efeito parecer físico. Pare o laço quando a diferença for desprezível.
+
+**Regras.** NÃO instalar GSAP nem ScrollTrigger. Em prefers-reduced-motion, a máscara não existe e a imagem aparece direto. Abaixo de 900px, sem controle por scroll: as persianas abrem juntas num fade curto.
+
+---
+
 
 ### Fundos animados
 
