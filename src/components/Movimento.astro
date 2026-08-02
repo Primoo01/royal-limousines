@@ -225,6 +225,9 @@
     // zero, e o observer nunca dispararia.
     const wordmark = document.querySelector<HTMLElement>('[data-wordmark]');
     const wordmarkDepois = document.querySelector<HTMLElement>('[data-wordmark-depois]');
+    // Terceiro degrau: as três palavras do Hero 2, que entram depois da
+    // tagline (ver CLAUDE.md > Hero 2).
+    const wordmarkDepois2 = document.querySelector<HTMLElement>('[data-wordmark-depois-2]');
 
     if (wordmark && proporcaoVisivel(wordmark) < 0.35) {
       void wordmark.getBoundingClientRect();
@@ -232,6 +235,10 @@
       if (wordmarkDepois) {
         void wordmarkDepois.getBoundingClientRect();
         wordmarkDepois.classList.add('wordmark-depois--preparado');
+      }
+      if (wordmarkDepois2) {
+        void wordmarkDepois2.getBoundingClientRect();
+        wordmarkDepois2.classList.add('wordmark-depois--preparado');
       }
 
       const wordmarkObserver = new IntersectionObserver(
@@ -249,6 +256,17 @@
                 if (evento.propertyName !== 'clip-path') return;
                 void wordmarkDepois.getBoundingClientRect();
                 wordmarkDepois.classList.add('wordmark-depois--visivel');
+                // E as três palavras depois DELA, encadeadas na mesma
+                // transição — a assinatura inteira antes dos valores.
+                if (wordmarkDepois2) {
+                  const aoTerminarTagline = (e: TransitionEvent) => {
+                    if (e.propertyName !== 'opacity') return;
+                    void wordmarkDepois2.getBoundingClientRect();
+                    wordmarkDepois2.classList.add('wordmark-depois--visivel');
+                    wordmarkDepois.removeEventListener('transitionend', aoTerminarTagline);
+                  };
+                  wordmarkDepois.addEventListener('transitionend', aoTerminarTagline);
+                }
                 texto.removeEventListener('transitionend', aoTerminar);
               };
               texto.addEventListener('transitionend', aoTerminar);
@@ -370,72 +388,46 @@
       return `rgb(${r}, ${g}, ${b})`;
     }
 
-    // Fábrica da passagem entre mundos. A /limousines/ usa claro→escuro ao
-    // longo de três telas; o hero da home usa escuro→claro em uma seção só.
-    // Mesma conta de progresso, mesma interpolação — só muda o sentido, o
-    // elemento que mede e o elemento que recebe as variáveis.
-    function criarTransicaoDeMundo(
-      elementoProgresso: HTMLElement,
-      elementosAlvo: HTMLElement[],
-      direcao: 'claro-para-escuro' | 'escuro-para-claro',
-      // Opcional. Enquanto a media query CASAR, a passagem deixa de
-      // interpolar e vira um corte limpo: 0 (mundo de origem) enquanto a
-      // seção ainda cobre a barra do topo, 1 (mundo de destino) depois.
-      // Sem valor intermediário. Só o hero da home usa; a /limousines/
-      // chama sem este argumento e não muda em nada.
-      corteLimpo?: { media: MediaQueryList; alturaBarra: number }
-    ) {
-      return function atualizar(): number {
-        const rect = elementoProgresso.getBoundingClientRect();
-        let progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
 
-        if (corteLimpo?.media.matches) {
-          progresso = rect.bottom <= corteLimpo.alturaBarra ? 1 : 0;
-        }
+    // O hero da home — só existe em "/"; nas demais páginas os
+    // querySelectors retornam null e o bloco não faz nada.
+    //
+    // A passagem INTERPOLADA (fundo do escuro pro claro + mídia crescendo)
+    // saiu: quem faz a travessia do Hero 1 pro Hero 2 agora é a revelação em
+    // persianas (ver Persianas.astro e CLAUDE.md). O que sobra aqui é só a
+    // cor da BARRA DO TOPO, que é fixed e mora fora do wrapper do hero: sem
+    // isto ela ficaria uma barra clara por cima do hero escuro.
+    //
+    // É CORTE LIMPO, sem interpolação: escuro enquanto o hero ainda cobre a
+    // barra, claro a partir do momento em que ele sai de baixo dela. A
+    // transição visual agora é a persiana; um fade de cor por baixo dela só
+    // competiria.
+    const heroEstagio1 = document.querySelector<HTMLElement>('[data-hero-estagio1]');
+    const alturaBarraHeader = document.querySelector<HTMLElement>('[data-header]')?.offsetHeight ?? 0;
+    const paletaEscura: Record<string, string> = {
+      '--bg': '#141210',
+      '--surface': '#211e18',
+      '--linha': '#3a342a',
+      '--texto': '#ede7db',
+      '--texto-mut': '#8c857a',
+      '--ouro': '#c6a25e',
+    };
+    let barraEscura: boolean | null = null;
 
-        for (const propriedade in paresDeCor) {
-          const [claro, escuro] = paresDeCor[propriedade];
-          const [de, para] = direcao === 'escuro-para-claro' ? [escuro, claro] : [claro, escuro];
-          const valor = interpolarCor(de, para, progresso);
-          elementosAlvo.forEach((alvo) => alvo.style.setProperty(propriedade, valor));
-        }
-        // Exposto pro CSS: é o que faz a mídia crescer durante a passagem.
-        elementosAlvo.forEach((alvo) => alvo.style.setProperty('--progresso-passagem', String(progresso)));
-        return progresso;
-      };
+    function atualizarCorDaBarra() {
+      if (!heroEstagio1) return;
+      const escura = heroEstagio1.getBoundingClientRect().bottom > alturaBarraHeader;
+      if (escura === barraEscura) return;
+      barraEscura = escura;
+      const raiz = document.documentElement;
+      for (const propriedade in paletaEscura) {
+        if (escura) raiz.style.setProperty(propriedade, paletaEscura[propriedade]);
+        else raiz.style.removeProperty(propriedade);
+      }
     }
 
-    // A passagem do hero da home — só existe em "/"; nas demais páginas os
-    // querySelectors retornam null e o bloco não faz nada.
-    const heroEstagio1 = document.querySelector<HTMLElement>('[data-hero-estagio1]');
-    const heroDinamico = document.querySelector<HTMLElement>('[data-hero-dinamico]');
-    // Alvos: o wrapper do hero E a raiz do documento. A raiz entra porque o
-    // header é fixo e mora FORA do wrapper — sem isso ele ficaria uma barra
-    // clara por cima do hero escuro. Pintando a raiz, o header acompanha a
-    // passagem e chega no mundo claro junto com o resto. Abaixo do hero o
-    // progresso é 1, ou seja exatamente a paleta clara padrão do site.
-    // Até 900px a passagem NÃO é animada: ali o hero é uma coluna alta e o
-    // scroll acabava antes de a interpolação chegar em 1, deixando o fundo
-    // parado num cinza intermediário entre os dois mundos. Vira um corte
-    // limpo — hero escuro do começo ao fim, mundo claro a partir do
-    // Estágio 2. A consulta é a MESMA do CSS do hero (max-width: 56.25rem),
-    // escrita no mesmo sentido de propósito: com `min-width` invertido, em
-    // exatamente 900px o CSS já seria mobile e o JS ainda animaria — que é
-    // justamente o par que produzia a faixa cinza.
-    // A barra do topo entra na conta porque ela é fixed e mora fora do
-    // wrapper: é ela que precisa virar clara junto com o resto.
-    const mediaCorteLimpo = window.matchMedia('(max-width: 56.25rem)');
-    const alturaBarraHeader = document.querySelector<HTMLElement>('[data-header]')?.offsetHeight ?? 0;
-    const atualizarPassagemHero =
-      heroEstagio1 && heroDinamico
-        ? criarTransicaoDeMundo(heroEstagio1, [heroDinamico, document.documentElement], 'escuro-para-claro', {
-            media: mediaCorteLimpo,
-            alturaBarra: alturaBarraHeader,
-          })
-        : null;
-
     function atualizarTransicaoDiaNoite() {
-      if (atualizarPassagemHero) atualizarPassagemHero();
+      atualizarCorDaBarra();
       if (!transicao || !mundoDinamico) return;
 
       const rect = transicao.getBoundingClientRect();
@@ -641,6 +633,138 @@
     atualizar();
     window.addEventListener('scroll', aoRolar, { passive: true });
     window.addEventListener('resize', aoRolar);
+
+    // 6) Persianas horizontais (ver Persianas.astro e CLAUDE.md) -----------
+    //
+    // O progresso do scroll NÃO vai direto pra máscara: passa por um arrasto
+    // (atual += (alvo - atual) * 0.12) dentro de um rAF próprio. É esse
+    // rastro que faz o efeito parecer físico — é o que o scrub do
+    // ScrollTrigger dava de graça na referência, aqui em quatro linhas.
+    const persianas = document.querySelector<HTMLElement>('[data-persianas]');
+
+    if (persianas) {
+      const svg = persianas.querySelector<SVGSVGElement>('[data-persianas-svg]');
+      const fundo = persianas.querySelector<SVGRectElement>('[data-persianas-fundo]');
+      const imagem = persianas.querySelector<SVGImageElement>('[data-persianas-imagem]');
+      const rects = Array.from(persianas.querySelectorAll<SVGRectElement>('[data-persiana]'));
+      const PARES = rects.length / 2;
+
+      // Defasagem: passo de 0,02 por par, duração 1 por par, normalizado pra
+      // que o ÚLTIMO par termine exatamente em progresso 1.
+      const PASSO = 0.02;
+      const DURACAO = 1;
+      const TOTAL = DURACAO + (PARES - 1) * PASSO;
+
+      let vbHeight = 0;
+
+      function medirViewBox() {
+        // Unidades virtuais: largura sempre 100, altura proporcional à tela.
+        // É isso que mantém a conta consistente em qualquer resolução.
+        vbHeight = (window.innerHeight / window.innerWidth) * 100;
+        svg!.setAttribute('viewBox', `0 0 100 ${vbHeight}`);
+        fundo!.setAttribute('height', String(vbHeight));
+        imagem!.setAttribute('height', String(vbHeight));
+        const mascara = svg!.querySelector('mask');
+        mascara?.setAttribute('height', String(vbHeight));
+      }
+
+      function aplicar(progresso: number) {
+        const h = vbHeight / PARES;
+        const meia = h / 2;
+        for (let i = 0; i < PARES; i++) {
+          // De baixo pra cima: o par 0 é o mais próximo da base.
+          const centerY = vbHeight - (i * h + meia);
+          const inicio = (i * PASSO) / TOTAL;
+          const fim = (i * PASSO + DURACAO) / TOTAL;
+          const bruto = Math.min(Math.max((progresso - inicio) / (fim - inicio), 0), 1);
+          // power3.out
+          const t = 1 - Math.pow(1 - bruto, 3);
+
+          // O +0.01 faz persianas vizinhas se sobreporem e mata os fios
+          // claros de subpixel. Multiplicado por t (em vez de somado fixo)
+          // pra que em repouso a altura seja exatamente 0 — somando fixo,
+          // os 60 rects mostrariam um fio parado antes de a seção entrar.
+          const altura = (meia + 0.01) * t;
+          const cima = rects[i * 2];
+          const baixo = rects[i * 2 + 1];
+          // Os dois nascem na MESMA linha central e crescem em direções
+          // opostas. Não é um retângulo encolhendo.
+          cima.setAttribute('y', String(centerY - meia * t));
+          cima.setAttribute('height', String(altura));
+          baixo.setAttribute('y', String(centerY));
+          baixo.setAttribute('height', String(altura));
+        }
+      }
+
+      const mediaPersianasConduzidas = window.matchMedia('(min-width: 56.25rem)');
+      const conduzir = () => mediaPersianasConduzidas.matches && !reduzMovimento;
+
+      if (reduzMovimento) {
+        // Sem máscara: a imagem aparece direto, como manda o CLAUDE.md.
+        medirViewBox();
+      } else if (!conduzir()) {
+        // Mobile: sem controle por scroll. As persianas abrem TODAS juntas e
+        // a imagem entra num fade curto, disparado uma vez ao entrar em cena.
+        medirViewBox();
+        svg!.setAttribute('mask', 'url(#persianas-mascara)');
+        aplicar(1);
+        persianas.setAttribute('data-fade', 'preparado');
+        const observador = new IntersectionObserver(
+          (entradas) => {
+            entradas.forEach((entrada) => {
+              if (!entrada.isIntersecting) return;
+              persianas.setAttribute('data-fade', 'visivel');
+              observador.unobserve(entrada.target);
+            });
+          },
+          { threshold: 0.2 }
+        );
+        observador.observe(persianas);
+        window.addEventListener('resize', () => {
+          medirViewBox();
+          aplicar(1);
+        });
+      } else {
+        medirViewBox();
+        svg!.setAttribute('mask', 'url(#persianas-mascara)');
+        aplicar(0);
+
+        let alvo = 0;
+        let atual = 0;
+        let rodando = false;
+
+        function laco() {
+          atual += (alvo - atual) * 0.12;
+          if (Math.abs(alvo - atual) > 0.0001) {
+            aplicar(atual);
+            requestAnimationFrame(laco);
+          } else {
+            // Encosta no alvo e para: nada de rAF perpétuo.
+            atual = alvo;
+            aplicar(atual);
+            rodando = false;
+          }
+        }
+
+        function medirProgresso() {
+          const rect = persianas!.getBoundingClientRect();
+          const util = rect.height - window.innerHeight;
+          if (util <= 0) return;
+          alvo = Math.min(Math.max(-rect.top / util, 0), 1);
+          if (!rodando) {
+            rodando = true;
+            requestAnimationFrame(laco);
+          }
+        }
+
+        atualizarCarrosseis.push(medirProgresso);
+        medirProgresso();
+        window.addEventListener('resize', () => {
+          medirViewBox();
+          medirProgresso();
+        });
+      }
+    }
   }
 
   // 2) Scroll suave com Lenis — só desktop, só sem reduced-motion ---------

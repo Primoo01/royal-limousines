@@ -10,6 +10,7 @@ import Carrossel from './Carrossel.astro';
 import { fotosLimo } from '../data/fotos-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta.png';
 import CortinaDeLuz from './CortinaDeLuz.astro';
+import Persianas from './Persianas.astro';
 import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
@@ -48,20 +49,19 @@ const passos = [
 <!--
   Hero da home em dois estágios (ver CLAUDE.md > Hero da home).
 
-  O wrapper nasce com os valores do mundo ESCURO inline: é o estado de
-  repouso do Estágio 1 e também o fallback se o JS não rodar. A passagem
-  interpola essas variáveis de escuro pra claro conforme o scroll — mesma
-  máquina da transição dia→noite da /limousines/, só que aqui dura uma
-  seção em vez de três telas, e fica atrás do conteúdo.
+  O wrapper carrega os valores do mundo ESCURO inline: é o mundo do
+  Estágio 1, e também o fallback se o JS não rodar. Eles NÃO são mais
+  interpolados — a travessia pro mundo claro agora é a revelação em
+  persianas (ver Persianas.astro), e o que muda de cor por scroll é só a
+  barra fixa do topo, em corte limpo, porque ela mora fora deste wrapper.
 
   O Estágio 2 NUNCA depende dessas variáveis: tem sobrescrita própria pro
-  mundo claro no CSS. Sem JS ele nunca fica escuro nem ilegível — perde só
-  a transição animada entre os dois mundos.
+  mundo claro no CSS. Sem JS ele nunca fica escuro nem ilegível.
 -->
 <div
   class="hero-dinamico"
   data-hero-dinamico
-  style="--bg:#141210;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;--progresso-passagem:0;"
+  style="--bg:#141210;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;"
 >
   <section class="hero-estagio1" data-hero-estagio1>
     <CortinaDeLuz />
@@ -111,10 +111,14 @@ const passos = [
     <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
   </section>
 
+  {/* A TRAVESSIA do Hero 1 pro Hero 2: a limousine sendo revelada por
+      persianas horizontais conforme o scroll avança. Substituiu a passagem
+      interpolada (fundo escurecendo + mídia crescendo) que havia aqui. */}
+  <Persianas imagem={fotosLimo.tresQuartosFrontalDark2.src} alt={fotosLimo.tresQuartosFrontalDark2.alt} />
+
   {/* Fundo em sangria total no elemento externo, conteúdo no container:
       com o fundo claro no próprio .u-container, ele ficava limitado à
-      largura máxima e sobrava uma moldura do wrapper (ainda a meio caminho
-      da passagem) nas laterais. */}
+      largura máxima e sobrava uma moldura do wrapper nas laterais. */}
   <section class="hero-estagio2">
     <Image
       class="silhueta-fundo silhueta-fundo--claro"
@@ -129,6 +133,13 @@ const passos = [
     <div class="hero-estagio2__miolo u-container">
       <Wordmark />
       <p class="hero-estagio2__tagline" data-wordmark-depois>Desde 2008 · São Paulo</p>
+      {/* Entram DEPOIS da assinatura: mesmo mecanismo da tagline, um degrau
+          adiante (data-wordmark-depois-2). */}
+      <p class="hero-estagio2__valores" data-wordmark-depois-2>
+        <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
+          >Elegância</span
+        >
+      </p>
     </div>
   </section>
 </div>
@@ -301,9 +312,6 @@ const passos = [
        seção estoure 100svh (e sem que o chevron, fixo na base da viewport,
        acabe caindo dentro da faixa). */
     width: min(30vw, 21rem);
-    transform: scale(calc(1 + var(--progresso-passagem, 0) * 0.42));
-    transform-origin: center right;
-    will-change: transform;
   }
 
   /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
@@ -345,11 +353,10 @@ const passos = [
     --ouro: var(--ouro-claro);
     background-color: var(--claro-bg);
     color: var(--claro-texto);
-    min-height: 60svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-block: var(--espaco-6);
+    /* Sem vão morto (CLAUDE.md > Hero 2): a seção abraça o próprio conteúdo
+       e a próxima começa logo depois. Os 60svh + justify-content: center que
+       havia aqui deixavam meia tela clara vazia embaixo da assinatura. */
+    padding-block: var(--espaco-6) var(--espaco-5);
   }
 
   .hero-estagio2 {
@@ -385,6 +392,36 @@ const passos = [
   }
 
   .hero-estagio2__tagline.wordmark-depois--visivel {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* As três palavras. Entram por último, depois da assinatura. */
+  .hero-estagio2__valores {
+    margin-top: var(--espaco-4);
+    font-family: var(--fonte-serif);
+    font-size: clamp(1.125rem, 0.9rem + 0.9vw, 1.75rem);
+    letter-spacing: 0.02em;
+    color: var(--claro-texto);
+  }
+
+  .hero-estagio2__valores span[aria-hidden='true'] {
+    color: var(--ouro-claro);
+  }
+
+  /* Mesma máquina da tagline, um degrau adiante. Visível por padrão: sem JS
+     aparece junto e nada some. */
+  .hero-estagio2__valores.wordmark-depois--preparado {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  .hero-estagio2__valores.wordmark-depois--preparado,
+  .hero-estagio2__valores.wordmark-depois--visivel {
+    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .hero-estagio2__valores.wordmark-depois--visivel {
     opacity: 1;
     transform: translateY(0);
   }
@@ -491,7 +528,8 @@ const passos = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-estagio1__midia {
+    .hero-estagio2__valores {
+      opacity: 1 !important;
       transform: none !important;
     }
 
