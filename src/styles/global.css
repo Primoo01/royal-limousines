@@ -594,10 +594,13 @@ p + p {
    atrás de tudo e sem capturar ponteiro. O contêiner precisa ser
    position: relative + overflow: hidden.
 
-   As duas artes vêm com fundo chapado (creme na da limousine, quase preto
-   na do sedan). Em vez de recortar o fundo no arquivo, o blend resolve:
-   `multiply` some com o creme no mundo claro e `screen` some com o preto no
-   mundo escuro. Sobra só o traço, que é o que interessa. */
+   A arte do sedan vem com fundo chapado quase preto, e `screen` faz ele
+   sumir no mundo escuro, sobrando só o traço.
+
+   A da limousine NÃO leva blend: a imagem entra crua, só com os 50% de
+   opacidade. O fundo dela (245,237,229) é praticamente o mesmo
+   --claro-bg (244,241,235), então o retângulo se dissolve sozinho e não
+   precisa de blend nenhum pra desaparecer. */
 .silhueta-fundo {
   position: absolute;
   z-index: 0;
@@ -612,10 +615,6 @@ p + p {
   opacity: 0.5;
   pointer-events: none;
   user-select: none;
-}
-
-.silhueta-fundo--claro {
-  mix-blend-mode: multiply;
 }
 
 .silhueta-fundo--escuro {
