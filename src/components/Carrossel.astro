@@ -1,28 +1,18 @@
 ---
-// Galeria horizontal por scroll — um componente só, usado na seção de fotos
-// da home e na do 300C preto em /limousines/.
+// Carrossel de fotos — Swiper (ver CLAUDE.md > Carrossel de fotos).
 //
-// COMO FUNCIONA (desktop): um spacer alto com um painel `position: sticky`
-// dentro. O "prender na tela" é 100% CSS — nenhum pin em JavaScript. O JS
-// só faz duas coisas: mede, e converte scroll vertical em translateX.
+// Decisão consciente: a versão própria (galeria horizontal por scroll)
+// quebrou duas vezes — a confiabilidade passou a valer mais que os KB.
 //
-//   larguraDaTira = trilho.scrollWidth   (já inclui gaps e padding-inline)
-//   distancia     = larguraDaTira - painel.clientWidth
-//   altura        = 100vh + distancia
+// CARREGAMENTO RESTRITO: este componente só é importado pela home e por
+// /limousines/. O <script> abaixo vira um chunk JS separado do script
+// site-wide de Movimento.astro — só as páginas que renderizam <Carrossel />
+// baixam o Swiper. As 8 páginas de serviço/região não o importam, então
+// nunca o carregam. Confirme isso comparando o peso de JS de uma dessas
+// páginas com o da home depois de qualquer mudança aqui.
 //
-// Como a altura útil do spacer (altura - 100vh) é exatamente `distancia`,
-// 1px de scroll vertical vira 1px de deslocamento horizontal. A tira acaba
-// no mesmo instante em que o sticky solta. Sincronia direta, sem
-// interpolação nenhuma — a suavidade quem dá é o Lenis.
-//
-// MOBILE (< 900px) e reduced-motion: a MESMA marcação é rolagem horizontal
-// nativa com scroll-snap. O JS nem entra, e as setas usam scrollBy nativo.
-// O scroll vertical da página nunca é sequestrado no toque.
-//
-// SEGURANÇA: o modo conduzido é OPT-IN. O padrão do CSS é a rolagem nativa,
-// que mostra todas as fotos; o JS é que liga `data-conduzido="true"` depois
-// de confirmar desktop sem reduced-motion. Se o JS falhar, a galeria não
-// trava com uma foto presa — ela vira uma tira rolável comum.
+// Só os módulos usados: Navigation, Pagination, Autoplay, Keyboard — nunca
+// o bundle completo do Swiper.
 import { Image } from 'astro:assets';
 import ImagePlaceholder from './ImagePlaceholder.astro';
 
@@ -47,17 +37,17 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
 
 <div
   class:list={['carrossel', mundo === 'escuro' && 'carrossel--escuro', className]}
-  data-carrossel
-  role="group"
+  data-carrossel-swiper
+  role="region"
   aria-roledescription="carrossel"
   aria-label="Fotos"
 >
-  <div class="carrossel__spacer" data-carrossel-spacer>
-    <div class="carrossel__pinado" data-carrossel-painel>
-      <div class="carrossel__trilho" data-carrossel-trilho tabindex="0">
-        {
-          fotos.map((foto, indice) => (
-            <figure class="carrossel__slide" data-carrossel-slide>
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      {
+        fotos.map((foto) => (
+          <div class="swiper-slide">
+            <figure class="carrossel__slide">
               {foto.imagem ? (
                 <Image
                   src={foto.imagem}
@@ -67,10 +57,6 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
                   fit="cover"
                   position="center"
                   format="webp"
-                  {/* Lazy inclusive no primeiro slide: o carrossel nunca é o
-                      hero (na home e na /limousines/ ele fica abaixo da
-                      dobra), e o eager aqui somava ~154 KB ao primeiro load
-                      de uma imagem que ninguém vê ainda. */}
                   loading="lazy"
                   style={foto.posicao ? `object-position: ${foto.posicao};` : undefined}
                 />
@@ -78,96 +64,68 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
                 <ImagePlaceholder label={foto.alt} aspectRatio="4/5" mundo={mundo} />
               )}
             </figure>
-          ))
-        }
-      </div>
-
-      <div class="carrossel__controles">
-        <button type="button" class="carrossel__botao" data-carrossel-anterior aria-label="Foto anterior">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <path
-              d="M15 5l-8 7 8 7"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-        </button>
-        <button type="button" class="carrossel__botao" data-carrossel-proximo aria-label="Próxima foto">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <path
-              d="M9 5l8 7-8 7"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-        </button>
-      </div>
+          </div>
+        ))
+      }
     </div>
+
+    <div class="carrossel__controles">
+      <button type="button" class="carrossel__botao swiper-button-prev" aria-label="Foto anterior">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <path
+            d="M15 5l-8 7 8 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button type="button" class="carrossel__botao swiper-button-next" aria-label="Próxima foto">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+          <path
+            d="M9 5l8 7-8 7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="swiper-pagination"></div>
   </div>
 </div>
 
 <style>
   .carrossel {
-    --carrossel-botao: 2.75rem;
     /* O slide é dimensionado pela ALTURA: cresce até ~80% da altura da tela,
        e a largura sai da proporção 4/5. As fotos são verticais — um slide
-       4/3 descartava 42% da altura de cada uma no recorte.
-       O teto de 52vw é o que garante que DOIS slides caibam lado a lado no
-       desktop mesmo em tela baixa e estreita (2 × 0,8 × 52vw + gap < 92vw). */
+       4/3 descartava 42% da altura de cada uma no recorte. O teto de 52vw é
+       o que garante que DOIS slides caibam lado a lado no desktop mesmo em
+       tela baixa e estreita (2 × 0,8 × 52vw + gap < 92vw). */
     --carrossel-altura: min(80svh, 52vw);
-  }
-
-  /* ---- PADRÃO: rolagem horizontal nativa ----
-     Vale no mobile, em reduced-motion e enquanto (ou se) o JS não rodar.
-     Todas as fotos ficam alcançáveis por toque, roda e teclado. */
-  .carrossel__spacer {
-    position: relative;
-  }
-
-  .carrossel__pinado {
+    --carrossel-botao: 2.75rem;
     padding-block: var(--espaco-4);
   }
 
-  .carrossel__trilho {
-    display: flex;
-    align-items: center;
-    gap: var(--espaco-3);
+  .swiper {
     padding-inline: var(--espaco-3);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    /* Barra invisível, como no resto do site — o scroll continua funcionando
-       por toque, roda e teclado. */
-    scrollbar-width: none;
+    /* Espaço pra paginação, que fica ancorada embaixo do trilho. */
+    padding-bottom: var(--espaco-5);
   }
 
-  .carrossel__trilho::-webkit-scrollbar {
-    display: none;
-  }
-
-  .carrossel__slide {
-    scroll-snap-align: center;
-  }
-
-  .carrossel__trilho:focus-visible {
-    outline: 2px solid var(--ouro);
-    outline-offset: 4px;
+  .swiper-slide {
+    height: var(--carrossel-altura);
+    width: calc(var(--carrossel-altura) * 4 / 5);
   }
 
   .carrossel__slide {
     position: relative;
-    flex-shrink: 0;
-    /* Proporção fixa + object-fit: cover aceita foto de qualquer orientação
-       sem distorcer. 4/5 (retrato) porque as fotos do sedan são verticais
-       9:16 — assim o recorte preserva 70% da altura original em vez de 42%. */
+    width: 100%;
+    height: 100%;
     aspect-ratio: 4 / 5;
-    /* No padrão (rolagem nativa) é um slide por vez, medido pela LARGURA da
-       tela. No modo conduzido a altura é que manda — ver abaixo. */
-    width: 85vw;
-    height: auto;
     margin: 0;
     overflow: hidden;
   }
@@ -184,29 +142,42 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
     display: block;
   }
 
+  /* ---- Setas: a paleta do projeto, não o padrão do Swiper -------------
+     Dourado do mundo correspondente, sem sombra, cantos retos. */
   .carrossel__controles {
     position: absolute;
     right: var(--espaco-4);
     bottom: var(--espaco-4);
-    z-index: 1;
+    z-index: 2;
     display: flex;
     gap: var(--espaco-2);
   }
 
   .carrossel__botao {
+    position: static;
+    margin: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: var(--carrossel-botao);
     height: var(--carrossel-botao);
-    border-radius: 50%;
+    /* Cantos retos (CLAUDE.md), diferente do círculo do padrão antigo do
+       site pra este componente — decisão explícita da rodada do Swiper. */
+    border-radius: 0;
     /* Glass falso (rgba + borda, sem blur) — backdrop-filter é reservado pro
-       header e pro botão de WhatsApp (CLAUDE.md > Vidro). */
+       header e pro botão de WhatsApp (CLAUDE.md > Vidro). Sem sombra. */
     background-color: color-mix(in srgb, var(--surface) 82%, transparent);
     border: 1px solid color-mix(in srgb, var(--linha) 80%, transparent);
-    color: var(--texto);
+    box-shadow: none;
+    color: var(--ouro);
     cursor: pointer;
     transition: color 0.25s ease, border-color 0.25s ease;
+  }
+
+  /* Remove o ícone padrão do Swiper (fonte própria via ::after) — o SVG
+     entra como filho normal do botão. */
+  .carrossel__botao::after {
+    content: none;
   }
 
   .carrossel__botao:hover,
@@ -215,36 +186,36 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
     border-color: var(--ouro);
   }
 
-  /* ---- MODO CONDUZIDO ----
-     Ligado pelo JS (data-conduzido="true") só em >= 900px e sem
-     reduced-motion. É aqui que entram o sticky e o avanço por transform.
-     A altura do spacer é escrita pelo JS em px, medida da tira real. */
-  .carrossel[data-conduzido='true'] .carrossel__pinado {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
+  .carrossel__botao.swiper-button-disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  /* ---- Paginação: idem, dourado do mundo, sem sombra, cantos retos ----
+     Elementos injetados pelo Swiper em runtime — não carregam o atributo
+     de escopo do Astro, por isso :global aqui. */
+  .carrossel :global(.swiper-pagination) {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
-    align-items: center;
-    padding-block: 0;
+    justify-content: center;
+    gap: var(--espaco-1);
   }
 
-  .carrossel[data-conduzido='true'] .carrossel__trilho {
-    /* Quem rola aqui é o transform, não o overflow. */
-    overflow-x: hidden;
-    scroll-snap-type: none;
-    padding-inline: 4vw;
-    /* Sem transition: a sincronia com o scroll é direta, sem interpolação. */
-    will-change: transform;
+  .carrossel :global(.swiper-pagination-bullet) {
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    background-color: var(--linha);
+    opacity: 1;
+    box-shadow: none;
+    transition: background-color 0.25s ease;
   }
 
-  /* No modo conduzido o slide é dimensionado pela ALTURA: cresce até ~80% da
-     altura da tela e a largura sai da proporção 4/5. O teto de 52vw garante
-     que DOIS caibam lado a lado mesmo em tela baixa e estreita. */
-  .carrossel[data-conduzido='true'] .carrossel__slide {
-    height: var(--carrossel-altura);
-    width: calc(var(--carrossel-altura) * 4 / 5);
-    scroll-snap-align: none;
+  .carrossel :global(.swiper-pagination-bullet-active) {
+    background-color: var(--ouro);
   }
 
   @media (max-width: 56.25rem) {
@@ -254,3 +225,42 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
     }
   }
 </style>
+
+<script>
+  import Swiper from 'swiper';
+  import { Navigation, Pagination, Autoplay, Keyboard } from 'swiper/modules';
+  import 'swiper/css';
+  import 'swiper/css/navigation';
+  import 'swiper/css/pagination';
+
+  const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('[data-carrossel-swiper]').forEach((raiz) => {
+    const container = raiz.querySelector<HTMLElement>('.swiper');
+    if (!container) return;
+
+    new Swiper(container, {
+      modules: [Navigation, Pagination, Autoplay, Keyboard],
+      centeredSlides: true,
+      slidesPerView: 1,
+      spaceBetween: 20,
+      grabCursor: true,
+      loop: true,
+      // Em prefers-reduced-motion, o autoplay não roda (CLAUDE.md).
+      autoplay: reduzMovimento ? false : { delay: 3000, disableOnInteraction: false },
+      keyboard: { enabled: true },
+      pagination: {
+        el: raiz.querySelector('.swiper-pagination'),
+        clickable: true,
+      },
+      navigation: {
+        nextEl: raiz.querySelector('.swiper-button-next'),
+        prevEl: raiz.querySelector('.swiper-button-prev'),
+      },
+      breakpoints: {
+        640: { slidesPerView: 1.25, spaceBetween: 20 },
+        1024: { slidesPerView: 2, spaceBetween: 20 },
+      },
+    });
+  });
+</script>

@@ -36,36 +36,8 @@ export const fichaAConfirmar = [
   { rotulo: 'Atendimento fora de São Paulo', valor: 'CONFIRMAR' },
 ];
 
-// As fotos reais do sedan, em src/assets/sedan-preto.
-//
-// A ORDEM DO ARRAY É A ORDEM DO CARROSSEL: exteriores primeiro, o interior
-// no fim. Cada legenda foi escrita ABRINDO a foto correspondente e olhando.
-// Se trocar um arquivo, abra a foto nova e confira a legenda de novo.
-//
-// Os três exteriores são as versões EDITADAS: a placa original saiu e entrou
-// a placa institucional Royal. Nenhuma placa legível permanece.
-//
-// FALTAM DUAS, seguradas de propósito: "volante e painel" e "teto solar
-// visto do banco traseiro" ainda mostram uma garrafa de água no porta-copos.
-// Elas voltam pra cá assim que chegar a versão sem o objeto — é só somar
-// duas entradas neste array, nada mais muda.
-export const fotosSedan = [
-  {
-    arquivo: 'sedan-frente-tres-quartos.jpg',
-    legenda: 'Chrysler 300C preto visto de frente em três quartos, com o teto solar aberto',
-  },
-  {
-    arquivo: 'sedan-traseira-tres-quartos.jpg',
-    legenda: 'Chrysler 300C preto visto de traseira em três quartos',
-  },
-  {
-    arquivo: 'sedan-traseira-placa-royal.jpg',
-    legenda: 'Chrysler 300C preto visto de traseira, com a placa Royal Limousines',
-  },
-  {
-    arquivo: 'sedan-porta-traseira-aberta.jpg',
-    legenda: 'Chrysler 300C preto com a porta traseira aberta, banco em couro claro',
-  },
-];
+// As fotos do carrossel do sedan moraram aqui (lote curado de 4, em
+// src/assets/sedan-preto). Substituídas por um lote maior e mais recente —
+// ver src/data/galeria-sedan.js.
 
-export default { fichaSegura, fichaAConfirmar, fotosSedan };
+export default { fichaSegura, fichaAConfirmar };

@@ -22,7 +22,8 @@ import silhuetaSedan from '../assets/fundos/300c-sedan-silhueta.png';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
 import sedanPreto from '../data/sedan-preto.js';
-import { fichaSegura, fotosSedan } from '../data/sedan.js';
+import { fichaSegura } from '../data/sedan.js';
+import { fotosGaleriaSedan } from '../data/galeria-sedan.js';
 
 const dados = paginas.paginas.find((p) => p.url === '/limousines/');
 // O backup não tinha meta description nesta página. Escrita a partir de fatos
@@ -30,19 +31,6 @@ const dados = paginas.paginas.find((p) => p.url === '/limousines/');
 // passageiros, casamentos/aniversários/eventos, São Paulo).
 const description =
   'Aluguel de limousine em São Paulo: conheça o Chrysler 300C branco, com 8 metros e capacidade para 8 passageiros, para casamentos, aniversários e eventos.';
-
-// As 6 fotos reais são do 300C PRETO e só aparecem na seção do sedan, aqui.
-// Nunca na home, que é sobre a limousine branca — seria mostrar o produto
-// errado. import.meta.glob resolve os arquivos de src/assets pra que o
-// astro:assets consiga processá-los; o nome do arquivo é a chave que liga
-// cada foto à sua legenda em sedan.js.
-const imagensSedan = import.meta.glob<{ default: ImageMetadata }>('/src/assets/sedan-preto/*.jpg', {
-  eager: true,
-});
-const fotosCarrosselSedan = fotosSedan.map((foto) => ({
-  imagem: imagensSedan[`/src/assets/sedan-preto/${foto.arquivo}`].default,
-  alt: foto.legenda,
-}));
 ---
 
 <BaseLayout title={dados.title} description={description}>
@@ -240,7 +228,7 @@ const fotosCarrosselSedan = fotosSedan.map((foto) => ({
     </section>
 
     {/* Fora do u-container: o carrossel é de sangria total. */}
-    <Carrossel fotos={fotosCarrosselSedan} mundo="escuro" class="fotos-sedan" />
+    <Carrossel fotos={fotosGaleriaSedan} mundo="escuro" class="fotos-sedan" />
   </div>
 </BaseLayout>
 

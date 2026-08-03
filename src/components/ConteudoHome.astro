@@ -8,6 +8,7 @@ import { Image } from 'astro:assets';
 import Foto from './Foto.astro';
 import Carrossel from './Carrossel.astro';
 import { fotosLimo } from '../data/fotos-limo.js';
+import { fotosGaleriaLimo } from '../data/galeria-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta-2.png';
 import CortinaDeLuz from './CortinaDeLuz.astro';
 import Wordmark from './Wordmark.astro';
@@ -15,16 +16,6 @@ import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
 import EntradaTitulo from './EntradaTitulo.astro';
 import site from '../config/site.js';
-
-// Fotos reais da limousine BRANCA. As do 300C preto (o sedan) ficam
-// restritas à seção do sedan em /limousines/: a home é sobre a branca, e
-// misturar as duas aqui mostraria o produto errado.
-//
-// `interna` é a última de propósito: é a de menor resolução (640×640) e
-// nunca deve abrir o carrossel, onde o slide aparece maior.
-const fotosGaleriaHome = [fotosLimo.tresQuartosFrontal, fotosLimo.lateral, fotosLimo.tresQuartosTraseira, fotosLimo.interna].map(
-  (foto) => ({ imagem: foto.src, alt: foto.alt, posicao: foto.posicao })
-);
 
 const passos = [
   {
@@ -219,7 +210,7 @@ const passos = [
   </div>
   {/* Sangria total, então fora do u-container. */}
   <div class="secao-galeria__carrossel">
-    <Carrossel fotos={fotosGaleriaHome} />
+    <Carrossel fotos={fotosGaleriaLimo} />
   </div>
 </section>
 
