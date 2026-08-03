@@ -49,8 +49,8 @@ Ao terminar qualquer tarefa, confirme item por item que nada disso regrediu. Se 
 
 ## Caminhos
 
-- **Projeto (onde construir):** `C:\Users\leayu\OneDrive\Área de Trabalho\PrimoStoneLAB\Projeto Dusdete\new-site`
-- **Backup do site antigo (somente leitura, fonte da verdade do conteúdo):** `C:\Users\leayu\OneDrive\Área de Trabalho\PrimoStoneLAB\Projeto Dusdete\www.limousinesroyal.com.br`
+- **Projeto (onde construir):** `E:\Dev\PrimoStoneLAB\Projeto Dusdete\new-site`
+- **Backup do site antigo (somente leitura, fonte da verdade do conteúdo):** `E:\Dev\PrimoStoneLAB\Projeto Dusdete\www.limousinesroyal.com.br`
 
 O backup é um espelho feito com wget. Cada página virou uma pasta com um `index.html` dentro. Ignore tudo que começa com `wp-`, e também `comments`, `feed`, `category`, `tag`, `author`.
 
@@ -123,32 +123,46 @@ Sem vão morto: o conteúdo seguinte começa logo após a seção.
 
 ---
 
+### Transição Hero 1 → Hero 2
 
-### Galeria horizontal por scroll
+Presa ao scroll. Um painel entra pela direita cobrindo a tela, e dentro dele a assinatura se monta em sequência.
 
-Vale para a seção de fotos da home e para a seção do 300C em /limousines/. Mesmo componente nos dois lugares.
+**Estrutura** (regras que não podem ser quebradas). O painel é uma div HTML comum — NUNCA coloque conteúdo HTML dentro de uma tag svg, porque o navegador descarta silenciosamente e foi isso que apagou o hero na tentativa anterior. O prender na tela é position sticky, top 0, height 100vh no desktop e 100svh no mobile: CSS puro, sem pin em JavaScript. O contêiner externo tem 250vh no desktop e 160svh no mobile. Apenas transform e opacity.
 
-**Desktop (acima de 900px).** A seção fica presa na tela enquanto o usuário rola, e nesse período a tira de imagens desliza para a esquerda. Terminada a tira, a página volta a rolar normalmente.
+Progresso: p = clamp((scrollY − topoDaSecao) / (alturaDaSecao − innerHeight), 0, 1)
 
-Estrutura:
-- `.galeria` — o trilho. Altura definida em JS: 100vh + (larguraDaTira − larguraDaJanela).
-- `.galeria__sticky` — position sticky, top 0, height 100vh, overflow hidden. O "prender na tela" é CSS puro, sem JS.
-- `.galeria__tira` — display flex, flex-wrap nowrap, will-change transform.
-- `.galeria__item` — largura 33vw, padding 2rem, box-sizing content-box.
-- A imagem: width 100%, object-fit cover, aspect-ratio 4/5 (as fotos são verticais; quadrado descartaria altura demais).
+**Fases sobre p.** 0 a 0.35 o painel entra com translateX de 100% para 0; 0.35 a 0.55 a silhueta entra com translateX de 60% para 0; 0.55 a 0.72 o logo aparece em opacity de 0 para 1 sem deslocamento; 0.72 a 0.88 "DESDE 2008 · SÃO PAULO" entra da esquerda com translateX de −40% para 0 mais opacity; 0.88 a 1 "Pontualidade · Discrição · Elegância" aparece em opacity. Cada fase usa progresso local normalizado com easing 1 − Math.pow(1 − t, 3).
 
-Cálculo:
-- distancia = tira.scrollWidth − window.innerWidth
-- progresso = clamp((scrollY − topoDaSecao) / (alturaDoTrilho − window.innerHeight), 0, 1)
-- tira.style.transform = translate3d(−progresso × distancia px, 0, 0)
+**Mobile (abaixo de 900px).** A tela também prende, com três ajustes: altura em svh e nunca vh (100vh no celular corresponde à viewport sem a barra do navegador, e quando ela aparece a altura muda e a tela pula); distância menor, 160svh contra 250vh, porque um gesto de toque percorre muito mais scroll; e composição própria, com tudo empilhado e centralizado, a silhueta como fundo atrás do conteúdo em vez de coluna ao lado.
 
-Sincronia direta, SEM interpolação: a suavidade já vem do Lenis. (Diferente das persianas, que usam arrasto de propósito.)
+**Duas armadilhas que impedem o sticky de funcionar.** position sticky para de funcionar se qualquer ancestral tiver overflow hidden, auto ou scroll — confira a cadeia até o body. E no iOS Safari, um transform, filter ou will-change em qualquer ancestral também quebra: o painel pode ter transform, os pais dele não.
 
-Recalcular distancia e altura do trilho no resize E depois que as imagens carregarem, senão a medida sai errada.
+Em prefers-reduced-motion, tudo visível no estado final, sem sequência. Depois da sequência o scroll volta ao normal.
 
-**Mobile (abaixo de 900px).** Nada de prender a tela. Rolagem horizontal nativa com scroll-snap-type x mandatory e scroll-snap-align center. Item com 78vw. Sequestrar o scroll no toque quebra a expectativa e é ruim de usar.
+---
 
-**Regras.** Apenas transform. Sem biblioteca. Barra de rolagem invisível. Navegável por teclado. Em prefers-reduced-motion, vira grade estática empilhada.
+### Vídeos 360
+
+Um vídeo por página, logo acima do carrossel: home leva o vídeo da limousine, /limousines/ leva o do sedan.
+
+**Corte de 35% do topo**, por CSS e sem editar o arquivo: o contêiner recebe overflow hidden e aspect-ratio igual a larguraDoVideo dividido por (alturaDoVideo × 0.65). O vídeo dentro usa width 100%, height 100%, object-fit cover e object-position center bottom.
+
+**Regras.** muted, loop, playsinline, sem controles, sem áudio, preload metadata, com poster. Só começa a tocar quando entra na viewport (IntersectionObserver) e pausa ao sair. Em prefers-reduced-motion, exibir apenas o poster.
+
+---
+
+### Carrossel de fotos
+
+Usa a biblioteca Swiper. Decisão consciente: a versão própria quebrou duas vezes e a confiabilidade passou a valer mais que os KB.
+
+**Carregamento restrito.** O Swiper é importado APENAS na home e em /limousines/. As 8 páginas de serviço/região não podem carregá-lo — são elas que trazem o tráfego do Google e continuam leves. Importe só os módulos usados (Navigation, Pagination, Autoplay, Keyboard), nunca o bundle completo.
+
+**Configuração.** centeredSlides true, slidesPerView 1, grabCursor true, loop true; autoplay com delay 3000 e disableOnInteraction false; keyboard habilitado; pagination clicável; navigation com setas; breakpoints 640 → 1.25 slides com 20 de espaço e 1024 → 2 slides com 20 de espaço.
+
+**Aparência.** Setas e paginação seguem a paleta do projeto, não o padrão do Swiper: dourado do mundo correspondente, sem sombra, cantos retos.
+
+**Imagens.** aspect-ratio 4/5, object-fit cover, alt descritivo em todas. Em prefers-reduced-motion, o autoplay não roda.
+
 ---
 
 ### Cabeçalho das páginas de conteúdo
@@ -269,36 +283,6 @@ O cliente gosta do efeito translúcido tipo iOS, **mas o site precisa ser leve**
 ---
 
 ## Movimento
-
-### Persianas horizontais — revelação por scroll
-
-Substitui a passagem do Hero 1 para o Hero 2 na home. Técnica do tutorial de Hiroki Watanabe (Codrops, licença MIT), reimplementada sem GSAP.
-
-**Estrutura.** Um SVG sobre a imagem, com viewBox "0 0 100 vbHeight", onde vbHeight = (innerHeight / innerWidth) × 100. Unidades virtuais, nunca pixels: é isso que mantém o cálculo consistente em qualquer tela. Recalcular no resize.
-
-Dentro do SVG: um <mask> com um retângulo preto do tamanho total (esconde tudo) e, sobre ele, os retângulos brancos das persianas (revelam). A <image> recebe essa máscara.
-
-**As persianas.** 30 pares. Para cada par i:
-- h = vbHeight / 30
-- centerY = vbHeight − (i × h + h/2) — calculado a partir da base, por isso abre de baixo para cima
-- Dois <rect> com x=0, width=100, height=0, fill="white", shape-rendering="crispEdges", ambos em y = centerY
-
-**A abertura.** Conforme o progresso avança, os dois retângulos crescem em direções opostas a partir da linha central:
-- o de cima: y → centerY − h/2 e height → h/2 + 0.01
-- o de baixo: y permanece em centerY e height → h/2 + 0.01
-
-O +0.01 é intencional: faz retângulos vizinhos se sobreporem levemente e elimina falhas de subpixel.
-
-**Defasagem.** Cada par começa depois do anterior, com passo relativo equivalente a 0,02s. Normalize para que o último par termine exatamente no fim do progresso.
-
-**Easing.** power3.out, ou seja 1 − Math.pow(1 − t, 3), aplicado ao progresso local de cada par.
-
-**O arrasto.** Não use o progresso do scroll direto. Interpole a cada quadro dentro de um requestAnimationFrame: atual += (alvo − atual) × 0.12. É isso que produz o rastro de movimento que a referência obtém com o scrub do ScrollTrigger, e é o que faz o efeito parecer físico. Pare o laço quando a diferença for desprezível.
-
-**Regras.** NÃO instalar GSAP nem ScrollTrigger. Em prefers-reduced-motion, a máscara não existe e a imagem aparece direto. Abaixo de 900px, sem controle por scroll: as persianas abrem juntas num fade curto.
-
----
-
 
 ### Fundos animados
 

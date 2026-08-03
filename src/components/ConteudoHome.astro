@@ -10,7 +10,6 @@ import Carrossel from './Carrossel.astro';
 import { fotosLimo } from '../data/fotos-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta-2.png';
 import CortinaDeLuz from './CortinaDeLuz.astro';
-import Persianas from './Persianas.astro';
 import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
@@ -50,10 +49,11 @@ const passos = [
   Hero da home em dois estágios (ver CLAUDE.md > Hero da home).
 
   O wrapper carrega os valores do mundo ESCURO inline: é o mundo do
-  Estágio 1, e também o fallback se o JS não rodar. Eles NÃO são mais
-  interpolados — a travessia pro mundo claro agora é a revelação em
-  persianas (ver Persianas.astro), e o que muda de cor por scroll é só a
-  barra fixa do topo, em corte limpo, porque ela mora fora deste wrapper.
+  Estágio 1, e também o fallback se o JS não rodar. Eles NÃO são
+  interpolados — a passagem pro Estágio 2 é corte limpo por enquanto (a
+  transição animada está descrita no CLAUDE.md, mas ainda não
+  implementada). O que muda de cor por scroll é só a barra fixa do topo,
+  também em corte limpo, porque ela mora fora deste wrapper.
 
   O Estágio 2 NUNCA depende dessas variáveis: tem sobrescrita própria pro
   mundo claro no CSS. Sem JS ele nunca fica escuro nem ilegível.
@@ -86,35 +86,30 @@ const passos = [
             {site.cta.whatsapp}
           </Botao>
         </div>
-      </div>
-
-      <div class="hero-estagio1__midia">
-        <Foto
-          src={fotosLimo.tresQuartosFrontalDark.src}
-          alt={fotosLimo.tresQuartosFrontalDark.alt}
-          aspectRatio="4/5"
-          larguraServida={900}
-          sizes="(max-width: 56.25rem) 100vw, 21rem"
-          prioridade
-        />
+        <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
       </div>
     </div>
 
-    {/* Marquee e nota ficam FORA do grid, como irmãos: no desktop a faixa do
-        marquee é uma linha reservada da seção (nada entra nela), e no mobile
-        eles são simplesmente os dois últimos itens da coluna, na ordem certa
-        — mídia, marquee, nota. */}
+    {/* Fora do grid, sangrando a partir de ~55% da largura da tela até a
+        mesma margem lateral do container (ver .hero-estagio1__midia). No
+        mobile volta pro fluxo normal, como último item da coluna. */}
+    <div class="hero-estagio1__midia">
+      <Foto
+        src={fotosLimo.tresQuartosFrontalDark.src}
+        alt={fotosLimo.tresQuartosFrontalDark.alt}
+        aspectRatio="4/5"
+        larguraServida={900}
+        sizes="(max-width: 56.25rem) 100vw, 45vw"
+        prioridade
+      />
+    </div>
+
+    {/* Marquee fora do grid, como irmão: no desktop é uma linha reservada da
+        seção (nada entra nela), e no mobile é o último item da coluna. */}
     <div class="hero-estagio1__marquee">
       <Marquee tamanho="grande" />
     </div>
-
-    <p class="hero-estagio1__nota">{site.contato.areaAtendida}</p>
   </section>
-
-  {/* A TRAVESSIA do Hero 1 pro Hero 2: a limousine sendo revelada por
-      persianas horizontais conforme o scroll avança. Substituiu a passagem
-      interpolada (fundo escurecendo + mídia crescendo) que havia aqui. */}
-  <Persianas imagem={fotosLimo.tresQuartosFrontalDark2.src} alt={fotosLimo.tresQuartosFrontalDark2.alt} />
 
   {/* Fundo em sangria total no elemento externo, conteúdo no container:
       com o fundo claro no próprio .u-container, ele ficava limitado à
@@ -275,8 +270,8 @@ const passos = [
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
-      'topo  midia'
-      '.     midia';
+      'topo  .'
+      '.     .';
     gap: var(--espaco-3) var(--espaco-4);
     align-items: start;
     /* Ocupa o que sobra acima da faixa do marquee. */
@@ -299,19 +294,30 @@ const passos = [
     color: var(--texto);
   }
 
+  /* Fora do grid — sangra a partir da largura da TELA (não do container),
+     por isso é posicionada em relação à seção inteira, não à coluna.
+     Esquerda: ~55vw. Direita: a mesma margem lateral que o container usa
+     à esquerda (largura-container centralizada + padding-inline), pra
+     terminar exatamente onde o texto termina do outro lado. */
   .hero-estagio1__midia {
-    grid-area: midia;
-    align-self: center;
-    /* De volta à direita. O recuo negativo que existia aqui só servia pro
-       marquee conseguir cruzar a borda da mídia; agora que nada pode se
-       sobrepor ao marquee, ele perdeu a função. */
-    justify-self: end;
-    /* Tamanho moderado: a mídia não domina o Estágio 1 — ela cresce durante
-       a passagem, e é esse crescimento que faz "a chegada". 21rem é o teto
-       que faz o conteúdo caber na área acima da faixa do marquee sem que a
-       seção estoure 100svh (e sem que o chevron, fixo na base da viewport,
-       acabe caindo dentro da faixa). */
-    width: min(30vw, 21rem);
+    position: absolute;
+    z-index: 1;
+    top: var(--altura-header);
+    left: 55%;
+    right: calc((100% - min(100%, var(--largura-container))) / 2 + var(--espaco-3));
+    /* Base: alinhada com o topo do bloco de texto, termina acima da faixa
+       do marquee. A conta espelha a altura do Marquee (tamanho grande) +
+       sua margin-top + o padding-bottom da seção — ver Marquee.astro. */
+    bottom: calc(var(--espaco-5) + 40px + clamp(6rem, calc(100svh - 620px), 30svh));
+  }
+
+  /* A <img> do Foto já é width:100% + object-fit:cover; aqui só precisamos
+     que ela preencha a ALTURA definida por este box (top+bottom acima) em
+     vez da altura vinda do aspect-ratio do componente. Com width e height
+     definidos (não-auto), o aspect-ratio inline do Foto passa a ser
+     ignorado — não precisa de !important. */
+  .hero-estagio1__midia :global(.foto) {
+    height: 100%;
   }
 
   /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
@@ -325,16 +331,10 @@ const passos = [
     pointer-events: none;
   }
 
-  /* Fora do fluxo: no fluxo ela somaria altura e empurraria a faixa do
-     marquee pra cima. Ancorada na seção, divide a altura da faixa mas fica
-     na metade direita, onde o marquee (50vw a partir da esquerda) não chega. */
+  /* Dentro do bloco de texto, logo abaixo dos botões — alinhada à esquerda
+     junto com o h1 e o parágrafo, sem posicionamento próprio. */
   .hero-estagio1__nota {
-    position: absolute;
-    /* Caixa do tamanho do texto, não da largura do container: com a caixa
-       larga ela cruzaria a faixa do marquee mesmo com o texto à direita. */
-    width: max-content;
-    right: var(--espaco-3);
-    bottom: var(--espaco-6);
+    margin-top: var(--espaco-4);
     font-family: var(--fonte-sans);
     font-size: 0.8125rem;
     letter-spacing: 0.14em;
@@ -439,11 +439,12 @@ const passos = [
   }
 
   /* ---- Mobile: layout próprio, não uma adaptação do desktop -----------
-     Abaixo de 900px a composição do desktop (grid de duas colunas + marquee
-     posicionado por cima) NÃO é reaproveitada. Vira coluna única, tudo no
-     fluxo normal, sem posicionamento absoluto: a ordem visual passa a ser
-     simplesmente a ordem do DOM — h1, parágrafo, botões, mídia, marquee,
-     nota. Era o posicionamento absoluto que desmontava aqui. */
+     Abaixo de 900px a composição do desktop (grid de duas colunas + mídia
+     em sangria) NÃO é reaproveitada. Vira coluna única, tudo no fluxo
+     normal, sem posicionamento absoluto: a ordem visual passa a ser h1,
+     parágrafo, botões, nota, marquee, mídia (a nota já vem nessa ordem
+     por estar dentro do bloco de texto; marquee e mídia são reordenados
+     abaixo). */
   @media (max-width: 56.25rem) {
     .hero-estagio1 {
       /* O conteúdo empilhado passa de uma tela; forçar 100svh só cortaria. */
@@ -456,11 +457,11 @@ const passos = [
       gap: var(--espaco-4);
     }
 
-    /* A grade deixa de ser caixa pra que topo, marquee, nota e mídia virem
-       irmãos diretos da seção e possam ser reordenados: o marquee precisa
-       entrar logo abaixo dos botões, antes da mídia. Como o box do
-       .u-container some junto, a margem lateral e o z-index (que punham o
-       conteúdo acima da cortina) voltam item a item abaixo. */
+    /* A grade deixa de ser caixa pra que topo e mídia virem irmãos diretos
+       da seção e possam ser reordenados: o marquee precisa entrar logo
+       abaixo dos botões, antes da mídia. Como o box do .u-container some
+       junto, a margem lateral e o z-index (que punham o conteúdo acima da
+       cortina) voltam item a item abaixo. */
     .hero-estagio1__grade {
       display: contents;
     }
@@ -494,21 +495,12 @@ const passos = [
       margin-bottom: var(--espaco-5);
     }
 
-    /* Abaixo do marquee, alinhada à esquerda junto com o h1. Sai do
-       posicionamento absoluto do desktop: `inset: auto` zera o right/bottom
-       daquela regra, que com position: relative viraria deslocamento. */
-    .hero-estagio1__nota {
-      order: 3;
-      position: relative;
-      inset: auto;
-      z-index: 1;
-      width: auto;
-      padding-inline: var(--espaco-3);
-      text-align: left;
-    }
-
     .hero-estagio1__midia {
       order: 4;
+      /* Sai do posicionamento absoluto do desktop: `inset: auto` zera
+         top/left/right/bottom daquela regra, que com position: relative
+         (herdado da regra compartilhada acima) virariam deslocamento. */
+      inset: auto;
       /* Largura total, proporção 4:5 vinda do próprio placeholder — nunca
          uma faixa sem altura útil. Sem transform: no mobile a mídia não
          cresce na passagem (largura total já é o tamanho final, e escalar
