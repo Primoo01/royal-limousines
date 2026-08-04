@@ -1,24 +1,30 @@
 // Fotos reais do Chrysler 300C branco (a limousine), em um lugar só.
 //
 // Centralizado de propósito (CLAUDE.md > Imagens): trocar uma foto por outra
-// é mudar um import aqui, não caçar caminho em oito páginas.
+// é mudar um nome aqui, não caçar caminho em oito páginas.
+//
+// FONTE ÚNICA: lê direto da pasta Images-limo/ na raiz, a mesma que o
+// carrossel usa (ver galeria-limo.js). Antes havia uma segunda cópia em
+// src/assets/limo — e foi ela que fez o site continuar servindo foto velha
+// depois que a origem foi atualizada. Cópia paralela sempre desanda; agora
+// não existe mais.
+//
+// A resolução é por NOME BASE, sem extensão: as fotos de origem trocam de
+// formato (.jpg / .jpeg / .png) e isso não pode quebrar o build.
 //
 // As duas versões "dark" são do MUNDO ESCURO (hero da home, hero da LP,
 // painéis escuros do menu). As demais são do MUNDO CLARO. Isso é o conceito
 // de dois mundos do projeto, não preferência estética.
-import tresQuartosFrontal from '../assets/limo/tres-quartos-frontal.jpg';
-import tresQuartosFrontalDark from '../assets/limo/tres-quartos-frontal-dark.jpg';
-import tresQuartosFrontalDark2 from '../assets/limo/tres-quartos-frontal-dark-2.jpg';
-import tresQuartosTraseira from '../assets/limo/tres-quartos-traseira.jpg';
-import lateral from '../assets/limo/lateral.jpg';
-import interna from '../assets/limo/interna.jpg';
-import frontal from '../assets/limo/frontal.jpg';
+import { porNome } from './midia.js';
+
+const arquivos = import.meta.glob('/Images-limo/*.{jpg,jpeg,png,webp}', { eager: true });
+const foto = (nome) => porNome(arquivos, nome, 'Images-limo');
 
 // Os alt abaixo foram escritos ABRINDO cada foto e olhando, não deduzidos do
 // nome do arquivo. Todas são a limousine ESTICADA (não o sedan).
 export const fotosLimo = {
   tresQuartosFrontal: {
-    src: tresQuartosFrontal,
+    src: foto('tres-quartos-frontal'),
     alt: 'Limousine Chrysler 300C branca em três quartos, parada na entrada de um salão de eventos ao anoitecer',
     // O recorte central cortava a base do carro (as rodas e a frente ficavam
     // fora). Ancorando embaixo, a base da foto encosta na base do contêiner e
@@ -27,27 +33,27 @@ export const fotosLimo = {
     posicao: 'center bottom',
   },
   tresQuartosFrontalDark: {
-    src: tresQuartosFrontalDark,
+    src: foto('tres-quartos-frontal-dark'),
     alt: 'Limousine Chrysler 300C branca à noite, com os faróis acesos, em frente a um prédio histórico iluminado',
   },
   tresQuartosFrontalDark2: {
-    src: tresQuartosFrontalDark2,
+    src: foto('tres-quartos-frontal-dark-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, sob iluminação noturna',
   },
   tresQuartosTraseira: {
-    src: tresQuartosTraseira,
+    src: foto('tres-quartos-traseira'),
     alt: 'Limousine Chrysler 300C branca vista de traseira em três quartos',
   },
   lateral: {
-    src: lateral,
+    src: foto('lateral'),
     alt: 'Limousine Chrysler 300C branca de lateral, com o comprimento inteiro no quadro',
   },
   interna: {
-    src: interna,
+    src: foto('interna'),
     alt: 'Interior da limousine Chrysler 300C branca, com bar, taças, bancos em couro claro e iluminação de festa em LED',
   },
   frontal: {
-    src: frontal,
+    src: foto('frontal'),
     alt: 'Limousine Chrysler 300C branca vista de frente',
   },
 };

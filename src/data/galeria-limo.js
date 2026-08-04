@@ -8,62 +8,61 @@
 //
 // Os alt foram escritos ABRINDO cada foto e olhando, não deduzidos do nome
 // do arquivo. Se trocar um arquivo, abra a foto nova e confira o texto.
-const imagens = import.meta.glob('/Images-limo/*.{jpg,jpeg,png}', { eager: true });
+// Resolução por NOME BASE, sem extensão: estas fotos já trocaram de .jpg
+// para .png na origem, e casar a extensão quebrava o build inteiro.
+import { porNome } from './midia.js';
 
-function arquivo(nome) {
-  const chave = Object.keys(imagens).find((caminho) => caminho.endsWith(`/${nome}`));
-  if (!chave) throw new Error(`Foto não encontrada em Images-limo: ${nome}`);
-  return imagens[chave].default;
-}
+const imagens = import.meta.glob('/Images-limo/*.{jpg,jpeg,png,webp}', { eager: true });
+const arquivo = (nome) => porNome(imagens, nome, 'Images-limo');
 
 export const fotosGaleriaLimo = [
   {
-    imagem: arquivo('tres-quartos-frontal.jpg'),
+    imagem: arquivo('tres-quartos-frontal'),
     alt: 'Limousine Chrysler 300C branca em três quartos, parada na entrada de um salão de eventos ao anoitecer',
     posicao: 'center bottom',
   },
   {
-    imagem: arquivo('tres-quartos-frontal-dark.jpg'),
+    imagem: arquivo('tres-quartos-frontal-dark'),
     alt: 'Limousine Chrysler 300C branca à noite, com os faróis acesos, em frente a um prédio histórico iluminado',
   },
   {
-    imagem: arquivo('tres-quartos-frontal-dark-2.jpg'),
+    imagem: arquivo('tres-quartos-frontal-dark-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, sob iluminação noturna',
   },
   {
-    imagem: arquivo('IMG_0247.jpg'),
+    imagem: arquivo('IMG_0247'),
     alt: 'Limousine Chrysler 300C branca estacionada à noite na entrada de um edifício, com manobrista ao fundo',
   },
   {
-    imagem: arquivo('Pasted-2.jpg'),
+    imagem: arquivo('Pasted-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, estacionada em frente a um edifício histórico',
   },
   {
-    imagem: arquivo('frontal.jpg'),
+    imagem: arquivo('frontal'),
     alt: 'Limousine Chrysler 300C branca vista de frente',
   },
   {
-    imagem: arquivo('lateral.jpg'),
+    imagem: arquivo('lateral'),
     alt: 'Limousine Chrysler 300C branca de lateral, com o comprimento inteiro no quadro',
   },
   {
-    imagem: arquivo('tres-quartos-traseira.jpg'),
+    imagem: arquivo('tres-quartos-traseira'),
     alt: 'Limousine Chrysler 300C branca vista de traseira em três quartos',
   },
   {
-    imagem: arquivo('tres-quartos-traseira-2.jpg'),
+    imagem: arquivo('tres-quartos-traseira-2'),
     alt: 'Limousine Chrysler 300C branca vista de traseira em três quartos, ao entardecer, em frente a um espaço de eventos',
   },
   {
-    imagem: arquivo('Casamento1.jpeg'),
+    imagem: arquivo('Casamento1'),
     alt: 'Noivos ao lado da limousine Chrysler 300C branca durante uma cerimônia de casamento ao ar livre',
   },
   {
-    imagem: arquivo('casamento2.jpeg'),
+    imagem: arquivo('casamento2'),
     alt: 'Noivos abraçados em frente à limousine Chrysler 300C branca, momentos antes da cerimônia',
   },
   {
-    imagem: arquivo('interna.png'),
+    imagem: arquivo('interna'),
     alt: 'Interior da limousine Chrysler 300C branca, com bar, taças, bancos em couro claro e iluminação de festa em LED',
   },
 ];
