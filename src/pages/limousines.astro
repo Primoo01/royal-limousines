@@ -17,6 +17,8 @@ import Marquee from '../components/Marquee.astro';
 import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
 import Carrossel from '../components/Carrossel.astro';
+import Video360 from '../components/Video360.astro';
+import { videos360 } from '../data/videos-360.js';
 import { Image } from 'astro:assets';
 import silhuetaSedan from '../assets/fundos/300c-sedan-silhueta.png';
 import site from '../config/site.js';
@@ -227,7 +229,20 @@ const description =
       </div>
     </section>
 
-    {/* Fora do u-container: o carrossel é de sangria total. */}
+    {/* Fora do u-container: vídeo e carrossel são de sangria total. O vídeo
+        vem primeiro — a volta em torno do carro antes dos detalhes. */}
+    {/* Sem a classe .fotos-sedan: aquele filtro corrige a subexposição das
+        FOTOS do sedan (e a regra em global.css mira `img`, não `video`). O
+        vídeo já vem exposto e não precisa da correção. */}
+    <div class="bloco-sedan__video">
+      <Video360
+        src={videos360.sedan.src}
+        poster={videos360.sedan.poster}
+        largura={videos360.sedan.largura}
+        altura={videos360.sedan.altura}
+        alt={videos360.sedan.alt}
+      />
+    </div>
     <Carrossel fotos={fotosGaleriaSedan} mundo="escuro" class="fotos-sedan" />
   </div>
 </BaseLayout>
@@ -404,6 +419,12 @@ const description =
 
   .bloco-frota--escuro .cta-veiculo {
     margin-top: var(--espaco-6);
+  }
+
+  /* Respiro entre a ficha do sedan e o bloco de mídia. O carrossel logo
+     abaixo tem padding próprio, então só o vídeo precisa da folga de cima. */
+  .bloco-sedan__video {
+    margin-top: var(--espaco-5);
   }
 
   /* O wrapper é quem efetivamente pinta fundo/texto com as variáveis que o

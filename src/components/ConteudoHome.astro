@@ -7,6 +7,8 @@
 import { Image } from 'astro:assets';
 import Foto from './Foto.astro';
 import Carrossel from './Carrossel.astro';
+import Video360 from './Video360.astro';
+import { videos360 } from '../data/videos-360.js';
 import { fotosLimo } from '../data/fotos-limo.js';
 import { fotosGaleriaLimo } from '../data/galeria-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta-2.png';
@@ -208,7 +210,18 @@ const passos = [
     <p class="u-eyebrow">Fotos</p>
     <EntradaTitulo as="h2">A limousine em detalhe</EntradaTitulo>
   </div>
-  {/* Sangria total, então fora do u-container. */}
+  {/* Sangria total, então fora do u-container — vale pro vídeo e pro
+      carrossel. O vídeo vem primeiro: é a volta em torno do carro, e o
+      carrossel logo abaixo mostra os detalhes. */}
+  <div class="secao-galeria__video">
+    <Video360
+      src={videos360.limo.src}
+      poster={videos360.limo.poster}
+      largura={videos360.limo.largura}
+      altura={videos360.limo.altura}
+      alt={videos360.limo.alt}
+    />
+  </div>
   <div class="secao-galeria__carrossel">
     <Carrossel fotos={fotosGaleriaLimo} />
   </div>
@@ -602,8 +615,14 @@ const passos = [
     font-size: 0.9375rem;
   }
 
-  .secao-galeria__carrossel {
+  .secao-galeria__video {
     margin-top: var(--espaco-4);
+  }
+
+  /* Menor que o respiro do vídeo pro título: vídeo e carrossel são o mesmo
+     bloco de mídia, e um vão grande entre eles quebraria a leitura. */
+  .secao-galeria__carrossel {
+    margin-top: var(--espaco-3);
   }
 
   .secao-contato__dados {

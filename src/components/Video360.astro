@@ -1,0 +1,112 @@
+---
+// Vídeo 360 — um por página, logo acima do carrossel (ver CLAUDE.md >
+// Vídeos 360).
+//
+// CORTE DE 35% DO TOPO, por CSS e sem editar o arquivo: o contêiner recebe
+// overflow hidden e um aspect-ratio mais largo que o do vídeo —
+//
+//     largura / (altura × 0.65)
+//
+// — e o vídeo dentro preenche esse espaço com object-fit: cover ancorado em
+// `center bottom`. Como a caixa é mais baixa do que a proporção original, o
+// cover escala pela largura e o excedente sai por CIMA, que é exatamente o
+// terço superior que queremos descartar. Nenhum pixel do arquivo é tocado.
+//
+// O <script> abaixo vira um chunk próprio, carregado só nas páginas que
+// renderizam este componente (home e /limousines/) — as 8 páginas de
+// serviço/região não o baixam.
+import { getImage } from 'astro:assets';
+
+interface Props {
+  /** Caminho do MP4 em public/ (o astro:assets não processa vídeo). */
+  src: string;
+  /** Poster, importado de src/assets pra passar pelo astro:assets. */
+  poster: ImageMetadata;
+  /** Largura real do arquivo de vídeo. */
+  largura: number;
+  /** Altura real do arquivo de vídeo. */
+  altura: number;
+  /** Descrição do que o vídeo mostra — vira o rótulo acessível. */
+  alt: string;
+  class?: string;
+}
+
+const { src, poster, largura, altura, alt, class: className } = Astro.props;
+
+// Fração do topo que sai fora. 0.65 = mantém 65%, corta 35%.
+const MANTIDO = 0.65;
+const proporcao = largura / (altura * MANTIDO);
+
+// O poster passa pelo astro:assets pra sair em WebP; o atributo `poster` do
+// <video> só aceita URL, então o componente <Image> não serve aqui.
+const posterOtimizado = await getImage({ src: poster, format: 'webp', width: largura });
+---
+
+<div class:list={['video360', className]} style={`aspect-ratio: ${proporcao};`} data-video360>
+  <video
+    src={src}
+    poster={posterOtimizado.src}
+    width={largura}
+    height={altura}
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    aria-label={alt}
+    data-video360-media></video>
+</div>
+
+<style>
+  /* O overflow hidden é o que efetivamente recorta: a caixa tem a proporção
+     do corte (mais larga que a do vídeo), e o que sobra do vídeo sai por
+     fora dela. */
+  .video360 {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--surface);
+  }
+
+  .video360 video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Ancorado embaixo: o excedente sai pelo TOPO, que é o que o corte de
+       35% descarta. */
+    object-position: center bottom;
+  }
+</style>
+
+<script>
+  // Toca só quando entra na viewport, pausa ao sair — um vídeo rodando fora
+  // de cena é bateria e banda gastas à toa.
+  //
+  // Em prefers-reduced-motion o vídeo nunca toca: fica no poster, que já é o
+  // estado de repouso do <video>. Não há nada a fazer além de não chamar
+  // play(), então o observer sequer é criado.
+  const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduzMovimento && 'IntersectionObserver' in window) {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          const video = entrada.target as HTMLVideoElement;
+          if (entrada.isIntersecting) {
+            // play() devolve uma Promise que rejeita se o navegador bloquear
+            // o autoplay. Como o vídeo é muted, isso é raro — mas uma
+            // rejeição não tratada viraria erro no console.
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    document.querySelectorAll<HTMLVideoElement>('[data-video360-media]').forEach((video) => {
+      observador.observe(video);
+    });
+  }
+</script>
