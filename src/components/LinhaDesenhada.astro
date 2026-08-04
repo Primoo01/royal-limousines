@@ -30,13 +30,14 @@ const classes = ['linha-desenhada', assinatura && 'linha-desenhada--assinatura',
 <div class={classes} data-linha-desenhada aria-hidden="true">
   {
     assinatura ? (
-      // preserveAspectRatio "meet" e não "none": com "none" a caixa esticava
-      // o traço junto e a espessura deformava, o que num gesto de 2.4px fica
-      // visível. Aqui o desenho mantém a proporção.
-      <svg viewBox="0 0 200 32" preserveAspectRatio="xMidYMid meet" focusable="false">
+      // Traço único e contínuo, com o laço no meio — o gesto de uma
+      // assinatura real. preserveAspectRatio "none" conforme especificado;
+      // a caixa recebe aspect-ratio igual ao do viewBox (700/120) pra que
+      // "none" não deforme a espessura do traço, que em 2.4 apareceria.
+      <svg viewBox="0 0 700 120" preserveAspectRatio="none" focusable="false">
         <path
           class="linha-desenhada__curva"
-          d="M3 22 C 22 4, 44 6, 58 18 C 70 28, 86 28, 98 17 C 112 4, 134 6, 150 16 C 162 23, 174 24, 184 19 L 197 7"
+          d="M20,86 C90,86 118,34 190,32 C250,30 258,74 214,80 C182,84 176,52 226,44 C300,32 360,70 430,64 C500,58 540,30 620,36 C650,38 668,46 682,50"
           fill="none"
         />
       </svg>
@@ -57,11 +58,13 @@ const classes = ['linha-desenhada', assinatura && 'linha-desenhada--assinatura',
     height: 1.5rem;
   }
 
-  /* O gesto ocupa mais área que a curva simples: é mais alto (duas
-     ondulações + arremate) e um pouco mais largo. */
+  /* O gesto é bem mais largo que a curva simples. A caixa repete a
+     proporção do viewBox (700/120) — com preserveAspectRatio="none" é isso
+     que impede o traço de esticar e engrossar num eixo só. */
   .linha-desenhada--assinatura {
-    max-width: 13rem;
-    height: 2.1rem;
+    max-width: 22rem;
+    height: auto;
+    aspect-ratio: 700 / 120;
   }
 
   .linha-desenhada svg {
@@ -78,16 +81,24 @@ const classes = ['linha-desenhada', assinatura && 'linha-desenhada--assinatura',
     fill: none;
   }
 
+  /* Dourado do MUNDO CLARO, fixo: a assinatura só existe na /contato/, que
+     é mundo claro do começo ao fim. */
   .linha-desenhada--assinatura .linha-desenhada__curva {
+    stroke: var(--ouro-claro);
     stroke-width: 2.4;
+    stroke-linecap: round;
     stroke-linejoin: round;
+    fill: none;
+    /* Com preserveAspectRatio="none" a espessura acompanharia a escala do
+       viewBox; isto mantém 2.4 em unidades de tela. */
+    vector-effect: non-scaling-stroke;
   }
 
-  /* Só existe transição quando o JS decidiu preparar este elemento —
-     evitando qualquer transição fantasma no estado padrão (sem JS). */
-  .linha-desenhada--preparada .linha-desenhada__curva {
-    transition: stroke-dashoffset 1.6s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s;
-  }
+  /* O desenho do traço é conduzido pela Web Animations API em
+     Movimento.astro, não por transition: a transição de stroke-dashoffset
+     não engatava de forma confiável (ver o comentário longo lá).
+     A classe --preparada continua existindo só para esconder o ponto
+     enquanto o traço se desenha. */
 
   .linha-desenhada__ponto {
     position: absolute;

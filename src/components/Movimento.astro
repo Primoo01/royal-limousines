@@ -219,63 +219,99 @@
     }
 
     // 1c) Linha que se desenha (ver LinhaDesenhada.astro) -------------------
-    // Mesma regra de segurança: sem dasharray/dashoffset definidos, a curva
-    // aparece inteira; o ponto some só quando o JS prepara o elemento.
-    const linhasPendentes = Array.from(document.querySelectorAll<HTMLElement>('[data-linha-desenhada]')).filter(
-      (el) => proporcaoVisivel(el) < 0.5
-    );
+    //
+    // O BUG QUE ISTO CORRIGE: a versão anterior media com getTotalLength() no
+    // carregamento e só preparava elementos com menos de 50% de visibilidade.
+    // Como o cabeçalho fica no topo de todas as páginas de conteúdo, a linha
+    // estava SEMPRE 100% visível no load — era filtrada fora, nunca recebia
+    // dasharray e nunca animava, em página nenhuma.
+    //
+    // Agora TODOS os elementos são observados, e a medição acontece DENTRO do
+    // callback do observer — ou seja, no instante em que o elemento está em
+    // cena e renderizado. Medir escondido devolve 0, e com 0 o dasharray não
+    // tem efeito. O IntersectionObserver dispara o callback imediatamente
+    // para quem já está na viewport, então o caso "já visível no load"
+    // também anima, sem tratamento especial.
+    const linhas = Array.from(document.querySelectorAll<HTMLElement>('[data-linha-desenhada]'));
 
-    linhasPendentes.forEach((container) => {
+    function desenharLinha(container: HTMLElement) {
       const path = container.querySelector<SVGPathElement>('.linha-desenhada__curva');
       if (!path) return;
-      const comprimento = path.getTotalLength();
-      // .style, não setAttribute: transition só anima de forma confiável um
-      // valor que já veio da cascata CSS — um valor só de atributo de
-      // apresentação SVG não conta como estado "de onde" para o motor de
-      // transição em alguns casos. E precisa de unidade (px): um número puro
-      // é sintaxe CSS inválida e é ignorado silenciosamente. "px" aqui é
-      // resolvido nas mesmas user units do sistema de coordenadas do path —
-      // o mesmo que getTotalLength() usa — não pixels de tela.
-      path.style.strokeDasharray = `${comprimento}px`;
-      path.style.strokeDashoffset = `${comprimento}px`;
-      // Força o navegador a "commitar" esse estado antes de aplicar a classe
-      // — a leitura precisa ser no MESMO elemento que vai receber a classe
-      // (o container, que também esconde o ponto via opacity+transition),
-      // não em qualquer elemento do documento.
-      void container.getBoundingClientRect();
-      container.classList.add('linha-desenhada--preparada');
-    });
 
-    if (linhasPendentes.length) {
+      // MEDIÇÃO NO MOMENTO CERTO: o elemento está visível e renderizado aqui.
+      const comprimento = path.getTotalLength();
+
+      // Rede de segurança: 0 ou NaN significa que a medição falhou. Não
+      // aplica dasharray nenhum e sai — a linha fica visível e completa.
+      // Traço invisível por falha de medição é o pior desfecho possível.
+      if (!Number.isFinite(comprimento) || comprimento <= 0) return;
+
+      const ponto = container.querySelector<HTMLElement>('[data-linha-ponto]');
+
+      // Sem WAAPI não há como garantir o desenho: deixa a linha visível e
+      // inteira em vez de arriscar escondê-la sem conseguir revelá-la.
+      if (typeof path.animate !== 'function') return;
+
+      // POR QUE Web Animations API e não transition CSS: a transição de
+      // stroke-dashoffset dependia de o navegador registrar o valor inicial
+      // como "before-change style". Como stroke-dashoffset não afeta a
+      // geometria da caixa, nem getBoundingClientRect() nem a leitura do
+      // próprio computed style forçavam esse registro de forma confiável —
+      // medido no Chrome: zero eventos transitionstart/run/end e o offset já
+      // em 0px no primeiro quadro. O traço aparecia pronto.
+      // A WAAPI declara os dois keyframes explicitamente, então não existe
+      // ambiguidade sobre o estado de partida.
+      //
+      // O dasharray fica inline e estático: é ele que corta o traço em um
+      // segmento visível e um vão, ambos do tamanho do path. A unidade "px"
+      // resolve nas user units do path — as mesmas de getTotalLength() —
+      // não em pixels de tela.
+      path.style.strokeDasharray = `${comprimento}px`;
+
+      // Esconde o ponto (variante 'curva') enquanto o traço se desenha.
+      container.classList.add('linha-desenhada--preparada');
+
+      const animacao = path.animate(
+        [{ strokeDashoffset: `${comprimento}px` }, { strokeDashoffset: '0px' }],
+        {
+          duration: 1700,
+          delay: 150,
+          easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
+          // 'both': segura o offset cheio durante o atraso e mantém o zero no
+          // fim, sem depender de escrever no style depois.
+          fill: 'both',
+        }
+      );
+
+      if (ponto) {
+        let pontoJaEntrou = false;
+        const mostrarPonto = () => {
+          if (pontoJaEntrou) return;
+          pontoJaEntrou = true;
+          ponto.classList.add('linha-desenhada__ponto--visivel');
+        };
+        animacao.finished.then(mostrarPonto).catch(() => mostrarPonto());
+        // Rede de segurança: o ponto não pode ficar invisível pra sempre se
+        // a promise não resolver. 1.7s + 0.15s + folga.
+        setTimeout(mostrarPonto, 2300);
+      }
+    }
+
+    if (linhas.length) {
       const linhaObserver = new IntersectionObserver(
         (entradas) => {
           entradas.forEach((entrada) => {
             if (!entrada.isIntersecting) return;
             const container = entrada.target as HTMLElement;
-            const path = container.querySelector<SVGPathElement>('.linha-desenhada__curva');
-            const ponto = container.querySelector<HTMLElement>('[data-linha-ponto]');
-            // Mantém a classe "preparada" — é ela quem carrega a regra de
-            // transition; removê-la agora tiraria o tapete da transição que
-            // está prestes a começar. O ponto usa uma classe própria
-            // (--visivel) por cima dela pra chegar ao estado final.
-            if (path) {
-              path.style.strokeDashoffset = '0px';
-              const aoTerminar = (evento: TransitionEvent) => {
-                if (evento.propertyName !== 'stroke-dashoffset') return;
-                if (ponto) {
-                  void ponto.getBoundingClientRect();
-                  ponto.classList.add('linha-desenhada__ponto--visivel');
-                }
-                path.removeEventListener('transitionend', aoTerminar);
-              };
-              path.addEventListener('transitionend', aoTerminar);
-            }
+            // Desobserva ANTES de desenhar: o callback não pode reentrar e
+            // reiniciar um traço que já começou.
             linhaObserver.unobserve(container);
+            desenharLinha(container);
           });
         },
-        { threshold: 0.5 }
+        { threshold: 0.2 }
       );
-      linhasPendentes.forEach((el) => linhaObserver.observe(el));
+      linhas.forEach((el) => linhaObserver.observe(el));
     }
   }
 
