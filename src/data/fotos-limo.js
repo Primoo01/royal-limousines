@@ -23,30 +23,35 @@ const foto = (nome) => porNome(arquivos, nome, 'Images-limo');
 // Os alt abaixo foram escritos ABRINDO cada foto e olhando, não deduzidos do
 // nome do arquivo. Todas são a limousine ESTICADA (não o sedan).
 export const fotosLimo = {
+  // `posicao: 'center bottom'` em quase todas: o recorte central cortava a
+  // base do carro (rodas e frente ficavam fora). Ancorando embaixo, a base
+  // da foto encosta na base do contêiner e o carro aparece inteiro. A
+  // propriedade viaja COM a foto, não com o espaço — vale em todos os
+  // lugares onde ela entra, inclusive no carrossel e na /servicos/.
   tresQuartosFrontal: {
     src: foto('tres-quartos-frontal'),
     alt: 'Limousine Chrysler 300C branca em três quartos, parada na entrada de um salão de eventos ao anoitecer',
-    // O recorte central cortava a base do carro (as rodas e a frente ficavam
-    // fora). Ancorando embaixo, a base da foto encosta na base do contêiner e
-    // o carro aparece inteiro. Viaja com a foto, não com o espaço: vale em
-    // todos os lugares onde ela entra.
     posicao: 'center bottom',
   },
   tresQuartosFrontalDark: {
     src: foto('tres-quartos-frontal-dark'),
     alt: 'Limousine Chrysler 300C branca à noite, com os faróis acesos, em frente a um prédio histórico iluminado',
+    posicao: 'center bottom',
   },
   tresQuartosFrontalDark2: {
     src: foto('tres-quartos-frontal-dark-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, sob iluminação noturna',
+    posicao: 'center bottom',
   },
   tresQuartosTraseira: {
     src: foto('tres-quartos-traseira'),
     alt: 'Limousine Chrysler 300C branca vista de traseira em três quartos',
+    posicao: 'center bottom',
   },
   lateral: {
     src: foto('lateral'),
     alt: 'Limousine Chrysler 300C branca de lateral, com o comprimento inteiro no quadro',
+    posicao: 'center bottom',
   },
   interna: {
     src: foto('interna'),

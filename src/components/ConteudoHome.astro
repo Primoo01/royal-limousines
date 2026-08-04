@@ -12,6 +12,9 @@ import { videos360 } from '../data/videos-360.js';
 import { fotosLimo } from '../data/fotos-limo.js';
 import { fotosGaleriaLimo } from '../data/galeria-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta-2.png';
+// Arte de fundo da seção de abertura. Vem da pasta de origem na raiz e
+// passa pelo astro:assets como qualquer outra imagem (WebP, redimensionada).
+import silhuetaAbertura from '../../Images/backgrounds/300c-limo-silhueta-3.png';
 import CortinaDeLuz from './CortinaDeLuz.astro';
 import Wordmark from './Wordmark.astro';
 import Marquee from './Marquee.astro';
@@ -90,6 +93,7 @@ const passos = [
       <Foto
         src={fotosLimo.tresQuartosFrontalDark.src}
         alt={fotosLimo.tresQuartosFrontalDark.alt}
+        posicao={fotosLimo.tresQuartosFrontalDark.posicao}
         aspectRatio="4/5"
         larguraServida={900}
         sizes="(max-width: 56.25rem) 100vw, 45vw"
@@ -138,12 +142,17 @@ const passos = [
           <div class="transicao-hero__logo" data-transicao-logo>
             <Wordmark />
           </div>
-          <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
-          <p class="hero-estagio2__valores" data-transicao-valores>
-            <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
-              >Elegância</span
-            >
-          </p>
+          {/* Os dois textos são IRMÃOS numa linha só, logo abaixo do logo:
+              a procedência sob a coroa, os valores sob a palavra ROYAL.
+              A ordem no DOM é a ordem de entrada (fase 4 e depois 5). */}
+          <div class="transicao-hero__assinatura">
+            <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
+            <p class="hero-estagio2__valores" data-transicao-valores>
+              <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
+                >Elegância</span
+              >
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -156,6 +165,19 @@ const passos = [
   home, e nenhuma delas pode sair da página.
 -->
 <section class="secao-abertura u-container reveal">
+  {/* Silhueta de fundo própria desta seção — arte diferente da do Hero 2 e
+      bem mais apagada (25% contra 50%), porque aqui ela fica ATRÁS do
+      texto, não ao lado dele. Decorativa: aria-hidden e sem ponteiro. */}
+  <Image
+    class="secao-abertura__fundo"
+    src={silhuetaAbertura}
+    alt=""
+    aria-hidden="true"
+    widths={[900, 1600]}
+    sizes="(max-width: 56.25rem) 120vw, 90vw"
+    format="webp"
+    loading="lazy"
+  />
   <div class="u-prosa secao-abertura__texto">
     <p>
       Desde 2008, oferecemos aluguel de limousines em São Paulo para
@@ -423,8 +445,37 @@ const passos = [
     transform: translate(var(--silhueta-x, 0%), -50%);
   }
 
-  .hero-estagio2__tagline {
+  /* Os dois textos da assinatura, lado a lado sob o logo.
+     A coluna é medida do PRÓPRIO SVG do logo (viewBox 0 0 405 114): a
+     coroa ocupa 0→170 e a palavra ROYAL começa em 186. 186/405 = 45.93%.
+     Por isso a primeira coluna tem exatamente essa largura — a tagline
+     alinha com a borda esquerda da coroa (que é a borda do logo) e os
+     valores começam alinhados com o R de ROYAL.
+     A largura do grid repete a do logo (ver Wordmark.astro) pra que as
+     duas réguas sejam a mesma. */
+  .transicao-hero__assinatura {
+    /* Largura do logo, repetida de Wordmark.astro. */
+    --logo-largura: min(100%, 40rem);
+    /* 186/405 do viewBox = onde o R de ROYAL começa. */
+    --logo-royal: 0.4593;
     margin-top: var(--espaco-3);
+    display: grid;
+    /* A primeira coluna é medida sobre a largura do LOGO (é o que alinha
+       com o ROYAL). A segunda ocupa o resto do CONTAINER, não o resto do
+       logo: em 40rem sobravam 346px e os valores quebravam em duas linhas,
+       o que jogava a segunda linha abaixo da linha de base comum. */
+    grid-template-columns: calc(var(--logo-largura) * var(--logo-royal)) 1fr;
+    align-items: baseline;
+    column-gap: 0;
+  }
+
+  /* Uma linha só: a quebra é justamente o que desalinhava a base. */
+  .transicao-hero__assinatura > * {
+    white-space: nowrap;
+  }
+
+  .hero-estagio2__tagline {
+    margin: 0;
     font-family: var(--fonte-sans);
     font-size: 0.875rem;
     letter-spacing: 0.18em;
@@ -434,7 +485,7 @@ const passos = [
 
   /* As três palavras. Entram por último, depois da assinatura. */
   .hero-estagio2__valores {
-    margin-top: var(--espaco-4);
+    margin: 0;
     font-family: var(--fonte-serif);
     font-size: clamp(1.125rem, 0.9rem + 0.9vw, 1.75rem);
     letter-spacing: 0.02em;
@@ -472,6 +523,21 @@ const passos = [
       text-align: center;
     }
 
+    /* Lado a lado não cabe em 390px: vira coluna centralizada. O
+       alinhamento com a coroa e com o ROYAL só faz sentido no desktop,
+       onde o logo é largo. */
+    .transicao-hero__assinatura {
+      grid-template-columns: 1fr;
+      row-gap: var(--espaco-2);
+      justify-items: center;
+    }
+
+    /* Em 390px os valores não cabem numa linha só; aqui podem quebrar,
+       porque empilhados não existe linha de base compartilhada. */
+    .transicao-hero__assinatura > * {
+      white-space: normal;
+    }
+
     /* A regra global esconde a silhueta abaixo de 900px por contraste.
        Aqui ela volta como fundo, mas com opacidade bem menor pra não
        comprometer a leitura do texto por cima. */
@@ -497,16 +563,50 @@ const passos = [
     }
   }
 
+  /* O position: relative e o overflow existem por causa da silhueta de
+     fundo, que é absoluta e sangra além da caixa. O padding vertical é o
+     mesmo de antes: a seção não muda de posição na página. */
   .secao-abertura {
+    position: relative;
+    overflow: hidden;
     padding-block: var(--espaco-6);
   }
 
+  /* Atrás do texto, centralizada, e bem mais apagada que a silhueta do
+     Hero 2 (25% contra 50%) justamente porque aqui há texto por cima. */
+  .secao-abertura__fundo {
+    position: absolute;
+    z-index: 0;
+    top: 50%;
+    left: 50%;
+    width: min(90%, 60rem);
+    height: auto;
+    transform: translate(-50%, -50%);
+    opacity: 0.25;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Bloco centralizado na página, texto centralizado, e uma medida de
+     leitura confortável — 46ch evita a linha longa demais que 48rem
+     permitia. O z-index tira o texto de baixo da silhueta. */
   .secao-abertura__texto {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: var(--espaco-2);
-    max-width: 48rem;
+    max-width: 46ch;
+    margin-inline: auto;
+    text-align: center;
     color: var(--texto);
+  }
+
+  @media (max-width: 56.25rem) {
+    .secao-abertura__fundo {
+      width: 130%;
+      opacity: 0.18;
+    }
   }
 
   /* ---- Mobile: layout próprio, não uma adaptação do desktop -----------

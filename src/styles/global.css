@@ -188,6 +188,38 @@ video {
   max-width: 100%;
 }
 
+/* ---------------------------------------------------------------- */
+/* Cantos arredondados das imagens — DEFINIDO SÓ AQUI                */
+/* ---------------------------------------------------------------- */
+/* Vale para o site inteiro: carrossel, heros, cabeçalhos, páginas de
+   serviço. Não repita border-radius em componente nenhum — mudar o
+   valor tem que ser mudar esta variável e mais nada.
+
+   Por que a lista inclui os CONTÊINERES e não só a <img>: .foto,
+   .carrossel__slide e .video360 têm overflow: hidden. Sem o raio neles,
+   o contêiner continua quadrado e corta os cantos arredondados da
+   imagem de volta em ângulo reto — o arredondamento simplesmente não
+   apareceria. */
+:root {
+  --raio-imagem: 3px;
+}
+
+img,
+video,
+.foto,
+.placeholder-imagem,
+.carrossel__slide,
+.video360 {
+  border-radius: var(--raio-imagem);
+}
+
+/* A silhueta decorativa é um PNG recortado sangrando pela borda: um raio
+   ali não tem o que arredondar e só criaria um corte visível se a arte
+   encostasse na caixa. */
+.silhueta-fundo {
+  border-radius: 0;
+}
+
 a {
   color: inherit;
 }

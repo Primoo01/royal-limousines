@@ -24,10 +24,12 @@ export const fotosGaleriaLimo = [
   {
     imagem: arquivo('tres-quartos-frontal-dark'),
     alt: 'Limousine Chrysler 300C branca à noite, com os faróis acesos, em frente a um prédio histórico iluminado',
+    posicao: 'center bottom',
   },
   {
     imagem: arquivo('tres-quartos-frontal-dark-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, sob iluminação noturna',
+    posicao: 'center bottom',
   },
   {
     imagem: arquivo('IMG_0247'),
@@ -44,10 +46,12 @@ export const fotosGaleriaLimo = [
   {
     imagem: arquivo('lateral'),
     alt: 'Limousine Chrysler 300C branca de lateral, com o comprimento inteiro no quadro',
+    posicao: 'center bottom',
   },
   {
     imagem: arquivo('tres-quartos-traseira'),
     alt: 'Limousine Chrysler 300C branca vista de traseira em três quartos',
+    posicao: 'center bottom',
   },
   {
     imagem: arquivo('tres-quartos-traseira-2'),

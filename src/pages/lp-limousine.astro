@@ -92,6 +92,7 @@ const passosOrcamento = [
       <Foto
         src={fotosLimo.tresQuartosFrontalDark2.src}
         alt={fotosLimo.tresQuartosFrontalDark2.alt}
+        posicao={fotosLimo.tresQuartosFrontalDark2.posicao}
         aspectRatio="4/3"
         prioridade
         class="reveal"
@@ -170,7 +171,13 @@ const passosOrcamento = [
   </section>
 
   <section class="u-container lp-secao lp-veiculo reveal">
-    <Foto src={fotosLimo.lateral.src} alt={fotosLimo.lateral.alt} aspectRatio="16/9" class="reveal" />
+    <Foto
+      src={fotosLimo.lateral.src}
+      alt={fotosLimo.lateral.alt}
+      posicao={fotosLimo.lateral.posicao}
+      aspectRatio="16/9"
+      class="reveal"
+    />
     <div>
       <p class="u-eyebrow">A limousine</p>
       <EntradaTitulo as="h2">Chrysler Limousine: clássica, elegante e confortável.</EntradaTitulo>
