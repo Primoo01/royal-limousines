@@ -43,11 +43,21 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
 ---
 
 <div class:list={['video360', className]} style={`aspect-ratio: ${proporcao};`} data-video360>
+  {/*
+    O `autoplay` é obrigatório para o iOS, e não é redundante com o play()
+    do script. O WebKit trata os dois por caminhos diferentes: o play()
+    programático sem gesto do usuário é recusado com NotAllowedError (medido
+    num iPhone real, nas 6 tentativas), enquanto `autoplay` + `muted` +
+    `playsinline` é o caminho declarativo que a Apple documenta como
+    permitido. O script continua existindo para pausar fora de cena e para
+    retomar quando o vídeo volta — coisas que o atributo sozinho não faz.
+  */}
   <video
     src={src}
     poster={posterOtimizado.src}
     width={largura}
     height={altura}
+    autoplay
     muted
     loop
     playsinline
@@ -105,6 +115,27 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
   // Fora disso não aparece nada para o visitante.
   const modoDebug = new URLSearchParams(location.search).has('videodebug');
 
+  const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('[data-video360-media]'));
+
+  // Com `autoplay` no HTML, o navegador começa a tocar por conta própria —
+  // então em prefers-reduced-motion é preciso DESLIGAR o atributo, não
+  // apenas deixar de chamar play(). Feito o quanto antes, para o vídeo não
+  // chegar a andar: fica no poster, como manda o CLAUDE.md.
+  if (reduzMovimento) {
+    videos.forEach((video) => {
+      video.removeAttribute('autoplay');
+      video.autoplay = false;
+      video.pause();
+      video.currentTime = 0;
+    });
+  }
+
+  // Estado do elemento no momento da falha — é o que diz se o problema é
+  // política de autoplay, mídia não carregada ou o vídeo sem `muted`.
+  function estado(video: HTMLVideoElement) {
+    return `muted=${video.muted} inline=${video.playsInline} autoplay=${video.autoplay} ready=${video.readyState} net=${video.networkState}`;
+  }
+
   function registrarErro(video: HTMLVideoElement, texto: string) {
     // Fica no DOM para inspeção remota, mesmo sem console.
     video.setAttribute('data-video-erro', texto);
@@ -147,12 +178,12 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
       promessa
         .then(() => {
           video.removeAttribute('data-video-erro');
-          if (modoDebug) registrarErro(video, `tocando (tentativa ${tentativa + 1})`);
+          if (modoDebug) registrarErro(video, `tocando (tentativa ${tentativa + 1}) | ${estado(video)}`);
         })
         .catch((erro: unknown) => {
           const nome = erro instanceof Error ? erro.name : 'Erro';
           const msg = erro instanceof Error ? erro.message : String(erro);
-          registrarErro(video, `${nome}: ${msg} (tentativa ${tentativa + 1})`);
+          registrarErro(video, `${nome}: ${msg} | ${estado(video)} (tentativa ${tentativa + 1})`);
 
           // Só insiste enquanto o vídeo continua em cena. Se falhar em
           // todas, o <video> permanece exibindo o poster — nunca vira um
@@ -181,8 +212,6 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
       { threshold: 0.5 }
     );
 
-    document.querySelectorAll<HTMLVideoElement>('[data-video360-media]').forEach((video) => {
-      observador.observe(video);
-    });
+    videos.forEach((video) => observador.observe(video));
   }
 </script>
