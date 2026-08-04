@@ -579,7 +579,16 @@ const passos = [
     z-index: 0;
     top: 50%;
     left: 50%;
-    width: min(90%, 60rem);
+    /* 30% maior que os min(90%, 60rem) originais. A altura é auto, então
+       ela acompanha na mesma proporção, e o par top/left 50% +
+       translate(-50%, -50%) mantém o centro no mesmo ponto. O que passar
+       da caixa é cortado pelo overflow: hidden da seção. */
+    width: min(117%, 78rem);
+    /* O reset global tem `img { max-width: 100% }`, que estava travando esta
+       imagem na largura da seção e engolindo qualquer valor acima de 100%.
+       Aqui ela precisa poder passar da caixa — o excedente é cortado pelo
+       overflow: hidden da seção, de propósito. */
+    max-width: none;
     height: auto;
     transform: translate(-50%, -50%);
     opacity: 0.25;
@@ -604,6 +613,11 @@ const passos = [
 
   @media (max-width: 56.25rem) {
     .secao-abertura__fundo {
+      /* Os 130% declarados aqui antes nunca valeram: o `max-width: 100%` do
+         reset global cortava a imagem na largura da seção, então ela
+         renderizava a 100%. Com o max-width liberado, 130% passa a valer de
+         fato — que é exatamente o aumento de 30% sobre o tamanho que
+         aparecia na tela. */
       width: 130%;
       opacity: 0.18;
     }
