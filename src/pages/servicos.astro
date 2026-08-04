@@ -39,6 +39,14 @@ const servicos = [
   {
     titulo: 'Festas Debutantes',
     imagem: fotosLimo.lateral,
+    // Enquadramento SÓ DESTE CARTÃO — não mexe na foto em lugar nenhum.
+    // A `lateral` é retrato (2268×4032) e aqui entra num contêiner 16/9, o
+    // corte vertical mais agressivo do site. O `center bottom` que ela
+    // carrega por padrão ancora a base da FOTO, e a base da foto é chão de
+    // paralelepípedo: o carro subia pro topo do quadro com uma faixa larga
+    // de chão embaixo. 68% sobe o recorte até as rodas encostarem na base.
+    // Testado quadro a quadro: em 66% as rodas já começam a ser cortadas.
+    posicao: 'center 68%',
     itens: [
       '2 horas de muita alegria e celebração',
       'Pacotes e condições especiais para eventos de 2ª a 6ª',
@@ -68,7 +76,9 @@ const servicos = [
             <Foto
               src={servico.imagem.src}
               alt={servico.imagem.alt}
-              posicao={servico.imagem.posicao}
+              {/* O cartão pode sobrescrever o enquadramento que a foto traz
+                  por padrão; sem override, vale o da própria foto. */}
+              posicao={servico.posicao ?? servico.imagem.posicao}
               aspectRatio="16/9"
               larguraServida={800}
             />
