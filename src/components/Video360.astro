@@ -170,7 +170,36 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
       }
     }
 
+    // Último recurso: play por gesto do usuário. Nenhum navegador recusa
+    // isso. Registrado uma vez só por vídeo.
+    const comToque = new WeakSet<HTMLVideoElement>();
+    function permitirToque(video: HTMLVideoElement) {
+      if (comToque.has(video)) return;
+      comToque.add(video);
+      const alvo = video.parentElement ?? video;
+      alvo.style.cursor = 'pointer';
+      const aoTocar = () => {
+        video.load();
+        video.play().then(() => {
+          video.removeAttribute('data-video-erro');
+          alvo.style.cursor = '';
+          if (modoDebug) registrarErro(video, `tocando por toque | ${estado(video)}`);
+        });
+      };
+      alvo.addEventListener('click', aoTocar);
+    }
+
     function tentarTocar(video: HTMLVideoElement, tentativa = 0) {
+      // MEDIDO NUM IPHONE REAL: networkState=0 (NETWORK_EMPTY) e
+      // readyState=0 (HAVE_NOTHING) — o iOS não tinha sequer iniciado a
+      // seleção de recurso, ou seja, nunca buscou o arquivo. O
+      // NotAllowedError era consequência disso: não há como tocar mídia que
+      // não foi carregada. O iOS ignora `preload` para poupar dados do
+      // usuário, então quem tem que pedir o carregamento somos nós.
+      if (video.networkState === HTMLMediaElement.NETWORK_EMPTY || video.readyState === 0) {
+        video.load();
+      }
+
       const promessa = video.play();
       // Navegadores antigos devolvem undefined em vez de Promise.
       if (!promessa || typeof promessa.catch !== 'function') return;
@@ -191,6 +220,12 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
           if (tentativa + 1 < MAX_TENTATIVAS) {
             const id = window.setTimeout(() => tentarTocar(video, tentativa + 1), INTERVALO);
             agendados.set(video, id);
+          } else {
+            // Esgotadas as tentativas, resta a única via que o iOS nunca
+            // recusa: um gesto do usuário. O toque na área do vídeo passa a
+            // dar play. Até lá o poster continua na tela, então quem não
+            // tocar não vê nada quebrado.
+            permitirToque(video);
           }
         });
     }
