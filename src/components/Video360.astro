@@ -85,24 +85,100 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
   // Em prefers-reduced-motion o vídeo nunca toca: fica no poster, que já é o
   // estado de repouso do <video>. Não há nada a fazer além de não chamar
   // play(), então o observer sequer é criado.
+  //
+  // POR QUE ISTO NÃO É UM `play()` SOLTO:
+  //
+  // O vídeo mora dentro de uma <section class="reveal">, que fica em
+  // opacity ~0 e com transform aplicado até entrar em cena, e leva 1,1s
+  // transicionando. O WebKit (iOS) é bem mais rigoroso que o Chrome e
+  // recusa reproduzir vídeo que considera não visível na tela — então a
+  // primeira chamada de play(), disparada no meio dessa transição, era
+  // rejeitada. Como o .catch() antigo descartava o erro, o vídeo ficava
+  // parado no primeiro quadro sem deixar rastro.
+  //
+  // A correção tem três partes: exigir mais área visível para disparar,
+  // TENTAR DE NOVO algumas vezes em vez de desistir na primeira rejeição
+  // (cobrindo a duração da revelação), e registrar o erro em vez de engoli-lo.
   const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Diagnóstico visível no aparelho: abra a página com ?videodebug na URL.
+  // Fora disso não aparece nada para o visitante.
+  const modoDebug = new URLSearchParams(location.search).has('videodebug');
+
+  function registrarErro(video: HTMLVideoElement, texto: string) {
+    // Fica no DOM para inspeção remota, mesmo sem console.
+    video.setAttribute('data-video-erro', texto);
+    if (!modoDebug) return;
+    const caixa = video.parentElement;
+    if (!caixa) return;
+    let rotulo = caixa.querySelector<HTMLElement>('[data-video-debug]');
+    if (!rotulo) {
+      rotulo = document.createElement('p');
+      rotulo.setAttribute('data-video-debug', '');
+      rotulo.style.cssText =
+        'position:absolute;inset-inline:0;bottom:0;margin:0;padding:.4em .6em;' +
+        'background:rgba(0,0,0,.78);color:#fff;font:500 12px/1.35 monospace;' +
+        'z-index:2;word-break:break-word;';
+      caixa.appendChild(rotulo);
+    }
+    rotulo.textContent = texto;
+  }
+
   if (!reduzMovimento && 'IntersectionObserver' in window) {
+    // Quantas tentativas e de quanto em quanto tempo. 6 × 400ms = 2,4s,
+    // folgado sobre os 1,1s que a revelação da seção leva.
+    const MAX_TENTATIVAS = 6;
+    const INTERVALO = 400;
+    const agendados = new WeakMap<HTMLVideoElement, number>();
+
+    function cancelar(video: HTMLVideoElement) {
+      const id = agendados.get(video);
+      if (id !== undefined) {
+        clearTimeout(id);
+        agendados.delete(video);
+      }
+    }
+
+    function tentarTocar(video: HTMLVideoElement, tentativa = 0) {
+      const promessa = video.play();
+      // Navegadores antigos devolvem undefined em vez de Promise.
+      if (!promessa || typeof promessa.catch !== 'function') return;
+
+      promessa
+        .then(() => {
+          video.removeAttribute('data-video-erro');
+          if (modoDebug) registrarErro(video, `tocando (tentativa ${tentativa + 1})`);
+        })
+        .catch((erro: unknown) => {
+          const nome = erro instanceof Error ? erro.name : 'Erro';
+          const msg = erro instanceof Error ? erro.message : String(erro);
+          registrarErro(video, `${nome}: ${msg} (tentativa ${tentativa + 1})`);
+
+          // Só insiste enquanto o vídeo continua em cena. Se falhar em
+          // todas, o <video> permanece exibindo o poster — nunca vira um
+          // retângulo vazio, porque nada aqui esconde o poster.
+          if (tentativa + 1 < MAX_TENTATIVAS) {
+            const id = window.setTimeout(() => tentarTocar(video, tentativa + 1), INTERVALO);
+            agendados.set(video, id);
+          }
+        });
+    }
+
     const observador = new IntersectionObserver(
       (entradas) => {
         entradas.forEach((entrada) => {
           const video = entrada.target as HTMLVideoElement;
           if (entrada.isIntersecting) {
-            // play() devolve uma Promise que rejeita se o navegador bloquear
-            // o autoplay. Como o vídeo é muted, isso é raro — mas uma
-            // rejeição não tratada viraria erro no console.
-            video.play().catch(() => {});
+            tentarTocar(video);
           } else {
+            cancelar(video);
             video.pause();
           }
         });
       },
-      { threshold: 0.25 }
+      // Metade do vídeo à vista: no iOS, disparar com uma nesga visível é
+      // justamente o caso em que o WebKit recusa.
+      { threshold: 0.5 }
     );
 
     document.querySelectorAll<HTMLVideoElement>('[data-video360-media]').forEach((video) => {
