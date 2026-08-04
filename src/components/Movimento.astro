@@ -218,67 +218,6 @@
       entradaPendentes.forEach((el) => entradaObserver.observe(el));
     }
 
-    // 1b-bis) Wordmark do Estágio 2 (ver Wordmark.astro) -------------------
-    // Mesma regra de segurança: visível por padrão, o JS só prepara quem
-    // ainda não entrou na viewport. O clip-path fica no filho — aplicá-lo no
-    // próprio elemento observado faz o Chromium calcular interseção sempre
-    // zero, e o observer nunca dispararia.
-    const wordmark = document.querySelector<HTMLElement>('[data-wordmark]');
-    const wordmarkDepois = document.querySelector<HTMLElement>('[data-wordmark-depois]');
-    // Terceiro degrau: as três palavras do Hero 2, que entram depois da
-    // tagline (ver CLAUDE.md > Hero 2).
-    const wordmarkDepois2 = document.querySelector<HTMLElement>('[data-wordmark-depois-2]');
-
-    if (wordmark && proporcaoVisivel(wordmark) < 0.35) {
-      void wordmark.getBoundingClientRect();
-      wordmark.classList.add('wordmark--preparado');
-      if (wordmarkDepois) {
-        void wordmarkDepois.getBoundingClientRect();
-        wordmarkDepois.classList.add('wordmark-depois--preparado');
-      }
-      if (wordmarkDepois2) {
-        void wordmarkDepois2.getBoundingClientRect();
-        wordmarkDepois2.classList.add('wordmark-depois--preparado');
-      }
-
-      const wordmarkObserver = new IntersectionObserver(
-        (entradas) => {
-          entradas.forEach((entrada) => {
-            if (!entrada.isIntersecting) return;
-            const alvo = entrada.target as HTMLElement;
-            const texto = alvo.querySelector<HTMLElement>('.wordmark__texto');
-            alvo.classList.add('wordmark--visivel');
-
-            // A tagline entra DEPOIS que a máscara termina de abrir — é a
-            // procedência sustentando a marca, por isso vem por último.
-            if (wordmarkDepois && texto) {
-              const aoTerminar = (evento: TransitionEvent) => {
-                if (evento.propertyName !== 'clip-path') return;
-                void wordmarkDepois.getBoundingClientRect();
-                wordmarkDepois.classList.add('wordmark-depois--visivel');
-                // E as três palavras depois DELA, encadeadas na mesma
-                // transição — a assinatura inteira antes dos valores.
-                if (wordmarkDepois2) {
-                  const aoTerminarTagline = (e: TransitionEvent) => {
-                    if (e.propertyName !== 'opacity') return;
-                    void wordmarkDepois2.getBoundingClientRect();
-                    wordmarkDepois2.classList.add('wordmark-depois--visivel');
-                    wordmarkDepois.removeEventListener('transitionend', aoTerminarTagline);
-                  };
-                  wordmarkDepois.addEventListener('transitionend', aoTerminarTagline);
-                }
-                texto.removeEventListener('transitionend', aoTerminar);
-              };
-              texto.addEventListener('transitionend', aoTerminar);
-            }
-            wordmarkObserver.unobserve(alvo);
-          });
-        },
-        { threshold: 0.35 }
-      );
-      wordmarkObserver.observe(wordmark);
-    }
-
     // 1c) Linha que se desenha (ver LinhaDesenhada.astro) -------------------
     // Mesma regra de segurança: sem dasharray/dashoffset definidos, a curva
     // aparece inteira; o ponto some só quando o JS prepara o elemento.
@@ -389,19 +328,79 @@
     }
 
 
+    // 5b) Transição Hero 1 → Hero 2 (ver CLAUDE.md) ------------------------
+    // Só existe em "/"; nas demais páginas o querySelector devolve null e
+    // todo este bloco fica inerte.
+    //
+    // O "prender na tela" é o `position: sticky` do painel, CSS puro — não
+    // existe pin em JavaScript aqui. Este bloco só converte o scroll em
+    // progresso e distribui esse progresso pelas cinco fases.
+    //
+    // REGRA DE SEGURANÇA: o CSS nasce no estado FINAL (tudo visível). Quem
+    // aplica os estados iniciais é este código, e só depois de confirmar
+    // que vai poder animar. Se ele não rodar, nada some.
+    const transicaoHero = document.querySelector<HTMLElement>('[data-transicao-hero]');
+    const heroPainel = document.querySelector<HTMLElement>('[data-transicao-painel]');
+    const heroSilhueta = document.querySelector<HTMLElement>('[data-transicao-silhueta]');
+    const heroLogo = document.querySelector<HTMLElement>('[data-transicao-logo]');
+    const heroTagline = document.querySelector<HTMLElement>('[data-transicao-tagline]');
+    const heroValores = document.querySelector<HTMLElement>('[data-transicao-valores]');
+
+    const temTransicaoHero = !!(transicaoHero && heroPainel && heroSilhueta && heroLogo && heroTagline && heroValores);
+
+    // power3.out — o mesmo easing do resto do site.
+    const suavizar = (t: number) => 1 - Math.pow(1 - t, 3);
+    // Progresso LOCAL de uma fase, normalizado e suavizado.
+    const faseLocal = (p: number, inicio: number, fim: number) =>
+      suavizar(Math.min(Math.max((p - inicio) / (fim - inicio), 0), 1));
+
+    // Guardado entre quadros: a cor da barra do topo depende de saber se o
+    // painel já cobriu a tela.
+    let progressoHero = 0;
+
+    function atualizarTransicaoHero() {
+      if (!temTransicaoHero) return;
+
+      const rect = transicaoHero!.getBoundingClientRect();
+      const util = rect.height - window.innerHeight;
+      if (util <= 0) return;
+      // p = clamp((scrollY − topoDaSecao) / (alturaDaSecao − innerHeight), 0, 1)
+      progressoHero = Math.min(Math.max(-rect.top / util, 0), 1);
+      const p = progressoHero;
+
+      // Fase 1 — o painel entra pela direita.
+      const fPainel = faseLocal(p, 0, 0.35);
+      heroPainel!.style.transform = `translateX(${(1 - fPainel) * 100}%)`;
+
+      // Fase 2 — a silhueta entra pela direita, dentro do painel.
+      const fSilhueta = faseLocal(p, 0.35, 0.55);
+      heroSilhueta!.style.setProperty('--silhueta-x', `${(1 - fSilhueta) * 60}%`);
+
+      // Fase 3 — o logo aparece por transparência, sem deslocamento.
+      heroLogo!.style.opacity = String(faseLocal(p, 0.55, 0.72));
+
+      // Fase 4 — a procedência entra pela esquerda.
+      const fTagline = faseLocal(p, 0.72, 0.88);
+      heroTagline!.style.opacity = String(fTagline);
+      heroTagline!.style.transform = `translateX(${(1 - fTagline) * -40}%)`;
+
+      // Fase 5 — as três palavras, por último.
+      heroValores!.style.opacity = String(faseLocal(p, 0.88, 1));
+    }
+
+    // Estado inicial da sequência. Só aqui — nunca no CSS.
+    if (temTransicaoHero) atualizarTransicaoHero();
+
     // O hero da home — só existe em "/"; nas demais páginas os
     // querySelectors retornam null e o bloco não faz nada.
     //
-    // A passagem INTERPOLADA (fundo do escuro pro claro + mídia crescendo)
-    // saiu: quem faz a travessia do Hero 1 pro Hero 2 agora é a revelação em
-    // persianas (ver Persianas.astro e CLAUDE.md). O que sobra aqui é só a
-    // cor da BARRA DO TOPO, que é fixed e mora fora do wrapper do hero: sem
-    // isto ela ficaria uma barra clara por cima do hero escuro.
+    // A BARRA DO TOPO é fixed e mora fora do wrapper do hero: sem isto ela
+    // ficaria uma barra clara por cima do hero escuro.
     //
-    // É CORTE LIMPO, sem interpolação: escuro enquanto o hero ainda cobre a
-    // barra, claro a partir do momento em que ele sai de baixo dela. A
-    // transição visual agora é a persiana; um fade de cor por baixo dela só
-    // competiria.
+    // É CORTE LIMPO, sem interpolação: escura enquanto o mundo escuro ainda
+    // cobre a barra, clara a partir daí. Durante a transição o fundo atrás
+    // do painel continua sendo o mundo escuro até o painel cobrir a tela
+    // (fim da fase 1), então a barra só clareia nesse ponto.
     const heroEstagio1 = document.querySelector<HTMLElement>('[data-hero-estagio1]');
     const alturaBarraHeader = document.querySelector<HTMLElement>('[data-header]')?.offsetHeight ?? 0;
     const paletaEscura: Record<string, string> = {
@@ -416,7 +415,16 @@
 
     function atualizarCorDaBarra() {
       if (!heroEstagio1) return;
-      const escura = heroEstagio1.getBoundingClientRect().bottom > alturaBarraHeader;
+      let escura = heroEstagio1.getBoundingClientRect().bottom > alturaBarraHeader;
+
+      if (!escura && temTransicaoHero) {
+        const r = transicaoHero!.getBoundingClientRect();
+        const cobreABarra = r.top <= alturaBarraHeader && r.bottom > alturaBarraHeader;
+        // 0.35 é o fim da fase 1: antes disso o painel claro ainda não
+        // chegou à borda esquerda e o que está sob a barra é o mundo escuro.
+        if (cobreABarra && progressoHero < 0.35) escura = true;
+      }
+
       if (escura === barraEscura) return;
       barraEscura = escura;
       const raiz = document.documentElement;
@@ -427,6 +435,9 @@
     }
 
     function atualizarTransicaoDiaNoite() {
+      // A ordem importa: a cor da barra depende do progresso calculado em
+      // atualizarTransicaoHero().
+      atualizarTransicaoHero();
       atualizarCorDaBarra();
       if (!transicao || !mundoDinamico) return;
 

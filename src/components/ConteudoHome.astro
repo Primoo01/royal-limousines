@@ -104,30 +104,48 @@ const passos = [
     </div>
   </section>
 
-  {/* Fundo em sangria total no elemento externo, conteúdo no container:
-      com o fundo claro no próprio .u-container, ele ficava limitado à
-      largura máxima e sobrava uma moldura do wrapper nas laterais. */}
-  <section class="hero-estagio2">
-    <Image
-      class="silhueta-fundo silhueta-fundo--claro"
-      src={silhuetaLimo}
-      alt=""
-      aria-hidden="true"
-      widths={[700, 1400]}
-      sizes="50vw"
-      format="webp"
-      loading="lazy"
-    />
-    <div class="hero-estagio2__miolo u-container">
-      <Wordmark />
-      <p class="hero-estagio2__tagline" data-wordmark-depois>Desde 2008 · São Paulo</p>
-      {/* Entram DEPOIS da assinatura: mesmo mecanismo da tagline, um degrau
-          adiante (data-wordmark-depois-2). */}
-      <p class="hero-estagio2__valores" data-wordmark-depois-2>
-        <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
-          >Elegância</span
-        >
-      </p>
+  {/*
+    TRANSIÇÃO HERO 1 → HERO 2 (ver CLAUDE.md > Transição Hero 1 → Hero 2).
+
+    O trilho tem 250vh (160svh no mobile) e o painel dentro fica preso por
+    `position: sticky` — CSS puro, sem pin em JavaScript. O painel É o
+    Hero 2: ele entra pela direita cobrindo a tela e, dentro dele, a
+    assinatura se monta em cinco fases conduzidas pelo scroll.
+
+    TUDO AQUI É HTML COMUM. Nenhum conteúdo de texto ou layout mora dentro
+    de <svg> — foi exatamente isso que apagou o hero na tentativa das
+    persianas: o navegador descarta silenciosamente HTML dentro de <svg>.
+    O único SVG é o do logo, que entra por set:html no Wordmark e não
+    carrega layout nenhum.
+  */}
+  <section class="transicao-hero" data-transicao-hero>
+    <div class="transicao-hero__sticky">
+      <div class="transicao-hero__painel" data-transicao-painel>
+        <Image
+          class="silhueta-fundo silhueta-fundo--claro transicao-hero__silhueta"
+          data-transicao-silhueta
+          src={silhuetaLimo}
+          alt=""
+          aria-hidden="true"
+          widths={[700, 1400]}
+          sizes="50vw"
+          format="webp"
+          loading="lazy"
+        />
+        <div class="transicao-hero__miolo u-container">
+          {/* O logo aparece por transparência, no lugar onde já está — por
+              isso o wrapper carrega só opacity, sem deslocamento. */}
+          <div class="transicao-hero__logo" data-transicao-logo>
+            <Wordmark />
+          </div>
+          <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
+          <p class="hero-estagio2__valores" data-transicao-valores>
+            <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
+              >Elegância</span
+            >
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -346,32 +364,63 @@ const passos = [
     color: var(--texto-mut);
   }
 
-  /* Estágio 2 — a assinatura. Mundo claro SEMPRE, sem depender das variáveis
-     que o JS interpola: se o JS não rodar, ele nunca fica escuro. */
-  .hero-estagio2 {
+  /* ---- Transição Hero 1 → Hero 2 -------------------------------------
+     (ver CLAUDE.md > Transição Hero 1 → Hero 2)
+
+     O TRILHO. A altura é o que define quanto scroll a sequência consome.
+     O fundo é o mundo ESCURO: é ele que aparece atrás do painel enquanto
+     o painel ainda não cobriu a tela, dando continuidade ao Hero 1. */
+  .transicao-hero {
+    position: relative;
+    height: 250vh;
+    background-color: var(--escuro-bg);
+  }
+
+  /* O "prender na tela" é CSS puro — nunca pin em JavaScript.
+     O overflow: hidden mora AQUI, no próprio elemento sticky, e não em
+     nenhum ancestral: a restrição do sticky é sobre ancestrais, e um
+     ancestral com overflow o mataria silenciosamente. É este overflow que
+     impede o painel (que parte de translateX(100%)) de gerar barra de
+     rolagem horizontal. */
+  .transicao-hero__sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* O PAINEL — é o Hero 2. Mundo claro SEMPRE, sem depender das variáveis
+     que o JS interpola: se o JS não rodar, ele nunca fica escuro.
+
+     O transform mora aqui, no painel, e em nenhum dos pais: transform em
+     ancestral quebra position: sticky no iOS Safari. */
+  .transicao-hero__painel {
     --bg: var(--claro-bg);
     --surface: var(--claro-surface);
     --linha: var(--claro-linha);
     --texto: var(--claro-texto);
     --texto-mut: var(--claro-texto-mut);
     --ouro: var(--ouro-claro);
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
     background-color: var(--claro-bg);
     color: var(--claro-texto);
-    /* Sem vão morto (CLAUDE.md > Hero 2): a seção abraça o próprio conteúdo
-       e a próxima começa logo depois. Os 60svh + justify-content: center que
-       havia aqui deixavam meia tela clara vazia embaixo da assinatura. */
-    padding-block: var(--espaco-6) var(--espaco-5);
   }
 
-  .hero-estagio2 {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-estagio2__miolo {
+  .transicao-hero__miolo {
     position: relative;
     z-index: 1;
     width: 100%;
+  }
+
+  /* Composição da silhueta durante a fase 2. O deslocamento entra por
+     variável pra somar ao translateY(-50%) que a regra global já aplica —
+     escrever `transform` cru aqui apagaria a centralização vertical. */
+  .transicao-hero__silhueta {
+    transform: translate(var(--silhueta-x, 0%), -50%);
   }
 
   .hero-estagio2__tagline {
@@ -381,23 +430,6 @@ const passos = [
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--ouro-claro);
-  }
-
-  /* Entra DEPOIS do wordmark — quem dispara é o JS, no fim da máscara.
-     Visível por padrão: sem JS, aparece junto e nada some. */
-  .hero-estagio2__tagline.wordmark-depois--preparado {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  .hero-estagio2__tagline.wordmark-depois--preparado,
-  .hero-estagio2__tagline.wordmark-depois--visivel {
-    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-
-  .hero-estagio2__tagline.wordmark-depois--visivel {
-    opacity: 1;
-    transform: translateY(0);
   }
 
   /* As três palavras. Entram por último, depois da assinatura. */
@@ -413,21 +445,56 @@ const passos = [
     color: var(--ouro-claro);
   }
 
-  /* Mesma máquina da tagline, um degrau adiante. Visível por padrão: sem JS
-     aparece junto e nada some. */
-  .hero-estagio2__valores.wordmark-depois--preparado {
-    opacity: 0;
-    transform: translateY(12px);
+  /* REGRA DE SEGURANÇA (CLAUDE.md): o estado escrito no CSS é o estado
+     FINAL — tudo visível, no lugar. Quem prepara os estados iniciais é o
+     JS, e só depois de confirmar que vai poder animar. Se o JS falhar,
+     nada some.
+
+     Mobile: svh e nunca vh. 100vh no celular vale a viewport SEM a barra
+     do navegador; quando ela aparece a altura muda e a composição pula.
+     E a distância cai de 250vh pra 160svh, porque um gesto de toque
+     percorre muito mais scroll que uma rolagem de mouse. */
+  @media (max-width: 56.25rem) {
+    .transicao-hero {
+      height: 160svh;
+    }
+
+    .transicao-hero__sticky {
+      height: 100svh;
+    }
+
+    /* Composição própria: empilhada e centralizada, com a silhueta de
+       fundo ATRÁS do conteúdo em vez de coluna ao lado. */
+    .transicao-hero__miolo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* A regra global esconde a silhueta abaixo de 900px por contraste.
+       Aqui ela volta como fundo, mas com opacidade bem menor pra não
+       comprometer a leitura do texto por cima. */
+    .transicao-hero__silhueta {
+      display: block;
+      left: 50%;
+      width: min(150%, 34rem);
+      opacity: 0.15;
+      transform: translate(calc(-50% + var(--silhueta-x, 0%)), -50%);
+    }
   }
 
-  .hero-estagio2__valores.wordmark-depois--preparado,
-  .hero-estagio2__valores.wordmark-depois--visivel {
-    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
+  /* Sem sequência: tudo no estado final e sem trilho de scroll morto. */
+  @media (prefers-reduced-motion: reduce) {
+    .transicao-hero {
+      height: auto;
+    }
 
-  .hero-estagio2__valores.wordmark-depois--visivel {
-    opacity: 1;
-    transform: translateY(0);
+    .transicao-hero__sticky {
+      position: static;
+      height: auto;
+      min-height: 100svh;
+    }
   }
 
   .secao-abertura {
@@ -515,23 +582,21 @@ const passos = [
       transform: none;
     }
 
-    /* A assinatura hugs o próprio conteúdo. Em 60svh sobrava meia tela clara
-       vazia embaixo do wordmark, e a seção seguinte só começava depois dela. */
-    .hero-estagio2 {
-      min-height: 0;
-      padding-block: var(--espaco-5);
-    }
   }
 
+  /* Rede de segurança: mesmo que algum estado inicial tenha sido aplicado
+     antes de o JS ler a preferência, nada da assinatura fica escondido. */
   @media (prefers-reduced-motion: reduce) {
-    .hero-estagio2__valores {
-      opacity: 1 !important;
-      transform: none !important;
-    }
-
+    .transicao-hero__painel,
+    .transicao-hero__logo,
+    .hero-estagio2__valores,
     .hero-estagio2__tagline {
       opacity: 1 !important;
       transform: none !important;
+    }
+
+    .transicao-hero__silhueta {
+      --silhueta-x: 0%;
     }
   }
 

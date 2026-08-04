@@ -5,19 +5,16 @@
 // deste arquivo. Nada fora daqui conhece a marcação interna — quem sequencia
 // a entrada usa o atributo `data-wordmark` na raiz.
 //
-// A revelação é por MÁSCARA: um clip-path que abre da esquerda pra direita.
+// A ENTRADA não mora aqui. Quem a conduz é a transição Hero 1 → Hero 2
+// (ver ConteudoHome.astro e CLAUDE.md): o logo aparece por transparência,
+// no lugar onde já está, na fase 3 da sequência de scroll. A revelação por
+// clip-path que existia aqui saiu junto — eram dois efeitos disputando o
+// mesmo elemento.
 //
-// Segurança: o clip-path fica no FILHO, nunca na raiz observada. Aplicar
-// clip-path no próprio elemento observado faz o Chromium calcular razão de
-// interseção sempre zero — o observer nunca dispara e o conteúdo fica
-// invisível pra sempre. Além disso o texto é visível por padrão: quem
-// aplica a máscara é o JS, e só em elemento que ainda não entrou na
-// viewport. Se o JS falhar, o wordmark aparece inteiro.
 // A logo é 100% de FORMAS PREENCHIDAS (27 paths + 3 rects em fill, zero
-// stroke), então o efeito certo é a revelação por máscara — que já era o
-// desta assinatura. stroke-dasharray + getTotalLength() não teria o que
-// desenhar: em forma preenchida ele animaria um contorno invisível.
-// Inline por ?raw pra que o fill=currentColor herde a cor do mundo.
+// stroke). Entra inline por ?raw justamente pra que o fill="currentColor"
+// de cada forma herde a cor definida no CSS abaixo — trocar a cor da marca
+// é trocar uma linha aqui, sem tocar no arquivo .svg.
 import site from '../config/site.js';
 import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
 ---
@@ -27,8 +24,15 @@ import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
 </p>
 
 <style>
+  /* Cor da marca. O SVG inline é todo fill="currentColor", então esta linha
+     pinta as 30 formas de uma vez.
+
+     ATENÇÃO AO CONTRASTE: #B9A695 sobre o fundo claro do Hero 2 (#F4F1EB)
+     dá 2,08:1 — bem abaixo dos 4,5:1 de texto e dos 3:1 de gráfico. É uma
+     escolha deliberada de marca (logotipos são isentos do WCAG), mas o
+     resultado lê como marca d'água, não como assinatura sólida. */
   .wordmark {
-    color: var(--texto);
+    color: #b9a695;
   }
 
   .wordmark__texto {
@@ -46,26 +50,10 @@ import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
     height: auto;
   }
 
-  /* Estado preparado: máscara fechada à esquerda. Só o JS aplica. */
-  .wordmark--preparado .wordmark__texto {
-    clip-path: inset(0 100% 0 0);
-  }
-
-  /* Transição declarada nos dois estados, nunca no base — assim não sobra
-     transição fantasma em quem nunca anima. */
-  .wordmark--preparado .wordmark__texto,
-  .wordmark--visivel .wordmark__texto {
-    transition: clip-path 1.1s cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-
-  .wordmark--visivel .wordmark__texto {
-    clip-path: inset(0 0 0 0);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .wordmark__texto {
-      clip-path: none !important;
-      transition: none !important;
+  /* Centralizada no mobile, onde a composição da transição é empilhada. */
+  @media (max-width: 56.25rem) {
+    .wordmark__texto :global(svg) {
+      margin-inline: auto;
     }
   }
 </style>
