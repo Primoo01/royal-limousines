@@ -125,26 +125,43 @@ const passos = [
   <section class="transicao-hero" data-transicao-hero>
     <div class="transicao-hero__sticky">
       <div class="transicao-hero__painel" data-transicao-painel>
-        <Image
-          class="silhueta-fundo silhueta-fundo--claro transicao-hero__silhueta"
-          data-transicao-silhueta
-          src={silhuetaLimo}
-          alt=""
-          aria-hidden="true"
-          widths={[700, 1400]}
-          sizes="50vw"
-          format="webp"
-          loading="lazy"
-        />
-        <div class="transicao-hero__miolo u-container">
-          {/* O logo aparece por transparência, no lugar onde já está — por
-              isso o wrapper carrega só opacity, sem deslocamento. */}
-          <div class="transicao-hero__logo" data-transicao-logo>
-            <Wordmark />
+        <div class="transicao-hero__miolo">
+          {/*
+            BLOCO SUPERIOR. Largura total, e é ele o referencial da silhueta:
+            como o logo é o único filho no fluxo, a altura deste bloco é a
+            altura do logo — então a silhueta, centrada em 50% daqui, cai
+            exatamente no mesmo eixo horizontal do logo. A silhueta fica fora
+            do u-container de propósito, para poder sangrar pela borda da
+            TELA; o logo, dentro, para alinhar com a margem de conteúdo.
+          */}
+          <div class="transicao-hero__topo">
+            <Image
+              class="silhueta-fundo silhueta-fundo--claro transicao-hero__silhueta"
+              data-transicao-silhueta
+              src={silhuetaLimo}
+              alt=""
+              aria-hidden="true"
+              widths={[700, 1400]}
+              sizes="50vw"
+              format="webp"
+              loading="lazy"
+            />
+            {/* O logo aparece por transparência, no lugar onde já está — por
+                isso o wrapper carrega só opacity, sem deslocamento. */}
+            <div class="transicao-hero__logo u-container" data-transicao-logo>
+              <Wordmark />
+            </div>
           </div>
-          {/* Os dois textos são IRMÃOS numa linha só, logo abaixo do logo:
-              a procedência sob a coroa, os valores sob a palavra ROYAL.
-              A ordem no DOM é a ordem de entrada (fase 4 e depois 5). */}
+
+          {/*
+            BLOCO INFERIOR. Empilhado e centrado na largura TOTAL da página,
+            não na do logo.
+
+            A ORDEM DO DOM É A ORDEM DE ENTRADA, e foi mantida: a tagline
+            (fase 4) vem antes dos valores (fase 5). Como o layout pede os
+            valores EM CIMA, quem inverte é o `order` no CSS — assim a
+            sequência de animação segue idêntica, só a posição muda.
+          */}
           <div class="transicao-hero__assinatura">
             <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
             <p class="hero-estagio2__valores" data-transicao-valores>
@@ -438,40 +455,43 @@ const passos = [
     width: 100%;
   }
 
+  /* Bloco superior: logo + silhueta no mesmo eixo horizontal. A altura vem
+     do logo (único filho no fluxo), e a silhueta é absoluta — por isso os
+     centros coincidem sem número mágico nenhum. */
+  .transicao-hero__topo {
+    position: relative;
+  }
+
   /* Composição da silhueta durante a fase 2. O deslocamento entra por
      variável pra somar ao translateY(-50%) que a regra global já aplica —
-     escrever `transform` cru aqui apagaria a centralização vertical. */
+     escrever `transform` cru aqui apagaria a centralização vertical.
+     O `left` posiciona o início logo após a palavra ROYAL; a largura leva
+     o desenho para além da borda direita da tela, que é a sangria pedida. */
   .transicao-hero__silhueta {
+    left: 57%;
     transform: translate(var(--silhueta-x, 0%), -50%);
   }
 
-  /* Os dois textos da assinatura, lado a lado sob o logo.
-     A coluna é medida do PRÓPRIO SVG do logo (viewBox 0 0 405 114): a
-     coroa ocupa 0→170 e a palavra ROYAL começa em 186. 186/405 = 45.93%.
-     Por isso a primeira coluna tem exatamente essa largura — a tagline
-     alinha com a borda esquerda da coroa (que é a borda do logo) e os
-     valores começam alinhados com o R de ROYAL.
-     A largura do grid repete a do logo (ver Wordmark.astro) pra que as
-     duas réguas sejam a mesma. */
+  /* Respiro generoso entre o bloco superior e o inferior. */
   .transicao-hero__assinatura {
-    /* Largura do logo, repetida de Wordmark.astro. */
-    --logo-largura: min(100%, 40rem);
-    /* 186/405 do viewBox = onde o R de ROYAL começa. */
-    --logo-royal: 0.4593;
-    margin-top: var(--espaco-3);
-    display: grid;
-    /* A primeira coluna é medida sobre a largura do LOGO (é o que alinha
-       com o ROYAL). A segunda ocupa o resto do CONTAINER, não o resto do
-       logo: em 40rem sobravam 346px e os valores quebravam em duas linhas,
-       o que jogava a segunda linha abaixo da linha de base comum. */
-    grid-template-columns: calc(var(--logo-largura) * var(--logo-royal)) 1fr;
-    align-items: baseline;
-    column-gap: 0;
+    margin-top: var(--espaco-6);
+    display: flex;
+    flex-direction: column;
+    /* Centrado na largura TOTAL da página, não na do logo. */
+    align-items: center;
+    text-align: center;
+    /* Pequeno, para as duas linhas lerem como um bloco só. */
+    gap: var(--espaco-1);
   }
 
-  /* Uma linha só: a quebra é justamente o que desalinhava a base. */
-  .transicao-hero__assinatura > * {
-    white-space: nowrap;
+  /* Os valores em cima, a procedência embaixo — invertendo o DOM, que
+     preserva a ordem de ENTRADA (tagline na fase 4, valores na fase 5). */
+  .hero-estagio2__valores {
+    order: 1;
+  }
+
+  .hero-estagio2__tagline {
+    order: 2;
   }
 
   .hero-estagio2__tagline {
@@ -523,24 +543,20 @@ const passos = [
       text-align: center;
     }
 
-    /* Lado a lado não cabe em 390px: vira coluna centralizada. O
-       alinhamento com a coroa e com o ROYAL só faz sentido no desktop,
-       onde o logo é largo. */
-    .transicao-hero__assinatura {
-      grid-template-columns: 1fr;
-      row-gap: var(--espaco-2);
-      justify-items: center;
+    /* O logo perde a régua da margem de conteúdo e centraliza. */
+    .transicao-hero__topo {
+      width: 100%;
     }
 
-    /* Em 390px os valores não cabem numa linha só; aqui podem quebrar,
-       porque empilhados não existe linha de base compartilhada. */
-    .transicao-hero__assinatura > * {
-      white-space: normal;
+    /* Respiro menor que no desktop: a tela é curta. */
+    .transicao-hero__assinatura {
+      margin-top: var(--espaco-4);
     }
 
     /* A regra global esconde a silhueta abaixo de 900px por contraste.
        Aqui ela volta como fundo, mas com opacidade bem menor pra não
-       comprometer a leitura do texto por cima. */
+       comprometer a leitura do texto por cima. Centrada atrás do logo —
+       o `left: 57%` do desktop só faz sentido ao lado da palavra ROYAL. */
     .transicao-hero__silhueta {
       display: block;
       left: 50%;
