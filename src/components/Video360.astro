@@ -64,6 +64,21 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
     preload="metadata"
     aria-label={alt}
     data-video360-media></video>
+
+  {/*
+    Botão de play — EXCEÇÃO DELIBERADA ao "sem controles" do CLAUDE.md.
+    Nasce oculto (hidden) e só aparece quando o autoplay é recusado, o que
+    acontece no iOS com Modo de Dados Reduzidos ligado: o aparelho não busca
+    o arquivo sozinho e o visitante ficaria diante de um poster estático,
+    sem nenhuma pista de que ali existe vídeo. Em quem toca normalmente ele
+    nunca é exibido. É <button> de verdade para funcionar com teclado e ser
+    anunciado por leitor de tela.
+  */}
+  <button type="button" class="video360__play" data-video360-play hidden aria-label={`Reproduzir vídeo: ${alt}`}>
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+      <path d="M8 5.5v13l11-6.5z" fill="currentColor"></path>
+    </svg>
+  </button>
 </div>
 
 <style>
@@ -85,6 +100,52 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
     /* Ancorado embaixo: o excedente sai pelo TOPO, que é o que o corte de
        35% descarta. */
     object-position: center bottom;
+  }
+
+  /* Discreto de propósito: é uma saída de emergência, não um controle de
+     player. Glass falso (rgba + borda, sem blur), como manda o CLAUDE.md
+     fora dos dois lugares onde backdrop-filter é permitido. */
+  .video360__play {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    padding: 0;
+    border-radius: 50%;
+    background-color: color-mix(in srgb, var(--escuro-bg) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--claro-bg) 55%, transparent);
+    color: var(--claro-bg);
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), background-color 0.25s ease;
+  }
+
+  /* `hidden` sozinho perde para o display do próprio seletor; explicitar
+     evita o botão aparecer por um quadro antes do JS decidir. */
+  .video360__play[hidden] {
+    display: none;
+  }
+
+  .video360__play:hover,
+  .video360__play:focus-visible {
+    transform: translate(-50%, -50%) scale(1.06);
+    background-color: color-mix(in srgb, var(--escuro-bg) 78%, transparent);
+  }
+
+  .video360__play svg {
+    /* Empurra o triângulo para o centro óptico do círculo. */
+    margin-left: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .video360__play {
+      transition: none;
+    }
   }
 </style>
 
@@ -170,23 +231,34 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
       }
     }
 
-    // Último recurso: play por gesto do usuário. Nenhum navegador recusa
-    // isso. Registrado uma vez só por vídeo.
+    // Último recurso: play por gesto do usuário — a única via que nenhum
+    // navegador recusa. Revela o botão, que até aqui estava oculto.
     const comToque = new WeakSet<HTMLVideoElement>();
     function permitirToque(video: HTMLVideoElement) {
       if (comToque.has(video)) return;
       comToque.add(video);
-      const alvo = video.parentElement ?? video;
-      alvo.style.cursor = 'pointer';
-      const aoTocar = () => {
+
+      const caixa = video.parentElement;
+      const botao = caixa?.querySelector<HTMLButtonElement>('[data-video360-play]');
+      if (!botao) return;
+
+      botao.hidden = false;
+
+      botao.addEventListener('click', () => {
         video.load();
         video.play().then(() => {
           video.removeAttribute('data-video-erro');
-          alvo.style.cursor = '';
+          botao.hidden = true;
           if (modoDebug) registrarErro(video, `tocando por toque | ${estado(video)}`);
         });
-      };
-      alvo.addEventListener('click', aoTocar);
+      });
+    }
+
+    // Se o vídeo voltar a tocar sozinho depois (ex.: o visitante rolou fora
+    // e voltou), o botão não pode continuar na tela.
+    function esconderBotao(video: HTMLVideoElement) {
+      const botao = video.parentElement?.querySelector<HTMLButtonElement>('[data-video360-play]');
+      if (botao) botao.hidden = true;
     }
 
     function tentarTocar(video: HTMLVideoElement, tentativa = 0) {
@@ -207,6 +279,7 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
       promessa
         .then(() => {
           video.removeAttribute('data-video-erro');
+          esconderBotao(video);
           if (modoDebug) registrarErro(video, `tocando (tentativa ${tentativa + 1}) | ${estado(video)}`);
         })
         .catch((erro: unknown) => {

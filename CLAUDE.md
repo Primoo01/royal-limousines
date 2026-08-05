@@ -147,7 +147,11 @@ Um vídeo por página, logo acima do carrossel: home leva o vídeo da limousine,
 
 **Corte de 35% do topo**, por CSS e sem editar o arquivo: o contêiner recebe overflow hidden e aspect-ratio igual a larguraDoVideo dividido por (alturaDoVideo × 0.65). O vídeo dentro usa width 100%, height 100%, object-fit cover e object-position center bottom.
 
-**Regras.** muted, loop, playsinline, sem controles, sem áudio, preload metadata, com poster. Só começa a tocar quando entra na viewport (IntersectionObserver) e pausa ao sair. Em prefers-reduced-motion, exibir apenas o poster.
+**Regras.** muted, loop, playsinline, **autoplay**, sem áudio, preload metadata, com poster. Pausa ao sair da viewport (IntersectionObserver) e retoma ao voltar. Em prefers-reduced-motion, o atributo autoplay é REMOVIDO por JS e fica só o poster.
+
+**Por que `autoplay` e não apenas `play()` por script.** Medido num iPhone real: o `play()` programático é recusado com `NotAllowedError`, e o elemento chegava com `networkState=0` (NETWORK_EMPTY) — o iOS ignora `preload` e nunca buscava o arquivo. A correção tem três camadas: o atributo `autoplay` (caminho declarativo que a Apple documenta como permitido), `video.load()` explícito quando `networkState` é NETWORK_EMPTY, e retentativas.
+
+**Exceção ao "sem controles".** Quando mesmo assim o autoplay é recusado — acontece no iOS com "Modo de Dados Reduzidos" ligado —, um botão de play discreto aparece sobre o poster. Ele nasce `hidden` e só é revelado depois de esgotadas as tentativas; em quem toca normalmente nunca aparece. Sem ele, esse visitante veria uma imagem parada sem nenhuma pista de que ali existe vídeo. É a única exceção à regra de não usar controles.
 
 ---
 
