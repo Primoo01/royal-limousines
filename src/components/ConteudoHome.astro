@@ -543,9 +543,24 @@ const passos = [
       text-align: center;
     }
 
-    /* O logo perde a régua da margem de conteúdo e centraliza. */
+    /* O logo perde a régua da margem de conteúdo e centraliza.
+       O padding-bottom reserva o espaço que a silhueta ocupa ABAIXO do
+       logo: ela é absoluta e não empurraria os textos sozinha, e sem esta
+       folga as duas linhas subiriam por cima do desenho. */
     .transicao-hero__topo {
       width: 100%;
+      padding-bottom: 5.6rem;
+    }
+
+    /* O logo é mais ESTREITO que a silhueta: é essa diferença que faz o
+       desenho ler como fundo e o logo como elemento principal. Com os dois
+       quase da mesma largura (o padrão do u-container dava 88%), as letras
+       de LIMOUSINES caíam sobre o meio do carro e a composição embolava.
+       Sem o padding lateral do container, que aqui só atrapalharia a conta. */
+    .transicao-hero__logo {
+      max-width: 77%;
+      padding-inline: 0;
+      margin-inline: auto;
     }
 
     /* Respiro menor que no desktop: a tela é curta. */
@@ -553,16 +568,23 @@ const passos = [
       margin-top: var(--espaco-4);
     }
 
-    /* A regra global esconde a silhueta abaixo de 900px por contraste.
-       Aqui ela volta como fundo, mas com opacidade bem menor pra não
-       comprometer a leitura do texto por cima. Centrada atrás do logo —
-       o `left: 57%` do desktop só faz sentido ao lado da palavra ROYAL. */
+    /* A regra global esconde a silhueta abaixo de 900px. Aqui ela volta
+       como camada de fundo do bloco: INTEIRA, centrada e sem sangrar —
+       94% da largura, contra os 150% que estouravam a tela.
+
+       Ancorada pelo TOPO (não por 50%) de propósito: é isso que coloca o
+       logo na metade superior do desenho, com a coroa sobre o capô. Com
+       centro em centro os dois ficariam sobrepostos demais. */
     .transicao-hero__silhueta {
       display: block;
       left: 50%;
-      width: min(150%, 34rem);
-      opacity: 0.15;
-      transform: translate(calc(-50% + var(--silhueta-x, 0%)), -50%);
+      /* Encosta só na parte de cima do desenho: a coroa cobre o capô e o
+         corpo do carro fica limpo. Descendo daqui, LIMOUSINES atravessaria
+         a lateral do veículo. */
+      top: 4.3rem;
+      width: 94%;
+      opacity: 0.3;
+      transform: translate(calc(-50% + var(--silhueta-x, 0%)), 0);
     }
   }
 
