@@ -462,6 +462,19 @@ const passos = [
     position: relative;
   }
 
+  /* CAMADAS — o logo é conteúdo, a silhueta é fundo.
+     A ordem do DOM não bastava: a silhueta é `position: absolute` e o
+     wrapper do logo era um div estático, e no algoritmo de pintura
+     TODO elemento posicionado vem depois de qualquer irmão não
+     posicionado, esteja ele onde estiver no HTML. Era daí que saía o
+     traço do carro cruzando a coroa e a palavra LIMOUSINES no mobile.
+     O `position: relative` (sem deslocamento) é o que dá direito ao
+     z-index; a silhueta continua no z-index 0 da regra global. */
+  .transicao-hero__logo {
+    position: relative;
+    z-index: 1;
+  }
+
   /* Composição da silhueta durante a fase 2. O deslocamento entra por
      variável pra somar ao translateY(-50%) que a regra global já aplica —
      escrever `transform` cru aqui apagaria a centralização vertical.
@@ -543,21 +556,22 @@ const passos = [
       text-align: center;
     }
 
-    /* O logo perde a régua da margem de conteúdo e centraliza.
-       O padding-bottom reserva o espaço que a silhueta ocupa ABAIXO do
-       logo: ela é absoluta e não empurraria os textos sozinha, e sem esta
-       folga as duas linhas subiriam por cima do desenho. */
+    /* Coluna: logo em cima, silhueta logo abaixo. Não existe mais
+       `padding-bottom` reservando espaço para uma silhueta absoluta —
+       ela agora ocupa espaço sozinha, no fluxo. */
     .transicao-hero__topo {
       width: 100%;
-      padding-bottom: 5.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    /* O logo é mais ESTREITO que a silhueta: é essa diferença que faz o
-       desenho ler como fundo e o logo como elemento principal. Com os dois
-       quase da mesma largura (o padrão do u-container dava 88%), as letras
-       de LIMOUSINES caíam sobre o meio do carro e a composição embolava.
-       Sem o padding lateral do container, que aqui só atrapalharia a conta. */
+    /* O logo perde a régua da margem de conteúdo e centraliza. Mais
+       ESTREITO que a silhueta de propósito: é essa diferença que faz o
+       desenho ler como fundo e o logo como elemento principal. */
     .transicao-hero__logo {
+      order: 1;
+      width: 100%;
       max-width: 77%;
       padding-inline: 0;
       margin-inline: auto;
@@ -568,23 +582,27 @@ const passos = [
       margin-top: var(--espaco-4);
     }
 
-    /* A regra global esconde a silhueta abaixo de 900px. Aqui ela volta
-       como camada de fundo do bloco: INTEIRA, centrada e sem sangrar —
-       94% da largura, contra os 150% que estouravam a tela.
+    /* A regra global esconde a silhueta abaixo de 900px. Aqui ela volta —
+       mas NO FLUXO, como uma faixa própria entre o logo e as três
+       palavras, e não mais como camada absoluta por cima do logo.
 
-       Ancorada pelo TOPO (não por 50%) de propósito: é isso que coloca o
-       logo na metade superior do desenho, com a coroa sobre o capô. Com
-       centro em centro os dois ficariam sobrepostos demais. */
+       `position: static` é o que desfaz a sobreposição na raiz: sem
+       posicionamento não há como ela pintar sobre o logo, e a folga entre
+       os dois passa a ser layout de verdade em vez de um `top` chutado.
+       O `order` põe o logo primeiro sem mexer no DOM — a ordem do HTML é
+       a ordem de ENTRADA das fases e não pode ser trocada.
+
+       Largura presa à margem de conteúdo do site — a tela inteira menos
+       o mesmo `--espaco-3` que o u-container usa dos dois lados. Nada
+       sangra pelas bordas. */
     .transicao-hero__silhueta {
       display: block;
-      left: 50%;
-      /* Encosta só na parte de cima do desenho: a coroa cobre o capô e o
-         corpo do carro fica limpo. Descendo daqui, LIMOUSINES atravessaria
-         a lateral do veículo. */
-      top: 4.3rem;
-      width: 94%;
+      position: static;
+      order: 2;
+      width: calc(100% - var(--espaco-3) * 2);
+      margin-top: var(--espaco-3);
       opacity: 0.3;
-      transform: translate(calc(-50% + var(--silhueta-x, 0%)), 0);
+      transform: translateX(var(--silhueta-x, 0%));
     }
   }
 
