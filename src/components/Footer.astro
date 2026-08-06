@@ -91,10 +91,11 @@ const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
     font-weight: 600;
   }
 
+  /* Texto de conteúdo: cor normal. Com a atenuada dava 2,81:1. */
   .footer__descricao {
     margin-top: var(--espaco-1);
     max-width: 20rem;
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .footer nav ul {
@@ -120,8 +121,9 @@ const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
     margin-top: var(--espaco-1);
   }
 
+  /* Área atendida é conteúdo (e palavra-chave), não legenda. */
   .footer__area {
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .footer__base {

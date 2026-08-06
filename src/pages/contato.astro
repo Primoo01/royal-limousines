@@ -10,14 +10,30 @@ import Faq from '../components/Faq.astro';
 import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
+import faq from '../data/faq.js';
 
 const dados = paginas.paginas.find((p) => p.url === '/contato/');
 const description =
   dados.meta_description ??
   'Fale com a Royal Limousines: telefone, WhatsApp e e-mail para orçamento de aluguel de limousine para casamentos e eventos em São Paulo, 7 dias por semana.';
+
+// JSON-LD FAQPage (ver CLAUDE.md > SEO técnico). Só AQUI: a /lp-limousine/
+// também mostra o mesmo FAQ, mas é noindex — marcar lá não valeria nada e
+// ainda duplicaria a marcação para o Google. As perguntas vêm de faq.js,
+// que por sua vez veio do backup; nada inventado.
+const faqPage = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.pergunta,
+    acceptedAnswer: { '@type': 'Answer', text: item.resposta },
+  })),
+};
 ---
 
 <BaseLayout title={dados.title} description={description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(faqPage)} />
   {/*
     Única página das quatro sem frase de corpo pra realocar (o backup só
     tinha rótulos de telefone/e-mail/formulário). A linha de apoio reusa a

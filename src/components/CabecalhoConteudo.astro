@@ -75,10 +75,13 @@ const { eyebrow, titulo, apoio, linha = 'curva' } = Astro.props;
     margin-top: var(--espaco-2);
   }
 
+  /* Cor de texto normal, não a atenuada: esta linha é conteúdo, não legenda.
+     Com --texto-mut media 3,26:1 sobre o fundo claro, abaixo dos 4,5:1
+     exigidos para texto (ver auditoria). */
   .cabecalho-conteudo__apoio {
     margin-top: var(--espaco-3);
     max-width: 44ch;
-    color: var(--texto-mut);
+    color: var(--texto);
   }
 
   .cabecalho-conteudo__linha {

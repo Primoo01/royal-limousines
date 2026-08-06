@@ -40,6 +40,21 @@ const {
 const paginaUrl = new URL(Astro.url.pathname, Astro.site);
 const canonicalUrl = canonicalPath ? new URL(canonicalPath, Astro.site) : paginaUrl;
 const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : null;
+
+// JSON-LD LocalBusiness (ver CLAUDE.md > SEO técnico). Vai em TODAS as
+// páginas: é a ficha do negócio, não da página. Todos os dados vêm do
+// site.js — nenhum campo inventado aqui.
+const localBusiness = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: site.nome,
+  description: site.descricaoCurta,
+  url: site.url,
+  telephone: site.contato.telefone.link.replace('tel:', ''),
+  email: site.contato.email,
+  areaServed: { '@type': 'Place', name: site.contato.areaAtendida },
+  address: { '@type': 'PostalAddress', addressLocality: 'São Paulo', addressRegion: 'SP', addressCountry: 'BR' },
+};
 ---
 
 <!doctype html>
@@ -67,6 +82,8 @@ const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : null;
     <meta name="twitter:title" content={title} />
     {description && <meta name="twitter:description" content={description} />}
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} />
 
     <slot name="head" />
   </head>
