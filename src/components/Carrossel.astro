@@ -223,6 +223,37 @@ const { fotos, mundo = 'claro', class: className } = Astro.props;
       right: var(--espaco-3);
       bottom: var(--espaco-3);
     }
+
+    /* ---- Proporção do slide no mobile -------------------------------
+       O slide SAÍA DEITADO (342×203 = 1.686), não em 4:5 como o CSS
+       acima pretende. Duas causas somadas:
+
+       1. Com slidesPerView: 1 o Swiper escreve a largura inline no
+          slide, anulando o `width: calc(--carrossel-altura * 4/5)`.
+       2. A altura vinha de `min(80svh, 52vw)`: em 390px o 52vw vence e
+          dá 203px — uma conta pensada pro desktop, onde 52vw é
+          generoso, e que no celular achata o quadro.
+
+       E dentro do slide o `aspect-ratio: 4/5` nunca valia, porque
+       `width: 100%` + `height: 100%` explícitos têm precedência sobre
+       ele.
+
+       Consequência: as fotos retrato (0,56 a 0,80) entravam numa caixa
+       deitada, o `cover` ampliava até preencher a largura e descartava
+       de 53% a 67% da ALTURA — cortando a frente ou a traseira do carro
+       em 6 das 12 fotos.
+
+       Correção: soltar as duas alturas e deixar o aspect-ratio da
+       figura mandar. A largura continua sendo a que o Swiper escreve; a
+       altura passa a ser largura × 5/4. Assim as fotos retrato aparecem
+       inteiras. */
+    .swiper-slide {
+      height: auto;
+    }
+
+    .carrossel__slide {
+      height: auto;
+    }
   }
 </style>
 
