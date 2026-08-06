@@ -44,35 +44,42 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
 
 <div class:list={['video360', className]} style={`aspect-ratio: ${proporcao};`} data-video360>
   {/*
-    O `autoplay` é obrigatório para o iOS, e não é redundante com o play()
-    do script. O WebKit trata os dois por caminhos diferentes: o play()
-    programático sem gesto do usuário é recusado com NotAllowedError (medido
-    num iPhone real, nas 6 tentativas), enquanto `autoplay` + `muted` +
-    `playsinline` é o caminho declarativo que a Apple documenta como
-    permitido. O script continua existindo para pausar fora de cena e para
-    retomar quando o vídeo volta — coisas que o atributo sozinho não faz.
+    SEM `autoplay` de propósito. O atributo faz o navegador buscar o arquivo
+    assim que a tag é lida — medido: somava 1,4 MB à carga inicial da home,
+    para um vídeo que está abaixo da dobra.
+
+    `preload="none"` e não "metadata" pelo mesmo motivo, medido no Chrome:
+    com "metadata" ele bufferizava de 768 KB a 1 MB antes de o visitante
+    rolar até o vídeo — quase o arquivo inteiro, o que anularia a economia.
+    Com "none" são 0 KB até o vídeo entrar em cena. Não há perda: quem pede
+    o carregamento é o video.load() do IntersectionObserver, que já existia
+    porque o iOS ignora `preload` de qualquer forma.
+
+    Quem dispara a reprodução é o play() no observer. O que o iOS exige para
+    permitir play() sem gesto do usuário são `muted` e `playsinline`, que
+    continuam aqui como atributos no HTML (o iOS avalia os dois no momento em
+    que lê a tag; defini-los por JS depois é tarde demais).
   */}
   <video
     src={src}
     poster={posterOtimizado.src}
     width={largura}
     height={altura}
-    autoplay
     muted
     loop
     playsinline
-    preload="metadata"
+    preload="none"
     aria-label={alt}
     data-video360-media></video>
 
   {/*
     Botão de play — EXCEÇÃO DELIBERADA ao "sem controles" do CLAUDE.md.
-    Nasce oculto (hidden) e só aparece quando o autoplay é recusado, o que
-    acontece no iOS com Modo de Dados Reduzidos ligado: o aparelho não busca
-    o arquivo sozinho e o visitante ficaria diante de um poster estático,
-    sem nenhuma pista de que ali existe vídeo. Em quem toca normalmente ele
-    nunca é exibido. É <button> de verdade para funcionar com teclado e ser
-    anunciado por leitor de tela.
+    Nasce oculto (hidden) e só aparece quando o play() é recusado em todas as
+    tentativas, o que acontece no iOS com Modo de Dados Reduzidos ligado: o
+    aparelho se recusa a carregar mídia sozinho e o visitante ficaria diante
+    de um poster estático, sem nenhuma pista de que ali existe vídeo. Em quem
+    toca normalmente ele nunca é exibido. É <button> de verdade para
+    funcionar com teclado e ser anunciado por leitor de tela.
   */}
   <button type="button" class="video360__play" data-video360-play hidden aria-label={`Reproduzir vídeo: ${alt}`}>
     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
@@ -160,16 +167,18 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
   // POR QUE ISTO NÃO É UM `play()` SOLTO:
   //
   // O vídeo mora dentro de uma <section class="reveal">, que fica em
-  // opacity ~0 e com transform aplicado até entrar em cena, e leva 1,1s
-  // transicionando. O WebKit (iOS) é bem mais rigoroso que o Chrome e
-  // recusa reproduzir vídeo que considera não visível na tela — então a
-  // primeira chamada de play(), disparada no meio dessa transição, era
-  // rejeitada. Como o .catch() antigo descartava o erro, o vídeo ficava
-  // parado no primeiro quadro sem deixar rastro.
+  // opacity ~0 até entrar em cena e leva 1,1s transicionando. O WebKit (iOS)
+  // é mais rigoroso que o Chrome quanto a reproduzir vídeo que considera não
+  // visível. Por isso: threshold alto para só disparar com metade à vista,
+  // RETENTATIVAS em vez de desistir na primeira rejeição, e o erro
+  // registrado em vez de engolido.
   //
-  // A correção tem três partes: exigir mais área visível para disparar,
-  // TENTAR DE NOVO algumas vezes em vez de desistir na primeira rejeição
-  // (cobrindo a duração da revelação), e registrar o erro em vez de engoli-lo.
+  // O `video.load()` mais abaixo é o que destrava o iOS de verdade: medido
+  // num iPhone real, o elemento chegava com networkState=0 (NETWORK_EMPTY),
+  // ou seja o aparelho nunca buscava o arquivo — e não há como reproduzir
+  // mídia que não foi carregada. O iOS ignora `preload` para poupar dados,
+  // então quem tem que pedir o carregamento somos nós, no momento em que o
+  // vídeo entra em cena.
   const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Diagnóstico visível no aparelho: abra a página com ?videodebug na URL.
@@ -178,18 +187,9 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
 
   const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('[data-video360-media]'));
 
-  // Com `autoplay` no HTML, o navegador começa a tocar por conta própria —
-  // então em prefers-reduced-motion é preciso DESLIGAR o atributo, não
-  // apenas deixar de chamar play(). Feito o quanto antes, para o vídeo não
-  // chegar a andar: fica no poster, como manda o CLAUDE.md.
-  if (reduzMovimento) {
-    videos.forEach((video) => {
-      video.removeAttribute('autoplay');
-      video.autoplay = false;
-      video.pause();
-      video.currentTime = 0;
-    });
-  }
+  // Em prefers-reduced-motion basta não chamar play(): sem o atributo
+  // `autoplay` no HTML, nada dispara sozinho e o vídeo fica no poster, como
+  // manda o CLAUDE.md. O observer abaixo sequer é criado nesse caso.
 
   // Estado do elemento no momento da falha — é o que diz se o problema é
   // política de autoplay, mídia não carregada ou o vídeo sem `muted`.
