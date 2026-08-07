@@ -93,10 +93,17 @@ const passos = [
       <Foto
         src={fotosLimo.casamentoNoivos.src}
         alt={fotosLimo.casamentoNoivos.alt}
-        posicao={fotosLimo.casamentoNoivos.posicao}
         aspectRatio="4/5"
-        larguraServida={900}
+        {/* Nativa do arquivo. Abaixo disso o 2x sairia do build já
+            ampliado; acima, o astro:assets inventaria pixel. */}
+        larguraServida={1600}
+        {/* Bate com o CSS real: no desktop a foto vai de 55% até a borda,
+            ou seja 45vw; abaixo de 900px ocupa a largura da página. */}
         sizes="(max-width: 56.25rem) 100vw, 45vw"
+        {/* Céu em gradiente e lataria branca fazem banding com compressão
+            agressiva — 85 é o piso aceitável para esta foto. */}
+        qualidade={85}
+        comFallback
         prioridade
       />
     </div>
@@ -363,13 +370,20 @@ const passos = [
   .hero-estagio1__midia {
     position: absolute;
     z-index: 1;
-    top: var(--altura-header);
     left: 55%;
-    right: calc((100% - min(100%, var(--largura-container))) / 2 + var(--espaco-3));
-    /* Base: alinhada com o topo do bloco de texto, termina acima da faixa
-       do marquee. A conta espelha a altura do Marquee (tamanho grande) +
-       sua margin-top + o padding-bottom da seção — ver Marquee.astro. */
-    bottom: calc(var(--espaco-5) + 40px + clamp(6rem, calc(100svh - 620px), 30svh));
+    /* Encosta na borda direita da SEÇÃO, que é a borda da tela. O valor
+       anterior recuava até a margem do .u-container (144px em 1440px) e
+       era exatamente de lá que vinha o gap. */
+    right: 0;
+    /* Centralizada na altura da seção. As duas folgas são a MESMA
+       expressão, então são iguais por construção — não por ajuste fino.
+       Sobra 55% de altura para a caixa, o que dá ~1.22 de proporção em
+       1440x900: justamente o enquadramento pedido (céu no topo, pedra
+       portuguesa na base).
+       Não colide com o marquee: ele tem width: 50vw e vive na metade
+       esquerda, enquanto a foto começa em 55%. */
+    top: 22.5%;
+    bottom: 22.5%;
   }
 
   /* A <img> do Foto já é width:100% + object-fit:cover; aqui só precisamos
@@ -392,6 +406,13 @@ const passos = [
      .foto aparecendo nos cantos. Zerado aqui: quem arredonda é a caixa. */
   .hero-estagio1__midia :global(.foto img) {
     border-radius: 0;
+    /* Âncoras do enquadramento: buquê inteiro à esquerda, corte da
+       limousine na porta traseira à direita, céu no topo e pedra
+       portuguesa na base. Como a origem é 2.22 e a caixa é 1.22, o cover
+       preserva 880px da largura de 1600 — e `left` = (1600-880) × 22% =
+       158, dois passos antes do buquê, que começa em 175. Medido, não
+       estimado. A altura entra inteira: nada de corte vertical. */
+    object-position: 22% center;
   }
 
   /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
@@ -787,6 +808,14 @@ const passos = [
        flutua dentro da tela. */
     .hero-estagio1__midia :global(.foto) {
       border-radius: 0;
+    }
+
+    /* A caixa volta a ser 4/5 aqui, e a janela do cover cai de 880px da
+       origem para 576px. Com 22% o recorte começaria em 225 e cortaria o
+       buquê (que abre em 175); 17% começa em 174 e o preserva. É o
+       máximo que esta proporção comporta — ver a nota de responsivo. */
+    .hero-estagio1__midia :global(.foto img) {
+      object-position: 17% center;
     }
 
   }
