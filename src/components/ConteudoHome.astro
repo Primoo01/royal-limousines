@@ -421,6 +421,48 @@ const passos = [
        de folga, sem colisão. */
     top: calc(22.5% - 87px);
     bottom: 22.5%;
+    /* ENTRADA NO LOAD. O estado BASE deste elemento é o FINAL — opacity 1
+       e translateX(0) — e o deslocado/transparente existe só no `from` do
+       @keyframes. Se a animação não rodar, a foto está visível e no lugar;
+       nenhum JS prepara estado inicial (regra do CLAUDE.md).
+       `both` cobre os dois lados: sem delay o preenchimento para trás é
+       instantâneo, e o para frente trava o estado final. */
+    animation: hero1-foto-entra 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Só opacity e transform — as duas compostas na GPU. Nada de left,
+     margin ou width, que disparariam layout a cada quadro.
+
+     Os 120px de partida não geram rolagem horizontal porque
+     `.hero-estagio1` já tem `overflow: hidden` (ver a regra da seção). Esse
+     recorte é seguro para o `position: sticky` do Hero 2: o sticky mora em
+     `.transicao-hero`, uma seção IRMÃ, e a restrição do sticky vale só
+     para ancestrais — `.hero-estagio1` não é ancestral dele. */
+  @keyframes hero1-foto-entra {
+    from {
+      opacity: 0;
+      transform: translateX(120px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Sem deslocamento: só um fade curto, como manda o CLAUDE.md. */
+  @keyframes hero1-foto-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-estagio1__midia {
+      animation: hero1-foto-fade 0.3s ease both;
+    }
   }
 
   /* A <img> do Foto já é width:100% + object-fit:cover; aqui só precisamos
