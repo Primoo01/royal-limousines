@@ -38,6 +38,19 @@ export const fotosLimo = {
     alt: 'Limousine Chrysler 300C branca à noite, com os faróis acesos, em frente a um prédio histórico iluminado',
     posicao: 'center bottom',
   },
+  // Foto do hero da home. É a única PAISAGEM larga do conjunto (1600x720,
+  // proporção 2.22) entrando num contêiner retrato de 4/5 — o `cover`
+  // preserva só 36% da largura, então o recorte NÃO pode ser central.
+  //
+  // Os 17% foram medidos, não estimados: com o casal em x≈175–500 e a
+  // frente do carro em x≈420–870, é o único valor em que os dois cabem
+  // inteiros nas três larguras. Em 25% o buquê da noiva começa a sair;
+  // em 10% perde-se o farol direito.
+  casamentoNoivos: {
+    src: foto('Casamento1'),
+    alt: 'Noivos ao lado da limousine Chrysler 300C branca em festa de casamento ao ar livre em São Paulo',
+    posicao: '17% center',
+  },
   tresQuartosFrontalDark2: {
     src: foto('tres-quartos-frontal-dark-2'),
     alt: 'Limousine Chrysler 300C branca em três quartos, sob iluminação noturna',

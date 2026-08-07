@@ -91,9 +91,9 @@ const passos = [
         mobile volta pro fluxo normal, como último item da coluna. */}
     <div class="hero-estagio1__midia">
       <Foto
-        src={fotosLimo.tresQuartosFrontalDark.src}
-        alt={fotosLimo.tresQuartosFrontalDark.alt}
-        posicao={fotosLimo.tresQuartosFrontalDark.posicao}
+        src={fotosLimo.casamentoNoivos.src}
+        alt={fotosLimo.casamentoNoivos.alt}
+        posicao={fotosLimo.casamentoNoivos.posicao}
         aspectRatio="4/5"
         larguraServida={900}
         sizes="(max-width: 56.25rem) 100vw, 45vw"
@@ -379,6 +379,19 @@ const passos = [
      ignorado — não precisa de !important. */
   .hero-estagio1__midia :global(.foto) {
     height: 100%;
+    /* Cantos arredondados SÓ à esquerda. À direita a foto sangra até a
+       margem do container, e arredondar ali abriria uma falha visível no
+       meio do sangramento. Esta é a única exceção do site ao
+       `--raio-imagem: 3px` global (ver global.css) — deliberada, e por
+       isso mora aqui em vez de virar mais uma variável de tema. */
+    border-radius: 50px 0 0 50px;
+  }
+
+  /* A regra global também dá 3px à <img>. Com o .foto arredondado em 50px
+     e overflow: hidden, esse raio interno deixaria um fio do fundo do
+     .foto aparecendo nos cantos. Zerado aqui: quem arredonda é a caixa. */
+  .hero-estagio1__midia :global(.foto img) {
+    border-radius: 0;
   }
 
   /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
@@ -753,14 +766,27 @@ const passos = [
          top/left/right/bottom daquela regra, que com position: relative
          (herdado da regra compartilhada acima) virariam deslocamento. */
       inset: auto;
-      /* Largura total, proporção 4:5 vinda do próprio placeholder — nunca
-         uma faixa sem altura útil. Sem transform: no mobile a mídia não
-         cresce na passagem (largura total já é o tamanho final, e escalar
-         só geraria vazamento horizontal). */
+      /* Largura da PÁGINA inteira, de borda a borda. A regra compartilhada
+         acima dá `padding-inline: var(--espaco-3)` a este bloco e ao topo;
+         aqui ele é zerado, e como a própria seção não tem padding
+         horizontal, isso já basta pra foto encostar nas duas bordas.
+         Nada de `100vw` com margem negativa: aquilo estoura a largura do
+         documento quando existe barra de rolagem. */
+      padding-inline: 0;
+      /* Sem transform: no mobile a mídia não cresce na passagem (largura
+         total já é o tamanho final, e escalar só geraria vazamento). */
       width: 100%;
       max-width: none;
       margin-left: 0;
       transform: none;
+    }
+
+    /* Encostada nas duas bordas, qualquer raio abriria uma falha de fundo
+       nos cantos — então some. Vale também pra borda esquerda: o
+       arredondamento de 50px é uma composição de desktop, onde a foto
+       flutua dentro da tela. */
+    .hero-estagio1__midia :global(.foto) {
+      border-radius: 0;
     }
 
   }
