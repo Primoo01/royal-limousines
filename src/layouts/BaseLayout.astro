@@ -63,7 +63,19 @@ const localBusiness = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f4f1eb" />
+    {/*
+      Favicon. A ORDEM IMPORTA: o PNG vem primeiro e o SVG depois, porque
+      navegador que entende os dois fica com a última declaração que
+      suporta — então o SVG ganha, e quem não lê SVG (agregadores, leitores
+      de feed, versões antigas) cai no PNG sem perceber.
+
+      O SVG traz `prefers-color-scheme` embutido: #A8823C na aba clara,
+      #EDE7DB na escura. O PNG é estático e não herda media query, por isso
+      é gerado sempre no dourado #A8823C, que é o que funciona nos dois.
+    */}
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
