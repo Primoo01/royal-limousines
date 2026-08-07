@@ -350,6 +350,12 @@ const passos = [
   .hero-estagio1__topo {
     grid-area: topo;
     align-self: center;
+    /* Desce o bloco inteiro — h1, lead, botões e a nota — de uma vez, pelo
+       contêiner que já os agrupa. `transform` e não `margin`: com
+       `align-self: center` a margem seria redistribuída pela centralização
+       e o deslocamento sairia pela metade. Assim são 90px exatos, e o
+       marquee (irmão, fora deste bloco) não se mexe. */
+    transform: translateY(90px);
   }
 
   .hero-estagio1__topo h1 {
@@ -370,19 +376,39 @@ const passos = [
   .hero-estagio1__midia {
     position: absolute;
     z-index: 1;
-    left: 55%;
-    /* Encosta na borda direita da SEÇÃO, que é a borda da tela. O valor
-       anterior recuava até a margem do .u-container (144px em 1440px) e
+    /* CRESCIMENTO ANCORADO NO CANTO INFERIOR DIREITO.
+       `right` e `bottom` NÃO mudam — é isso que trava a base e a borda
+       direita. A caixa cresce subtraindo de `left` e de `top`, então ela
+       só pode avançar para cima e para a esquerda.
+
+       -106px vem da proporção medida (1.2225): com a altura ganhando 87px
+       e passando a 617, a largura proporcional é 617 × 1.2225 = 754, ou
+       seja +106. Manter a proporção é o que preserva o enquadramento —
+       o object-position continua em 22% e o corte é o mesmo, só maior.
+
+       DESLOCAMENTO DE 20px PARA A DIREITA: os +20px em `left` e os -20px
+       em `right` andam JUNTOS, então a caixa desliza sem mudar de tamanho
+       — largura, proporção e enquadramento continuam idênticos. Os 20px
+       que passam da borda são recortados pelo `overflow: hidden` da
+       seção, sem gerar barra de rolagem. */
+    left: calc(55% - 106px + 20px);
+    /* Passa 20px da borda direita da SEÇÃO em vez de parar nela. O valor
+       original recuava até a margem do .u-container (144px em 1440px) e
        era exatamente de lá que vinha o gap. */
-    right: 0;
+    right: -20px;
     /* Centralizada na altura da seção. As duas folgas são a MESMA
        expressão, então são iguais por construção — não por ajuste fino.
        Sobra 55% de altura para a caixa, o que dá ~1.22 de proporção em
        1440x900: justamente o enquadramento pedido (céu no topo, pedra
        portuguesa na base).
        Não colide com o marquee: ele tem width: 50vw e vive na metade
-       esquerda, enquanto a foto começa em 55%. */
-    top: 22.5%;
+       esquerda, enquanto a foto começa em 55%.
+
+       Os -87px sobem o topo sem tocar em `bottom`, então a altura ganha
+       exatamente 87px e a base fica no lugar. Medido em 1440x900: o topo
+       vai de 216.84 para 129.84, e o header termina em 74 — sobram 55.84
+       de folga, sem colisão. */
+    top: calc(22.5% - 87px);
     bottom: 22.5%;
   }
 
@@ -765,6 +791,12 @@ const passos = [
 
     .hero-estagio1__topo {
       order: 1;
+      /* Os 50px do desktop não valem aqui. Medido: no empilhado do mobile
+         eles jogam "SÃO PAULO E REGIÃO" 10px por dentro do marquee, que
+         no desktop fica no rodapé da seção mas aqui vem logo abaixo do
+         bloco de texto. Os botões continuariam dentro da dobra (sobram
+         300px em 390), então não é a dobra que impede — é a colisão. */
+      transform: none;
       /* Sem tela cheia e sem centralização vertical: era daí que vinha o
          vazio grande e variável entre o header e o h1. O bloco agora
          encosta no topo e a folga é só o padding da seção. */
