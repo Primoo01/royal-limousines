@@ -93,13 +93,24 @@ const passos = [
       <Foto
         src={fotosLimo.casamentoNoivos.src}
         alt={fotosLimo.casamentoNoivos.alt}
-        aspectRatio="4/5"
+        {/* Sem `aspectRatio`: aqui a proporção muda por breakpoint (4/5 no
+            desktop, 8/5 no mobile) e é definida no CSS abaixo. Passar a
+            prop escreveria style inline, que venceria a media query. */}
         {/* Nativa do arquivo. Abaixo disso o 2x sairia do build já
             ampliado; acima, o astro:assets inventaria pixel. */}
         larguraServida={1600}
-        {/* Bate com o CSS real: no desktop a foto vai de 55% até a borda,
-            ou seja 45vw; abaixo de 900px ocupa a largura da página. */}
-        sizes="(max-width: 56.25rem) 100vw, 45vw"
+        {/* Degrau intermediário de 1100: sem ele o 390 precisava de 1084
+            para chegar a 2x e pulava direto pro arquivo de 1600 (244 KB).
+            Com 1100 ele atinge os mesmos 2x por ~115 KB. */}
+        larguras={[480, 800, 1100, 1600]}
+        {/* NÃO é a largura da caixa — é a largura que a imagem TERIA antes
+            do recorte do `cover`, que é o que o navegador precisa baixar.
+            A caixa de 390 exibe uma imagem de 541.7 de largura (o resto é
+            cortado), ou seja 139vw; no desktop a de 754 exibe 1371, ou
+            95vw. Com os 100vw/45vw anteriores o navegador pedia arquivo
+            pequeno e o mobile saía em 1.48x em vez de 2x — era daí que
+            vinha a moleza da imagem. */}
+        sizes="(max-width: 56.25rem) 139vw, 95vw"
         {/* Céu em gradiente e lataria branca fazem banding com compressão
             agressiva — 85 é o piso aceitável para esta foto. */}
         qualidade={85}
@@ -419,6 +430,10 @@ const passos = [
      ignorado — não precisa de !important. */
   .hero-estagio1__midia :global(.foto) {
     height: 100%;
+    /* No desktop este valor é inerte — a caixa é dimensionada por
+       top/bottom/left/right e o `height: 100%` manda. Fica declarado para
+       o componente nunca cair no fallback 4/3 se o posicionamento mudar. */
+    --foto-proporcao: 4 / 5;
     /* Cantos arredondados SÓ à esquerda. À direita a foto sangra até a
        margem do container, e arredondar ali abriria uma falha visível no
        meio do sangramento. Esta é a única exceção do site ao
@@ -840,14 +855,23 @@ const passos = [
        flutua dentro da tela. */
     .hero-estagio1__midia :global(.foto) {
       border-radius: 0;
+      /* METADE DA ALTURA de antes, com a largura seguindo nas duas
+         extremidades da página. Como a largura já era 100% e não pode
+         crescer mais, quem muda é a proporção: 4/5 (0.8) → 8/5 (1.6),
+         que é exatamente o dobro da largura em relação à altura.
+         Em 390px: 390x487.5 → 390x243.75. Em 768px: 768x960 → 768x480.
+
+         Ganho lateral: a janela do `cover` sobe de 576px para 1152px da
+         origem, o que acaba com a ampliação de 1.33x que existia no 768. */
+      --foto-proporcao: 8 / 5;
     }
 
-    /* A caixa volta a ser 4/5 aqui, e a janela do cover cai de 880px da
-       origem para 576px. Com 22% o recorte começaria em 225 e cortaria o
-       buquê (que abre em 175); 17% começa em 174 e o preserva. É o
-       máximo que esta proporção comporta — ver a nota de responsivo. */
+    /* Com a caixa em 8/5 a janela do cover passa a 1152px da origem — o
+       dobro de antes —, então o casal e o carro inteiro cabem com folga e
+       o recorte deixa de ser apertado. 12% começa em 54, e o buquê abre em
+       175: 121px de margem. Acima de 25% o buquê começaria a sair. */
     .hero-estagio1__midia :global(.foto img) {
-      object-position: 17% center;
+      object-position: 12% center;
     }
 
   }

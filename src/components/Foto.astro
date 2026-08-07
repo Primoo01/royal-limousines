@@ -14,10 +14,21 @@ interface Props {
   src: ImageMetadata;
   /** Obrigatório: toda imagem do site leva alt descritivo. */
   alt: string;
-  /** Proporção do container, ex.: "16/9", "4/3", "3/4", "4/5" */
+  /**
+   * Proporção do container, ex.: "16/9", "4/3", "3/4", "4/5".
+   * OMITIR quando ela precisar variar por breakpoint: sem esta prop nada
+   * é escrito inline, e o CSS assume via `--foto-proporcao` (padrão 4/3).
+   * É o caso do hero da home, que usa 4/5 no desktop e 8/5 no mobile.
+   */
   aspectRatio?: string;
   /** Largura máxima que a foto será servida. Teto de 1600px do CLAUDE.md. */
   larguraServida?: number;
+  /**
+   * Degraus do srcset, quando os três padrões são grosseiros demais. Sem
+   * um degrau intermediário o navegador pula direto para o maior arquivo e
+   * baixa muito mais byte do que precisa. Vale para o LCP.
+   */
+  larguras?: number[];
   /**
    * Quanto do viewport a foto ocupa, por breakpoint. Precisa bater com o CSS
    * real do espaço: um `sizes` largo demais faz o navegador baixar um arquivo
@@ -46,8 +57,9 @@ interface Props {
 const {
   src,
   alt,
-  aspectRatio = '4/3',
+  aspectRatio,
   larguraServida = 1200,
+  larguras,
   sizes = '(max-width: 56.25rem) 100vw, 50vw',
   prioridade = false,
   posicao,
@@ -61,7 +73,7 @@ const {
 const comuns = {
   src,
   alt,
-  widths: [480, 800, larguraServida],
+  widths: larguras ?? [480, 800, larguraServida],
   sizes,
   loading: prioridade ? ('eager' as const) : ('lazy' as const),
   fetchpriority: prioridade ? ('high' as const) : ('auto' as const),
@@ -71,7 +83,14 @@ const comuns = {
 };
 ---
 
-<div class:list={['foto', className]} style={`aspect-ratio: ${aspectRatio};`}>
+{/*
+  A proporção entra como CUSTOM PROPERTY, e SÓ quando a prop foi passada.
+  Motivo: style inline vence media query — se a variável fosse escrita
+  aqui sempre, nenhum breakpoint conseguiria trocá-la. Omitindo a prop, o
+  CSS assume pelo fallback do `var()` e pode variar por largura de tela.
+  Para quem passa a prop, o resultado é idêntico ao de antes.
+*/}
+<div class:list={['foto', className]} style={aspectRatio ? `--foto-proporcao: ${aspectRatio};` : undefined}>
   {
     comFallback ? (
       <Picture {...comuns} formats={['webp']} fallbackFormat="jpg" />
@@ -85,6 +104,7 @@ const comuns = {
   .foto {
     position: relative;
     width: 100%;
+    aspect-ratio: var(--foto-proporcao, 4 / 3);
     overflow: hidden;
     background-color: var(--surface);
   }
