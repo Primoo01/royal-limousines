@@ -16,3 +16,35 @@ npm-debug.log*
 .DS_Store
 
 .vercel
+
+# ---------------------------------------------------------------------
+# Mídia raw — nunca versionar
+# ---------------------------------------------------------------------
+# Backup: E:\Backups\royal-2026-08-02\ e E:\Backups\royal-salvage-2026-08-06\
+#
+# As pastas abaixo guardam ARQUIVOS DE ORIGEM (vídeos de fundo do menu e
+# os 360 sem compressão). Nada no código as referencia: o que o site serve
+# são as versões já comprimidas em public/videos/. Um deles tinha 165,9 MB
+# e sozinho respondia por metade do repositório.
+Images/mídias menu/
+Images/mídias menu2/
+Images/videos-360/
+
+# Rede de proteção contra commit acidental de vídeo pesado. As duas
+# exceções são os únicos lugares de onde o site pode servir vídeo:
+# public/videos/ (arquivo estático, é o que videos-360.js aponta) e
+# src/assets/ (se algum dia passar por astro:assets).
+*.mp4
+*.mov
+*.webm
+!public/videos/*.mp4
+!src/assets/**/*.mp4
+
+# ATENÇÃO — o que NÃO está aqui, e por quê.
+# Images/300sedan/, Images/backgrounds/ e Images-limo/ parecem mídia raw,
+# mas são ENTRADAS DO BUILD: src/data/galeria-sedan.js, galeria-limo.js e
+# fotos-limo.js leem essas pastas com import.meta.glob, e
+# ConteudoHome.astro importa Images/backgrounds/300c-limo-silhueta-3.png.
+# Ignorá-las quebraria o build no Cloudflare Pages (clone limpo, glob
+# vazio) e esvaziaria os carrosséis. Só podem sair daqui depois que as
+# imagens usadas forem movidas para src/assets/.
