@@ -157,18 +157,18 @@ const passos = [
             BLOCO INFERIOR. Empilhado e centrado na largura TOTAL da página,
             não na do logo.
 
-            A ORDEM DO DOM É A ORDEM DE ENTRADA, e foi mantida: a tagline
-            (fase 4) vem antes dos valores (fase 5). Como o layout pede os
-            valores EM CIMA, quem inverte é o `order` no CSS — assim a
-            sequência de animação segue idêntica, só a posição muda.
+            A ORDEM DO DOM É A ORDEM DE ENTRADA — e agora ela coincide com a
+            ordem visual: os valores entram antes (fase 4) e ficam em cima, a
+            procedência entra por último (fase 5) e fica embaixo. Por isso o
+            `order` que invertia as duas no CSS deixou de existir.
           */}
           <div class="transicao-hero__assinatura">
-            <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
             <p class="hero-estagio2__valores" data-transicao-valores>
               <span>Pontualidade</span><span aria-hidden="true"> · </span><span>Discrição</span><span aria-hidden="true"> · </span><span
                 >Elegância</span
               >
             </p>
+            <p class="hero-estagio2__tagline" data-transicao-tagline>Desde 2008 · São Paulo</p>
           </div>
         </div>
       </div>
@@ -495,16 +495,6 @@ const passos = [
     text-align: center;
     /* Pequeno, para as duas linhas lerem como um bloco só. */
     gap: var(--espaco-1);
-  }
-
-  /* Os valores em cima, a procedência embaixo — invertendo o DOM, que
-     preserva a ordem de ENTRADA (tagline na fase 4, valores na fase 5). */
-  .hero-estagio2__valores {
-    order: 1;
-  }
-
-  .hero-estagio2__tagline {
-    order: 2;
   }
 
   .hero-estagio2__tagline {

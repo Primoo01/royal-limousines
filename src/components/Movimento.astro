@@ -372,6 +372,13 @@
     // existe pin em JavaScript aqui. Este bloco só converte o scroll em
     // progresso e distribui esse progresso pelas cinco fases.
     //
+    // As fases são ENCOSTADAS: cada uma começa onde a anterior termina, sem
+    // folga e sem sobreposição — o intervalo entre duas entradas é a duração
+    // da anterior. Trocar a ordem é trocar as janelas de lugar levando a
+    // largura junto; a soma continua 1.00 e a sequência não fica mais longa.
+    // Ordem: painel (0.35) → logo (0.17) → carro (0.20) → valores (0.12) →
+    // procedência (0.16).
+    //
     // REGRA DE SEGURANÇA: o CSS nasce no estado FINAL (tudo visível). Quem
     // aplica os estados iniciais é este código, e só depois de confirmar
     // que vai poder animar. Se ele não rodar, nada some.
@@ -408,20 +415,20 @@
       const fPainel = faseLocal(p, 0, 0.35);
       heroPainel!.style.transform = `translateX(${(1 - fPainel) * 100}%)`;
 
-      // Fase 2 — a silhueta entra pela direita, dentro do painel.
-      const fSilhueta = faseLocal(p, 0.35, 0.55);
+      // Fase 2 — o logo aparece por transparência, sem deslocamento.
+      heroLogo!.style.opacity = String(faseLocal(p, 0.35, 0.52));
+
+      // Fase 3 — a silhueta entra pela direita, dentro do painel.
+      const fSilhueta = faseLocal(p, 0.52, 0.72);
       heroSilhueta!.style.setProperty('--silhueta-x', `${(1 - fSilhueta) * 60}%`);
 
-      // Fase 3 — o logo aparece por transparência, sem deslocamento.
-      heroLogo!.style.opacity = String(faseLocal(p, 0.55, 0.72));
+      // Fase 4 — as três palavras.
+      heroValores!.style.opacity = String(faseLocal(p, 0.72, 0.84));
 
-      // Fase 4 — a procedência entra pela esquerda.
-      const fTagline = faseLocal(p, 0.72, 0.88);
+      // Fase 5 — a procedência entra pela esquerda, por último.
+      const fTagline = faseLocal(p, 0.84, 1);
       heroTagline!.style.opacity = String(fTagline);
       heroTagline!.style.transform = `translateX(${(1 - fTagline) * -40}%)`;
-
-      // Fase 5 — as três palavras, por último.
-      heroValores!.style.opacity = String(faseLocal(p, 0.88, 1));
     }
 
     // Estado inicial da sequência. Só aqui — nunca no CSS.
