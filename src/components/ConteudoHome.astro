@@ -475,14 +475,28 @@ const passos = [
     z-index: 1;
   }
 
-  /* Composição da silhueta durante a fase 2. O deslocamento entra por
+  /* Composição da silhueta durante a fase 3. O deslocamento entra por
      variável pra somar ao translateY(-50%) que a regra global já aplica —
      escrever `transform` cru aqui apagaria a centralização vertical.
-     O `left` posiciona o início logo após a palavra ROYAL; a largura leva
-     o desenho para além da borda direita da tela, que é a sangria pedida. */
+     O `left` posiciona o repouso logo após a palavra ROYAL; a largura leva
+     o desenho para além da borda direita da tela, que é a sangria pedida.
+
+     A PARTIDA É FORA DA TELA, e a distância é medida em vw — nunca em
+     pixel nem em % da própria imagem. O erro anterior era usar 60% da
+     LARGURA DELA: como a imagem é menor que o vão até a borda, sobravam
+     ~100px dentro da tela e ela ficava à mostra desde que o painel
+     pousava, muito antes da vez dela.
+
+     Aqui o repouso é 57vw (o `left: 57%` de um painel que ocupa a tela
+     toda), então faltam 43vw para a borda esquerda sair de cena. Os 2vw
+     a mais são folga contra arredondamento e barra de rolagem.
+
+     `--silhueta-entrada` vem do JS e vai de 1 (fora) a 0 (no lugar). O
+     fallback 0 é a REGRA DE SEGURANÇA: sem JS ela nasce no lugar final. */
   .transicao-hero__silhueta {
     left: 57%;
-    transform: translate(var(--silhueta-x, 0%), -50%);
+    --silhueta-fuga: 45vw;
+    transform: translate(calc(var(--silhueta-entrada, 0) * var(--silhueta-fuga)), -50%);
   }
 
   /* Respiro generoso entre o bloco superior e o inferior. */
@@ -592,7 +606,14 @@ const passos = [
       width: calc(100% - var(--espaco-3) * 2);
       margin-top: var(--espaco-3);
       opacity: 0.3;
-      transform: translateX(var(--silhueta-x, 0%));
+      /* Aqui o repouso encosta na margem de conteúdo, então a fuga é a tela
+         inteira. Os dois `--espaco-3` a mais não são enfeite: abaixo de
+         382px o Chrome mobile reduz o zoom (o header impõe essa largura
+         mínima de conteúdo) e passa a exibir MAIS do que 100vw. Sem essa
+         folga, em 320px reapareciam 38px da frente do carro, e em 360px a
+         margem era de apenas 2px. */
+      --silhueta-fuga: calc(100vw + var(--espaco-3) * 2);
+      transform: translateX(calc(var(--silhueta-entrada, 0) * var(--silhueta-fuga)));
     }
   }
 
@@ -756,7 +777,7 @@ const passos = [
     }
 
     .transicao-hero__silhueta {
-      --silhueta-x: 0%;
+      --silhueta-entrada: 0;
     }
   }
 

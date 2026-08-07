@@ -418,9 +418,13 @@
       // Fase 2 — o logo aparece por transparência, sem deslocamento.
       heroLogo!.style.opacity = String(faseLocal(p, 0.35, 0.52));
 
-      // Fase 3 — a silhueta entra pela direita, dentro do painel.
+      // Fase 3 — a silhueta entra de FORA da tela, pela direita.
+      // O JS manda só o fator normalizado (1 = fora, 0 = no lugar); quem
+      // traduz isso em distância é o CSS, em vw, porque o quanto ela
+      // precisa andar depende da largura da tela e do repouso de cada
+      // breakpoint. Mandar uma % daqui foi o que a deixava meio visível.
       const fSilhueta = faseLocal(p, 0.52, 0.72);
-      heroSilhueta!.style.setProperty('--silhueta-x', `${(1 - fSilhueta) * 60}%`);
+      heroSilhueta!.style.setProperty('--silhueta-entrada', String(1 - fSilhueta));
 
       // Fase 4 — as três palavras.
       heroValores!.style.opacity = String(faseLocal(p, 0.72, 0.84));
