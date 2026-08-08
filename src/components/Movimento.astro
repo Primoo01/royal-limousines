@@ -349,6 +349,15 @@
       '--ouro': ['#a8823c', '#c6a25e'],
     };
 
+    // O destino escuro do FUNDO pode ser sobrescrito pela página. A
+    // /limousines/ termina num preto mais fundo (#020202) que o --escuro-bg
+    // do resto do site: era o tom do bloco do sedan, e virou o alvo da
+    // interpolação pra que se chegue nele sem emenda.
+    const bgEscuroDaPagina = mundoDinamico
+      ? getComputedStyle(mundoDinamico).getPropertyValue('--bg-escuro-pagina').trim()
+      : '';
+    if (/^#[0-9a-f]{6}$/i.test(bgEscuroDaPagina)) paresDeCor['--bg'] = ['#f4f1eb', bgEscuroDaPagina];
+
     function hexParaRgb(hex: string): [number, number, number] {
       const valor = parseInt(hex.slice(1), 16);
       return [(valor >> 16) & 255, (valor >> 8) & 255, valor & 255];
@@ -495,6 +504,11 @@
         const [claro, escuro] = paresDeCor[propriedade];
         mundoDinamico.style.setProperty(propriedade, interpolarCor(claro, escuro, progresso));
       }
+
+      // Cortina de luz como ambiente: rampa de entrada nos primeiros 15% do
+      // progresso, platô, e rampa de saída nos últimos 15%. Teto em 0.5.
+      const rampa = Math.min(progresso / 0.15, 1, (1 - progresso) / 0.15);
+      mundoDinamico!.style.setProperty('--cortina-op', (Math.max(rampa, 0) * 0.5).toFixed(3));
 
       pontosLuz.forEach((ponto, indice) => {
         const limiar = indice / pontosLuz.length;

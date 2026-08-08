@@ -18,6 +18,9 @@ import Botao from '../components/Botao.astro';
 import EntradaTitulo from '../components/EntradaTitulo.astro';
 import Carrossel from '../components/Carrossel.astro';
 import Video360 from '../components/Video360.astro';
+// Reaproveitado do Hero 1, não recriado: é o mesmo componente, entrando aqui
+// como ambiente dentro da camada de fundo (ver .fundo-dinamico no CSS).
+import CortinaDeLuz from '../components/CortinaDeLuz.astro';
 import { videos360 } from '../data/videos-360.js';
 import { Image } from 'astro:assets';
 import silhuetaSedan from '../assets/fundos/300c-sedan-silhueta.png';
@@ -176,8 +179,20 @@ const description =
   <div
     class="mundo-dinamico"
     data-mundo-dinamico
-    style="--bg:#141210;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;"
+    style="--bg-escuro-pagina:#020202;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;"
   >
+    {/*
+      CAMADA ÚNICA DE FUNDO. É a única coisa que pinta fundo daqui pra
+      baixo — o `background-color` do wrapper e o `::before` de #020202 do
+      bloco do sedan saíram, e o body virou transparente nesta página.
+      `position: fixed` + `inset: 0`, então cobre a viewport em qualquer
+      posição de scroll e não tem costura possível.
+      A cortina de luz entra dentro dela como ambiente.
+    */}
+    <div class="fundo-dinamico" aria-hidden="true">
+      <CortinaDeLuz />
+    </div>
+
     <div class="transicao-dia-noite" data-transicao-dia-noite aria-hidden="true">
       <span class="ponto-luz" style="top: 15%; left: 12%;"></span>
       <span class="ponto-luz" style="top: 30%; left: 78%;"></span>
@@ -357,22 +372,15 @@ const description =
     overflow: hidden;
   }
 
-  /* Preto do sedan, mais fundo que o --escuro-bg do resto do mundo escuro.
-     Sangria total: a seção é .u-container (largura máxima), então pintar o
-     background-color dela deixaria duas faixas do fundo antigo nas laterais.
-     A camada abaixo escapa do container com a técnica dos 50vw. */
-  .bloco-frota--escuro::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 100vw;
-    transform: translateX(-50%);
-    background-color: #020202;
-    pointer-events: none;
-  }
+  /* O ::before que pintava #020202 chapado aqui FOI REMOVIDO — era ele a
+     faixa de borda dura da transição. Com `z-index: -1` ele normalmente
+     ficaria atrás do fundo do wrapper e invisível, mas a classe `reveal`
+     deixa esta seção em opacity 0.92 enquanto anima, e opacity < 1 cria
+     contexto de empilhamento: isso promovia o pseudo-elemento para cima do
+     fundo do ancestral. Daí a faixa aparecer só durante a animação de
+     entrada, e persistir no mobile, onde ela roda junto com a transição.
+     O preto mais fundo continua existindo — agora como destino da
+     interpolação (data-bg-escuro), então chega até ele sem emenda. */
 
   .bloco-frota--escuro > .u-eyebrow {
     margin-bottom: var(--espaco-4);
@@ -427,11 +435,54 @@ const description =
     margin-top: var(--espaco-5);
   }
 
-  /* O wrapper é quem efetivamente pinta fundo/texto com as variáveis que o
-     JS interpola — sem isso, só as bordas/dourado mudariam de cor. */
+  /* O wrapper só carrega as variáveis e a cor do TEXTO. Quem pinta fundo é
+     a camada fixa abaixo — duas camadas pintando é o que criava costura. */
   .mundo-dinamico {
-    background-color: var(--bg);
+    /* FONTE ÚNICA do preto mais fundo desta página. `--bg-escuro-pagina`
+       vem inline (junto do resto do estado de repouso) e é lido em três
+       lugares, todos por referência: aqui como repouso/sem-JS, pelo JS como
+       destino da interpolação, e pelo reforço de prefers-reduced-motion em
+       global.css. Assim o valor existe uma vez só. */
+    --bg: var(--bg-escuro-pagina);
     color: var(--texto);
+  }
+
+  /* A camada. `z-index: -1` a põe atrás de todo o conteúdo sem precisar
+     empilhar nada; ela é irmã do conteúdo, não ancestral, então nenhum
+     `overflow: hidden` de seção a recorta. Nenhum ancestral dela tem
+     transform, requisito do `position: fixed`. */
+  .fundo-dinamico {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--bg);
+    pointer-events: none;
+  }
+
+  /* O body pinta `var(--bg)` por global.css e cobriria a camada, que tem
+     z-index negativo. O html assume a cor de repouso como rede de
+     segurança: se a camada falhar, a página fica clara — nunca branca. */
+  :global(body) {
+    background-color: transparent;
+  }
+
+  :global(html) {
+    background-color: var(--claro-bg);
+  }
+
+  /* Cortina de luz como AMBIENTE: entra no começo da passagem, sai no fim,
+     teto em 0.5 — a rampa é calculada no JS e chega em `--cortina-op`.
+     Sem JS fica 0: é decoração, e exibi-la no mundo claro estaria errado.
+     A regra de "visível por padrão" do CLAUDE.md vale para conteúdo. */
+  .fundo-dinamico :global(.cortina) {
+    opacity: var(--cortina-op, 0);
+  }
+
+  /* O véu do componente é uma elipse escura (rgba(20,18,16,.94)) feita pra
+     dar legibilidade ao texto do hero. Aqui a camada está ATRÁS de tudo e,
+     no mundo claro, o véu viraria uma mancha escura enorme no centro. */
+  .fundo-dinamico :global(.cortina__veu) {
+    display: none;
   }
 
   .transicao-dia-noite {
@@ -472,6 +523,38 @@ const description =
 
     .transicao-dia-noite {
       min-height: 60svh;
+    }
+
+    /* Metade das linhas da cortina: 8 nós animando em tela pequena não se
+       paga, e o desenho lê igual com 4. Só `display: none` — não recria o
+       componente nem duplica markup. */
+    .fundo-dinamico :global(.cortina__linha:nth-child(even)) {
+      display: none;
+    }
+
+    /* SILHUETA NO MOBILE. A regra global esconde `.silhueta-fundo` abaixo de
+       900px por contraste (ver global.css) — a justificativa era texto por
+       cima do traço. Aqui ela volta com a MESMA ideia do desktop (fundo
+       decorativo sangrando pela borda), adaptada à coluna única: ancorada na
+       BASE da seção, onde não há texto, centrada, sangrando pelas duas
+       laterais e com opacidade muito menor (0.5 → 0.14). O `screen` do
+       --escuro continua, então o fundo chapado da arte desaparece e sobra
+       só o traço. O `overflow: hidden` da seção recorta a sangria. */
+    .bloco-frota--escuro .silhueta-fundo {
+      display: block;
+      top: auto;
+      bottom: var(--espaco-5);
+      left: 50%;
+      width: 132%;
+      opacity: 0.14;
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Ambiente é o primeiro a sair quando o usuário pede menos movimento. */
+  @media (prefers-reduced-motion: reduce) {
+    .fundo-dinamico :global(.cortina) {
+      display: none;
     }
   }
 </style>

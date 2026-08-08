@@ -807,7 +807,11 @@ p + p {
   /* /limousines/: sem transição dia→noite animada, direto pro mundo escuro
      (o wrapper já nasce com esses valores inline — isto é só reforço/clareza). */
   .mundo-dinamico {
-    --bg: var(--escuro-bg) !important;
+    /* `--bg-escuro-pagina` deixa a página escolher um preto próprio: a
+       /limousines/ termina em #020202, mais fundo que o --escuro-bg. Sem
+       essa referência, o reforço aqui puxaria o fundo de volta pro
+       #141210 e o repouso divergiria da transição animada. */
+    --bg: var(--bg-escuro-pagina, var(--escuro-bg)) !important;
     --surface: var(--escuro-surface) !important;
     --linha: var(--escuro-linha) !important;
     --texto: var(--escuro-texto) !important;
