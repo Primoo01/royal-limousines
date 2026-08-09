@@ -3,11 +3,15 @@
 // Centralizado de propósito (CLAUDE.md > Imagens): trocar uma foto por outra
 // é mudar um nome aqui, não caçar caminho em oito páginas.
 //
-// FONTE ÚNICA: lê direto da pasta Images-limo/ na raiz, a mesma que o
-// carrossel usa (ver galeria-limo.js). Antes havia uma segunda cópia em
-// src/assets/limo — e foi ela que fez o site continuar servindo foto velha
-// depois que a origem foi atualizada. Cópia paralela sempre desanda; agora
-// não existe mais.
+// FONTE ÚNICA: lê src/assets/limo/, a mesma pasta que o carrossel usa (ver
+// galeria-limo.js). A regra que importa continua valendo — não pode existir
+// uma segunda cópia das mesmas fotos, porque foi isso que uma vez fez o site
+// servir foto velha depois de a origem ser atualizada.
+//
+// Antes a pasta era Images-limo/ na raiz. Ela saiu do repositório: os
+// originais eram de 8 a 13 MB cada, e o astro:assets nunca serve acima de
+// 1600px. Aqui ficam versões com esse teto; os originais em resolução cheia
+// estão em "Projeto Dusdete/midias-originais/originais-full/".
 //
 // A resolução é por NOME BASE, sem extensão: as fotos de origem trocam de
 // formato (.jpg / .jpeg / .png) e isso não pode quebrar o build.
@@ -17,8 +21,8 @@
 // de dois mundos do projeto, não preferência estética.
 import { porNome } from './midia.js';
 
-const arquivos = import.meta.glob('/Images-limo/*.{jpg,jpeg,png,webp}', { eager: true });
-const foto = (nome) => porNome(arquivos, nome, 'Images-limo');
+const arquivos = import.meta.glob('/src/assets/limo/*.{jpg,jpeg,png,webp}', { eager: true });
+const foto = (nome) => porNome(arquivos, nome, 'src/assets/limo');
 
 // Os alt abaixo foram escritos ABRINDO cada foto e olhando, não deduzidos do
 // nome do arquivo. Todas são a limousine ESTICADA (não o sedan).

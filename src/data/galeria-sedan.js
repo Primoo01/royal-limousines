@@ -1,9 +1,12 @@
 // Fotos do Chrysler 300C preto (sedan) para o carrossel da seção dele em
-// /limousines/ (ver CLAUDE.md > Carrossel de fotos). Fonte: pasta
-// Images/300sedan na raiz do projeto — TODAS as fotos de lá entram aqui.
+// /limousines/ (ver CLAUDE.md > Carrossel de fotos). Fonte:
+// src/assets/sedan-preto/ — TODAS as fotos de lá entram aqui.
 //
-// Substitui o lote antigo, curado, que morava em src/assets/sedan-preto
-// (ver histórico em sedan.js) — este é mais recente e completo.
+// É o lote novo, mais completo que o antigo lote curado que ocupava esta
+// mesma pasta (ver histórico em sedan.js). Vinha de Images/300sedan na raiz,
+// que saiu do repositório: eram quatro PNGs de ~9,5 MB cada, e o
+// astro:assets nunca serve acima de 1600px. Os originais em resolução cheia
+// estão em "Projeto Dusdete/midias-originais/originais-full/".
 //
 // Os alt foram escritos ABRINDO cada foto e olhando, não deduzidos do nome
 // do arquivo. Ordem: exteriores primeiro, interior por último.
@@ -11,8 +14,8 @@
 // trocar o formato do arquivo na origem não pode quebrar o build.
 import { porNome } from './midia.js';
 
-const imagens = import.meta.glob('/Images/300sedan/*.{jpg,jpeg,png,webp}', { eager: true });
-const arquivo = (nome) => porNome(imagens, nome, 'Images/300sedan');
+const imagens = import.meta.glob('/src/assets/sedan-preto/*.{jpg,jpeg,png,webp}', { eager: true });
+const arquivo = (nome) => porNome(imagens, nome, 'src/assets/sedan-preto');
 
 export const fotosGaleriaSedan = [
   {

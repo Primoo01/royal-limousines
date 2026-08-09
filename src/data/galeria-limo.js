@@ -1,10 +1,11 @@
 // Fotos da limousine Chrysler 300C branca para o carrossel da home
-// (ver CLAUDE.md > Carrossel de fotos). Fonte: pasta Images-limo/ na raiz do
-// projeto — TODAS as fotos de lá entram aqui, nenhuma fica de fora.
+// (ver CLAUDE.md > Carrossel de fotos). Fonte: src/assets/limo/ — TODAS as
+// fotos de lá entram aqui, nenhuma fica de fora.
 //
-// import.meta.glob com caminho absoluto a partir da raiz do Vite resolve
-// arquivos fora de src/, do mesmo jeito que limousines.astro já fazia para
-// as fotos do sedan em src/assets/sedan-preto.
+// A pasta era Images-limo/ na raiz e saiu do repositório: os originais
+// pesavam de 8 a 13 MB cada e o astro:assets nunca serve acima de 1600px.
+// Os arquivos em resolução cheia estão em
+// "Projeto Dusdete/midias-originais/originais-full/".
 //
 // Os alt foram escritos ABRINDO cada foto e olhando, não deduzidos do nome
 // do arquivo. Se trocar um arquivo, abra a foto nova e confira o texto.
@@ -12,8 +13,8 @@
 // para .png na origem, e casar a extensão quebrava o build inteiro.
 import { porNome } from './midia.js';
 
-const imagens = import.meta.glob('/Images-limo/*.{jpg,jpeg,png,webp}', { eager: true });
-const arquivo = (nome) => porNome(imagens, nome, 'Images-limo');
+const imagens = import.meta.glob('/src/assets/limo/*.{jpg,jpeg,png,webp}', { eager: true });
+const arquivo = (nome) => porNome(imagens, nome, 'src/assets/limo');
 
 export const fotosGaleriaLimo = [
   {
