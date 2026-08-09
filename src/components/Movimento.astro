@@ -500,9 +500,19 @@
       const rect = transicao.getBoundingClientRect();
       const progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);
 
+      // As mesmas cores vão para o wrapper E para a raiz. O wrapper cobre o
+      // conteúdo da página; a raiz alcança quem vive FORA dele — header,
+      // rodapé e botão flutuante de WhatsApp. Sem isso o rodapé continuava
+      // em `--surface` claro depois que a página já tinha chegado ao
+      // #020202: a mesma borda dura que a camada única resolveu no miolo,
+      // só que no pé. Escrever nos dois é redundante de propósito — o
+      // repouso sem JS do wrapper vem do style inline dele, e a raiz não
+      // pode herdar isso.
       for (const propriedade in paresDeCor) {
         const [claro, escuro] = paresDeCor[propriedade];
-        mundoDinamico.style.setProperty(propriedade, interpolarCor(claro, escuro, progresso));
+        const cor = interpolarCor(claro, escuro, progresso);
+        mundoDinamico.style.setProperty(propriedade, cor);
+        document.documentElement.style.setProperty(propriedade, cor);
       }
 
       // Cortina de luz como ambiente: rampa de entrada nos primeiros 15% do

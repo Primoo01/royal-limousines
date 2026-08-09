@@ -110,6 +110,15 @@ const eventos = servicosRegiao.filter((item) => item.categoria === 'evento');
     text-decoration: none;
     color: var(--texto);
     font-size: 0.9375rem;
+    /* `anywhere` e não `break-word`: só ele REDUZ o min-content do
+       elemento. O e-mail (contato@limousinesroyal.com.br) é uma string
+       indivisível de 240px de min-content; numa coluna de ~75px em telas de
+       320px, era ele que impunha 382px de largura mínima à PÁGINA INTEIRA e
+       fazia o Chrome mobile reduzir o zoom (escala 0,84 em 320px, 0,94 em
+       360px — abaixo do piso de 360px do CLAUDE.md). `break-word` quebraria
+       a linha na hora de pintar, mas não muda o tamanho intrínseco, então
+       não resolveria o transbordo. */
+    overflow-wrap: anywhere;
   }
 
   .footer nav a:hover,
