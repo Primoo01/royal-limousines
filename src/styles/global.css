@@ -114,6 +114,27 @@
   color-scheme: light;
 }
 
+/* Página que ABRE sobre um hero do mundo escuro (hoje só a home). A classe
+   vem no <html> direto do build, via a prop `topoEscuro` do BaseLayout — é
+   ela que faz o header e o botão de WhatsApp nascerem escuros já no
+   primeiro paint.
+   Antes quem escrevia estas seis variáveis era o JavaScript, em
+   document.documentElement, depois do primeiro paint: medido, o header e o
+   botão ficavam CLAROS sobre o hero escuro por 164ms no mobile e 270ms no
+   desktop. O JS agora só alterna esta classe quando o scroll sai do hero.
+
+   `html` e não `:root` no seletor: mesma especificidade da regra de cima,
+   e vindo depois, ganha sem precisar de !important. */
+html.topo-escuro {
+  --bg: var(--escuro-bg);
+  --surface: var(--escuro-surface);
+  --linha: var(--escuro-linha);
+  --texto: var(--escuro-texto);
+  --texto-mut: var(--escuro-texto-mut);
+  --ouro: var(--ouro-escuro);
+  color-scheme: dark;
+}
+
 /* Seção/bloco no mundo escuro (ex.: segunda metade de /limousines/) */
 .mundo-escuro {
   --bg: var(--escuro-bg);
@@ -682,11 +703,25 @@ p + p {
 /* Não aplique .glass-real em mais nenhum componente.                */
 /* ---------------------------------------------------------------- */
 
+/* O background-color vem PRIMEIRO e é sólido o bastante para o elemento já
+   nascer na cor certa mesmo que o blur nunca seja aplicado — é o fallback
+   do backdrop-filter, e com a classe `topo-escuro` ele nasce escuro. */
 .glass-real {
   background-color: color-mix(in srgb, var(--bg) 55%, transparent);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid color-mix(in srgb, var(--linha) 70%, transparent);
+}
+
+/* O prefixo do Safari mora numa regra SEPARADA de propósito. Declarado
+   junto do sem-prefixo, o minificador tratava os dois como equivalentes e
+   descartava justamente o sem-prefixo — e o Chromium ignora
+   `-webkit-backdrop-filter` (verificado: computa `none`). Resultado: o
+   glass real nunca funcionou em Chrome/Edge, nos dois únicos lugares onde
+   o CLAUDE.md o permite. Em regra própria, nenhum minificador colapsa. */
+@supports (-webkit-backdrop-filter: blur(10px)) {
+  .glass-real {
+    -webkit-backdrop-filter: blur(10px);
+  }
 }
 
 /* Glass falso — usar em todo o resto. Mesmo efeito visual, sem custo de blur. */

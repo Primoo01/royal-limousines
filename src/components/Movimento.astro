@@ -459,15 +459,19 @@
     // (fim da fase 1), então a barra só clareia nesse ponto.
     const heroEstagio1 = document.querySelector<HTMLElement>('[data-hero-estagio1]');
     const alturaBarraHeader = document.querySelector<HTMLElement>('[data-header]')?.offsetHeight ?? 0;
-    const paletaEscura: Record<string, string> = {
-      '--bg': '#141210',
-      '--surface': '#211e18',
-      '--linha': '#3a342a',
-      '--texto': '#ede7db',
-      '--texto-mut': '#8c857a',
-      '--ouro': '#c6a25e',
-    };
-    let barraEscura: boolean | null = null;
+
+    // A PALETA ESCURA NÃO MORA MAIS AQUI. Ela é a classe `topo-escuro` no
+    // <html>, definida em global.css e renderizada já no build pela prop
+    // `topoEscuro` do BaseLayout. Este bloco só ALTERNA a classe conforme o
+    // scroll — nenhum estilo visual depende deste script para o primeiro
+    // paint. Antes as seis variáveis eram escritas em
+    // document.documentElement daqui, e o header e o botão de WhatsApp
+    // nasciam claros sobre o hero escuro por 164ms no mobile / 270ms no
+    // desktop: era esse o flash.
+    const raiz = document.documentElement;
+    // Semeado com o que veio do HTML, pra primeira passada não reescrever
+    // um estado que já está correto.
+    let barraEscura: boolean | null = raiz.classList.contains('topo-escuro') ? true : null;
 
     function atualizarCorDaBarra() {
       if (!heroEstagio1) return;
@@ -483,11 +487,7 @@
 
       if (escura === barraEscura) return;
       barraEscura = escura;
-      const raiz = document.documentElement;
-      for (const propriedade in paletaEscura) {
-        if (escura) raiz.style.setProperty(propriedade, paletaEscura[propriedade]);
-        else raiz.style.removeProperty(propriedade);
-      }
+      raiz.classList.toggle('topo-escuro', escura);
     }
 
     function atualizarTransicaoDiaNoite() {

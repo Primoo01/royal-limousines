@@ -25,6 +25,19 @@ interface Props {
   /** Caminho absoluto de uma imagem para Open Graph / Twitter card. */
   ogImage?: string | null;
   ogType?: 'website' | 'article';
+  /**
+   * True quando a página ABRE sobre um hero do mundo escuro. Põe a classe
+   * `topo-escuro` no <html>, e é o CSS — não o JS — que passa a decidir a
+   * cor do header e do botão de WhatsApp no primeiro paint.
+   *
+   * Antes essas seis variáveis eram escritas em document.documentElement
+   * por JavaScript depois do primeiro paint: medido, o header e o botão
+   * nasciam CLAROS sobre o hero escuro por 164ms no mobile e 270ms no
+   * desktop. Com a classe vindo no HTML do build, o flash deixa de existir.
+   * O JS continua responsável por REMOVER a classe quando o scroll sai do
+   * hero — mas isso já é interação, não carregamento.
+   */
+  topoEscuro?: boolean;
 }
 
 const {
@@ -35,6 +48,7 @@ const {
   robots,
   ogImage = site.seo.imagemPadrao,
   ogType = 'website',
+  topoEscuro = false,
 } = Astro.props;
 
 const paginaUrl = new URL(Astro.url.pathname, Astro.site);
@@ -58,7 +72,7 @@ const localBusiness = {
 ---
 
 <!doctype html>
-<html lang={site.idioma}>
+<html lang={site.idioma} class:list={{ 'topo-escuro': topoEscuro }}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

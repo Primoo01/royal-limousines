@@ -6,6 +6,9 @@ import paginas from '../data/paginas-antigas.json';
 const dados = paginas.paginas.find((p) => p.url === '/');
 ---
 
-<BaseLayout title={dados.title} description={dados.meta_description}>
+{/* topoEscuro: a home abre sobre o Estágio 1 do hero, que é mundo escuro.
+    Sem isso o header e o botão de WhatsApp nascem claros no primeiro paint
+    e só escurecem quando o JS roda — o flash que estávamos caçando. */}
+<BaseLayout title={dados.title} description={dados.meta_description} topoEscuro>
   <ConteudoHome />
 </BaseLayout>
