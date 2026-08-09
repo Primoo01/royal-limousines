@@ -209,7 +209,12 @@ const passos = [
     alt=""
     aria-hidden="true"
     widths={[900, 1600]}
-    sizes="(max-width: 56.25rem) 120vw, 90vw"
+    {/* Com `cover` isto não é a largura da CAIXA — é a largura que a imagem
+        tem depois de escalada para cobrir, que é maior. Em 1440px a seção
+        mede 1200x531 e a arte (3.38 de proporção) precisa de ~1793px de
+        largura para cobrir a altura. Anunciar 90vw fazia o navegador pedir
+        arquivo pequeno demais. */}
+    sizes="(max-width: 56.25rem) 150vw, 125vw"
     format="webp"
     loading="lazy"
   />
@@ -758,23 +763,26 @@ const passos = [
 
   /* Atrás do texto, centralizada, e bem mais apagada que a silhueta do
      Hero 2 (25% contra 50%) justamente porque aqui há texto por cima. */
+  /* COBRE A SEÇÃO INTEIRA, encostando nas quatro bordas.
+     Antes era dimensionada pela LARGURA com `height: auto`: como a arte é
+     3.38 de proporção (muito larga e baixa) e a seção é bem mais alta,
+     sobrava faixa vazia em cima e embaixo — 80,8px de cada lado em 1440px,
+     109,8 em 768 e 216,1 em 390. Não era `contain` nem padding do
+     contêiner: era o `height: auto` seguindo a proporção nativa.
+     Agora `inset: 0` + `cover` recorta o excedente em vez de encolher a
+     imagem, e o `overflow: hidden` da seção já estava lá para conter. */
   .secao-abertura__fundo {
     position: absolute;
     z-index: 0;
-    top: 50%;
-    left: 50%;
-    /* 30% maior que os min(90%, 60rem) originais. A altura é auto, então
-       ela acompanha na mesma proporção, e o par top/left 50% +
-       translate(-50%, -50%) mantém o centro no mesmo ponto. O que passar
-       da caixa é cortado pelo overflow: hidden da seção. */
-    width: min(117%, 78rem);
-    /* O reset global tem `img { max-width: 100% }`, que estava travando esta
-       imagem na largura da seção e engolindo qualquer valor acima de 100%.
-       Aqui ela precisa poder passar da caixa — o excedente é cortado pelo
-       overflow: hidden da seção, de propósito. */
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* O reset global tem `img { max-width: 100% }`; aqui não atrapalha
+       mais, mas fica explícito porque a regra é sobre esta imagem. */
     max-width: none;
-    height: auto;
-    transform: translate(-50%, -50%);
+    /* `cover` preserva a proporção e recorta — nunca deforma. */
+    object-fit: cover;
+    object-position: center center;
     opacity: 0.25;
     pointer-events: none;
     user-select: none;
@@ -788,7 +796,11 @@ const passos = [
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--espaco-2);
+    /* Respiro entre os três parágrafos. O vão real é este `gap` MAIS o
+       `p + p { margin-top: var(--espaco-2) }` do global.css, que continua
+       valendo dentro do flex — ou seja 40 + 16 = 56px, contra os 32px de
+       antes. Um degrau da escala do projeto, nada de px solto. */
+    gap: var(--espaco-4);
     max-width: 46ch;
     margin-inline: auto;
     text-align: center;
@@ -797,12 +809,11 @@ const passos = [
 
   @media (max-width: 56.25rem) {
     .secao-abertura__fundo {
-      /* Os 130% declarados aqui antes nunca valeram: o `max-width: 100%` do
-         reset global cortava a imagem na largura da seção, então ela
-         renderizava a 100%. Com o max-width liberado, 130% passa a valer de
-         fato — que é exatamente o aumento de 30% sobre o tamanho que
-         aparecia na tela. */
-      width: 130%;
+      /* A largura de 130% que morava aqui saiu junto com o dimensionamento
+         por largura: com `cover` quem manda é o `inset: 0`, e esticar além
+         de 100% só criaria transbordo sem cobrir mais nada.
+         A opacidade menor fica: no mobile a coluna de texto ocupa a largura
+         toda e passa por cima do desenho. */
       opacity: 0.18;
     }
   }
