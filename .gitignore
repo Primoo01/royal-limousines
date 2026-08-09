@@ -20,15 +20,22 @@ npm-debug.log*
 # ---------------------------------------------------------------------
 # Mídia raw — nunca versionar
 # ---------------------------------------------------------------------
-# Backup: E:\Backups\royal-2026-08-02\ e E:\Backups\royal-salvage-2026-08-06\
+# ONDE ESTÃO OS ORIGINAIS (nada foi apagado):
+#   Projeto Dusdete\midias-originais\originais-full\  → os que foram
+#       reencodados para src/assets/ (107 MB, resolução cheia)
+#   Projeto Dusdete\midias-originais\nao-usados\      → sem referência no
+#       código: backgrounds/, videos-360/, royal-logo/ (33 MB)
+#   E:\Backups\royal-midias-2026-08-09\               → cópia redundante
+#   E:\Backups\royal-mirror-pre-purga.git             → repo antes da purga
 #
-# As pastas abaixo guardam ARQUIVOS DE ORIGEM (vídeos de fundo do menu e
-# os 360 sem compressão). Nada no código as referencia: o que o site serve
-# são as versões já comprimidas em public/videos/. Um deles tinha 165,9 MB
-# e sozinho respondia por metade do repositório.
-Images/mídias menu/
-Images/mídias menu2/
-Images/videos-360/
+# Images/ e Images-limo/ foram REMOVIDAS do histórico com git-filter-repo:
+# 42 blobs, 155,85 MB. O pack caiu de 179 MB para 26,53 MB. As imagens que
+# o build usa vivem agora em src/assets/, com teto de 1600px de largura —
+# o mesmo do CLAUDE.md, e o suficiente para tudo que o astro:assets serve.
+#
+# Se essas pastas reaparecerem na raiz, é cópia de trabalho: não versione.
+Images/
+Images-limo/
 
 # Rede de proteção contra commit acidental de vídeo pesado. As duas
 # exceções são os únicos lugares de onde o site pode servir vídeo:
@@ -39,12 +46,3 @@ Images/videos-360/
 *.webm
 !public/videos/*.mp4
 !src/assets/**/*.mp4
-
-# ATENÇÃO — o que NÃO está aqui, e por quê.
-# Images/300sedan/, Images/backgrounds/ e Images-limo/ parecem mídia raw,
-# mas são ENTRADAS DO BUILD: src/data/galeria-sedan.js, galeria-limo.js e
-# fotos-limo.js leem essas pastas com import.meta.glob, e
-# ConteudoHome.astro importa Images/backgrounds/300c-limo-silhueta-3.png.
-# Ignorá-las quebraria o build no Cloudflare Pages (clone limpo, glob
-# vazio) e esvaziaria os carrosséis. Só podem sair daqui depois que as
-# imagens usadas forem movidas para src/assets/.
