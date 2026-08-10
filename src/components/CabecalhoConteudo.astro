@@ -68,7 +68,16 @@ const { eyebrow, titulo, apoio, linha = 'curva' } = Astro.props;
     padding-bottom: var(--espaco-4);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* `flex-end` e não `center`: com o centramento, a sobra do
+       `min-height: 60svh` era dividida metade acima e metade abaixo do
+       conteúdo — e a metade de baixo caía justamente entre o divisor e a
+       seção seguinte, variando de 1,8px a 112,9px conforme a altura da
+       tela. Empurrando o bloco para a base, toda a sobra vai para cima e o
+       vão abaixo do divisor passa a ser só o `padding-bottom`: 40px fixos,
+       exatamente os mesmos 40px que o divisor tem acima dele.
+       O `min-height: 60svh` do CLAUDE.md continua valendo — o cabeçalho
+       ocupa a mesma altura, só distribui o vazio de outro jeito. */
+    justify-content: flex-end;
   }
 
   .cabecalho-conteudo__titulo {
@@ -86,5 +95,22 @@ const { eyebrow, titulo, apoio, linha = 'curva' } = Astro.props;
 
   .cabecalho-conteudo__linha {
     margin-top: var(--espaco-4);
+  }
+
+  /* O espaço ABAIXO do divisor é o `padding-bottom` deste cabeçalho —
+     var(--espaco-4), exatamente os mesmos 40px que o `margin-top` acima
+     dá. A seção seguinte estava REPETINDO esse respiro duas vezes: o
+     `padding-top` dela (40px) mais a margem do primeiro filho (64px em
+     /servicos/ e nas 8 de região, 40px em /contato/). Somados, o vão de
+     baixo chegava a 133–217px contra os 40 de cima.
+     Zerar aqui, uma vez, vale para as 11 páginas que usam este cabeçalho.
+     O `:global` é necessário porque a seção é irmã, renderizada por outro
+     arquivo — o escopo do Astro não a alcançaria. */
+  .cabecalho-conteudo + :global(section) {
+    padding-top: 0;
+  }
+
+  .cabecalho-conteudo + :global(section) > :global(:first-child) {
+    margin-top: 0;
   }
 </style>
