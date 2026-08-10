@@ -84,6 +84,22 @@ const description =
       </div>
     </div>
 
+    {/* Ponte para a seção do sedan. Fica AQUI, logo depois da apresentação do
+        300C branco, e não no fim da seção: quem já viu o carro de festa e
+        percebe que não é o que procura encontra a alternativa antes de rolar
+        mais três blocos.
+        O <p> e o botão precisam continuar irmãos ADJACENTES — o espaçamento
+        entre eles vem de `.bloco-frota__ponte + .botao`. Nada pode entrar no
+        meio dos dois.
+        O scroll suave vem do `html { scroll-behavior: smooth }` que já existe
+        em global.css — não precisa de JS, e vira instantâneo sozinho em
+        prefers-reduced-motion. */}
+    <p class="bloco-frota__ponte">
+      Para traslados mais discretos, sem a exposição de um carro de festa, a
+      frota também tem o Chrysler 300C preto.
+    </p>
+    <Botao variante="terciario" href="#sedan">Conhecer o sedan 300C preto</Botao>
+
     <div class="bloco-frota__interior">
       <div class="bloco-frota__interior-texto">
         <h3>Espaço interno</h3>
@@ -152,15 +168,6 @@ const description =
         {site.cta.whatsapp}
       </Botao>
     </div>
-
-    {/* Ponte para a seção do sedan. O scroll suave vem do
-        `html { scroll-behavior: smooth }` que já existe em global.css — não
-        precisa de JS, e vira instantâneo sozinho em prefers-reduced-motion. */}
-    <p class="bloco-frota__ponte">
-      Para traslados mais discretos, sem a exposição de um carro de festa, a
-      frota também tem o Chrysler 300C preto.
-    </p>
-    <Botao variante="terciario" href="#sedan">Conhecer o sedan 300C preto</Botao>
   </section>
 
   <Marquee />
