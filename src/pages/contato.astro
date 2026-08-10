@@ -40,7 +40,16 @@ const faqPage = {
     descrição curta que já existe em site.js e já aparece no rodapé — é
     conteúdo existente do site, não frase nova inventada aqui.
   */}
-  <CabecalhoConteudo eyebrow="Contato" titulo="Contato" apoio={site.descricaoCurta} linha="assinatura" />
+  {/* O eyebrow dizia "Contato", a mesma palavra do h1 logo abaixo. O h1 vem
+      do backup e é sinal de SEO congelado, então quem muda é o eyebrow —
+      texto decorativo escrito aqui, que não existe no site antigo e não
+      carrega palavra-chave nenhuma. */}
+  <CabecalhoConteudo
+    eyebrow="Fale conosco"
+    titulo="Contato"
+    apoio={site.descricaoCurta}
+    linha="assinatura"
+  />
 
   <section class="u-container secao-contato reveal">
     <div class="secao-contato__grade">
