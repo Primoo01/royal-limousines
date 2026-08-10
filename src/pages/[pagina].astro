@@ -124,6 +124,16 @@ const outrasPaginasCasamento =
     align-items: center;
   }
 
+  /* Só a PRIMEIRA grade, a que fica logo abaixo do divisor do
+     CabecalhoConteudo. O divisor cai sobre a coluna de texto, e como a foto
+     é mais alta o centramento empurrava essa coluna 64,6px para baixo: o vão
+     abaixo do divisor virava 104,6px contra os 40px de cima, com a foto já
+     nos 40px. Com `start` os dois topos coincidem. A segunda grade fica
+     centralizada como sempre — ela não tem divisor acima. */
+  .secao-regiao__grade:first-child {
+    align-items: start;
+  }
+
   .secao-regiao__grade + .secao-regiao__grade {
     margin-top: var(--espaco-6);
     padding-top: var(--espaco-6);

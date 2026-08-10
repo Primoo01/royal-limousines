@@ -54,11 +54,22 @@ const description =
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--espaco-5);
-    align-items: center;
+    /* `start` e não `center`: esta grade é a primeira coisa abaixo do divisor
+       do CabecalhoConteudo, e o divisor cai justamente sobre a coluna de
+       texto. Como a foto (4/3) é mais alta que o texto, o centramento
+       empurrava a coluna curta 45,8px para baixo — o vão abaixo do divisor
+       virava 85,8px contra os 40px de cima, enquanto a foto já estava nos
+       40px. Com `start` os dois topos ficam na mesma linha, ambos a 40px. */
+    align-items: start;
   }
 
+  /* Sem margem no topo: este é o primeiro conteúdo visível abaixo do divisor,
+     e o respiro dele já é o `padding-bottom` do cabeçalho (40px, o mesmo
+     `var(--espaco-4)` que o divisor tem acima). A regra de `:first-child` do
+     CabecalhoConteudo não alcançava esta margem — ela zera o
+     `.secao-empresa__texto`, e os 24px moravam no `.u-prosa` aninhado dentro
+     dele. Mesmo tratamento que as 8 páginas de região já tinham. */
   .secao-empresa__texto .u-prosa {
-    margin-top: var(--espaco-3);
     display: flex;
     flex-direction: column;
     gap: var(--espaco-2);
