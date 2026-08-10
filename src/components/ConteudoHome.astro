@@ -96,12 +96,16 @@ const passos = [
         {/* Sem `aspectRatio`: aqui a proporção muda por breakpoint (4/5 no
             desktop, 8/5 no mobile) e é definida no CSS abaixo. Passar a
             prop escreveria style inline, que venceria a media query. */}
-        {/* Nativa do arquivo. Abaixo disso o 2x sairia do build já
-            ampliado; acima, o astro:assets inventaria pixel. */}
+        {/* Teto de 1600px do CLAUDE.md, e é ele que manda aqui — NÃO é mais a
+            largura nativa. O arquivo em src/assets/limo/ é uma redução do
+            original de 3064x1376 (midias-originais/.../Casamento1-hd.png).
+            Subir deste número serve imagem acima do teto do projeto e precisa
+            de decisão explícita; descer joga fora nitidez que existe. */}
         larguraServida={1600}
-        {/* Degrau intermediário de 1100: sem ele o 390 precisava de 1084
-            para chegar a 2x e pulava direto pro arquivo de 1600 (244 KB).
-            Com 1100 ele atinge os mesmos 2x por ~115 KB. */}
+        {/* Degrau intermediário de 1100: sem ele um desktop de ~1100 CSS px em
+            DPR 2 pula direto pro arquivo de 1600 (275 KB) para exibir o que
+            cabe em 1100 (142 KB). O celular não passa por aqui — abaixo de
+            56.25rem quem serve é a retrato, com o srcset próprio dela. */}
         larguras={[480, 800, 1100, 1600]}
         {/* Abaixo de 56.25rem quem entra é a retrato, com `sizes` próprio —
             este vale só para o desktop agora, sem a cláusula de mobile.
@@ -544,9 +548,16 @@ const passos = [
      O TRILHO. A altura é o que define quanto scroll a sequência consome.
      O fundo é o mundo ESCURO: é ele que aparece atrás do painel enquanto
      o painel ainda não cobriu a tela, dando continuidade ao Hero 1. */
+  /* 320vh de contêiner com 100vh presos pelo sticky = 220vh ÚTEIS, que é a
+     distância em que o progresso p vai de 0 a 1. O útil é sempre
+     `altura − innerHeight`, nunca a altura declarada (ver
+     atualizarTransicaoHero em Movimento.astro).
+     Era 250vh / 150vh. Os cinco limiares de p NÃO mudaram — as fases só se
+     espalham por mais scroll, cada uma ganhando 47% de distância.
+     O mobile continua em 160svh / 60svh, na media query mais abaixo. */
   .transicao-hero {
     position: relative;
-    height: 250vh;
+    height: 320vh;
     background-color: var(--escuro-bg);
   }
 
@@ -568,7 +579,16 @@ const passos = [
 
      O transform mora aqui, no painel, e em nenhum dos pais: transform em
      ancestral quebra position: sticky no iOS Safari. */
+  /* REPOUSO DECLARADO = ESTADO FINAL, aqui e nos três da assinatura abaixo.
+     Isto já era verdade, mas por OMISSÃO: nenhuma regra escrevia opacity 0
+     nem transform, então o computado era o estado final por acidente de não
+     existir regra. Omissão é o que se perde na próxima edição — e este site
+     já perdeu o H1 duas vezes exatamente assim. Agora está escrito: sem o
+     JS, o painel cobre a tela e a assinatura está inteira.
+     Quem esconde é o scrub, por style inline, e só enquanto a seção está em
+     cena (ver Movimento.astro). */
   .transicao-hero__painel {
+    transform: translateX(0);
     --bg: var(--claro-bg);
     --surface: var(--claro-surface);
     --linha: var(--claro-linha);
@@ -606,6 +626,8 @@ const passos = [
      O `position: relative` (sem deslocamento) é o que dá direito ao
      z-index; a silhueta continua no z-index 0 da regra global. */
   .transicao-hero__logo {
+    /* Repouso = estado final. Ver a nota em .transicao-hero__painel. */
+    opacity: 1;
     position: relative;
     z-index: 1;
   }
@@ -647,6 +669,9 @@ const passos = [
   }
 
   .hero-estagio2__tagline {
+    /* Repouso = estado final. Ver a nota em .transicao-hero__painel. */
+    opacity: 1;
+    transform: translateX(0);
     margin: 0;
     font-family: var(--fonte-sans);
     font-size: 0.875rem;
@@ -657,6 +682,8 @@ const passos = [
 
   /* As três palavras. Entram por último, depois da assinatura. */
   .hero-estagio2__valores {
+    /* Repouso = estado final. Ver a nota em .transicao-hero__painel. */
+    opacity: 1;
     margin: 0;
     font-family: var(--fonte-serif);
     font-size: clamp(1.125rem, 0.9rem + 0.9vw, 1.75rem);
