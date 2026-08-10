@@ -216,7 +216,12 @@ const description =
         alt=""
         aria-hidden="true"
         widths={[700, 1400]}
-        sizes="60vw"
+        {/* Acima de 56.25rem a arte vai de 56% da seção até a borda da tela —
+            medido, isso dá 45vw em 1440px e 46,3vw em 1920px, então 47vw cobre o
+            caso; abaixo de 56rem ela ocupa a largura da coluna única. Sem
+            recorte em nenhum dos dois, então a largura exibida é a própria
+            largura da caixa — não há fator de `cover` a multiplicar. */}
+        sizes="(max-width: 56rem) 100vw, 47vw"
         format="webp"
         loading="lazy"
       />
@@ -375,8 +380,56 @@ const description =
     padding-block: var(--espaco-7);
     /* Alvo do link "#sedan": sem isto o título nasce por baixo do header. */
     scroll-margin-top: var(--altura-header);
-    /* Recorta a silhueta que sangra pela borda direita. */
+    /* Recorta a sangria da silhueta. No desktop este recorte é DESLIGADO
+       logo abaixo (a arte passou a caber inteira); no mobile continua, porque
+       lá ela é deliberadamente ampliada em 132% e precisa ser contida. */
     overflow: hidden;
+  }
+
+  /* SILHUETA DO SEDAN SEM CORTE, NO MESMO LUGAR.
+     O corte vinha da regra global: `left: 56%; width: 60%` termina em 116% da
+     largura da seção, e a seção é `.u-container`, com teto de 75rem. Em 1440px
+     isso jogava 192px da arte para fora do container, e o `overflow: hidden`
+     recortava — sumia a traseira do carro. Dos 720px de caixa, só 528
+     apareciam.
+     A correção NÃO move a arte: o `left: 56%` continua idêntico, então o
+     desenho começa exatamente onde começava, depois da coluna de texto (que
+     termina em 40rem). O que muda é o outro lado — em vez de uma largura fixa
+     que estoura o container e é recortada, a borda direita é ancorada na borda
+     da TELA. A arte passa a ter a largura que couber ali, e como `height` é
+     auto ela segue a proporção nativa (1400x455 = 3,0769): entra inteira.
+     A largura é CALCULADA, não ancorada por `right`. Tentei `right` com
+     `width: auto` primeiro e não funciona: em elemento substituído, `auto`
+     resolve para a largura INTRÍNSECA e o `right` é descartado por
+     sobre-restrição — a caixa passava a valer o que o `sizes` anunciava
+     (medi 662px onde devia dar 648, transbordando 14px da tela).
+     A conta: com o container centralizado, a distância da borda esquerda da
+     arte até a borda da tela é
+       50vw − (esquerda da arte − 50% do container)
+     e como a arte começa em 56%, os 6% são 56% − 50%. Daí `calc(50vw - 6%)`.
+     Se o `left` mudar, este 6% muda junto.
+     Resultado medido: 648px de arte inteira em 1440px (contra 528px de arte
+     cortada antes), 888px em 1920px, e a borda direita encostando na tela em
+     todas as larguras.
+     `overflow: visible` porque a arte agora passa da borda do container de
+     propósito. Verificado que não cria rolagem horizontal — acima de 56rem a
+     barra é escondida (global.css), então 100vw é igual à largura útil.
+     Escopado em `.bloco-frota--escuro`: a MESMA classe `.silhueta-fundo` é
+     usada pela silhueta do Hero 2 na home, cuja geometria é parte da sequência
+     de scroll. Mexer na regra global mexeria nela.
+     O breakpoint é 56.25rem porque é ali que a regra global revela a arte na
+     forma de desktop. */
+  @media (min-width: 56.25rem) {
+    .bloco-frota--escuro {
+      overflow: visible;
+    }
+
+    .bloco-frota--escuro .silhueta-fundo {
+      /* `left` NÃO é redeclarado: continua os 56% da regra global, que é o que
+         mantém a arte no mesmo lugar. */
+      width: calc(50vw - 6%);
+      max-width: none;
+    }
   }
 
   /* O ::before que pintava #020202 chapado aqui FOI REMOVIDO — era ele a
