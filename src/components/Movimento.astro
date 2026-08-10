@@ -590,8 +590,26 @@
       // getBoundingClientRect(). Amortecer de novo no scrub empilharia dois
       // filtros e deixaria a sequência borrachuda.
       const lenis = new Lenis({
-        // peso: 0.1 = padrão atual · 0.075 = mais pesado · 0.05 = muito pesado
-        lerp: 0.075,
+        // PESO — tempo até o scroll assentar depois de uma rolada.
+        //   0.1   padrão da biblioteca ·  ~970ms   (derivado)
+        //   0.075                      · ~1310ms   (derivado)
+        //   0.064 ATUAL                ·  1541ms   MEDIDO
+        //   0.059                      ·  1670ms   MEDIDO
+        //   0.05                       · ~1990ms   (derivado)
+        //
+        // MEDIR EM MILISSEGUNDOS DE RELÓGIO, NUNCA EM QUADROS. O lerp do Lenis
+        // é corrigido por delta de tempo, então sob carga a contagem de quadros
+        // varia (medi 82 a 92 quadros para este mesmo valor) enquanto o tempo
+        // real fica estável (1509–1549ms em sete amostras). Contar quadros me
+        // fez rejeitar o 0.064 uma vez por engano.
+        // Método: evento de roda com deltaY 600 em 1440x900, mediana de 7,
+        // "assentou" = 10 quadros consecutivos com menos de 0,5px de variação.
+        //
+        // Para converter: ms ≈ 102 / −ln(1 − lerp). A lei reproduz os dois
+        // pontos medidos com erro abaixo de 0,5%, e é dela que vêm os valores
+        // marcados como derivados. Diminuir o lerp aumenta o deslize; a
+        // DISTÂNCIA por rolada não muda (quem manda nela é o wheelMultiplier).
+        lerp: 0.064,
         wheelMultiplier: 0.9,
         smoothWheel: true,
         syncTouch: false,
