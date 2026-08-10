@@ -8,7 +8,7 @@
 // O recorte é sempre CENTRAL (object-fit: cover + object-position: center).
 // Várias fotos são retrato 9:16 entrando em espaços largos; cover recorta,
 // nunca distorce (ver CLAUDE.md > Imagens).
-import { Image, Picture } from 'astro:assets';
+import { Image, Picture, getImage } from 'astro:assets';
 
 interface Props {
   src: ImageMetadata;
@@ -51,6 +51,25 @@ interface Props {
    * o resto do site o WebP sozinho basta e pesa menos.
    */
   comFallback?: boolean;
+  /**
+   * ART DIRECTION: arquivo DIFERENTE para telas estreitas — não outro tamanho
+   * do mesmo arquivo, que é o que `larguras`/`sizes` já resolvem.
+   *
+   * Existe porque foto retrato e foto paisagem não são intercambiáveis: a do
+   * hero da home é 2.22 (paisagem) e cabe na caixa larga do desktop, enquanto
+   * no celular a tela é vertical e pede uma retrato.
+   *
+   * Emite <picture> com `<source media>`, e é isso que garante UMA imagem
+   * baixada. Dois <Foto> com `display: none` não servem: o navegador busca a
+   * imagem escondida também, e aqui estamos na rota do LCP.
+   */
+  srcEstreito?: ImageMetadata;
+  /** Media query que ativa `srcEstreito`. Precisa bater com o CSS de quem chama. */
+  mediaEstreito?: string;
+  /** Degraus do srcset da variante estreita. Teto = largura nativa dela. */
+  largurasEstreito?: number[];
+  /** `sizes` da variante estreita, medido no espaço dela, não no do desktop. */
+  sizesEstreito?: string;
   class?: string;
 }
 
@@ -65,6 +84,10 @@ const {
   posicao,
   qualidade,
   comFallback = false,
+  srcEstreito,
+  mediaEstreito = '(max-width: 56.25rem)',
+  largurasEstreito,
+  sizesEstreito = '100vw',
   class: className,
 } = Astro.props;
 
@@ -81,6 +104,29 @@ const comuns = {
   style: posicao ? `object-position: ${posicao};` : undefined,
   ...(qualidade ? { quality: qualidade } : {}),
 };
+
+// Só quando há art direction. O <Picture> do astro:assets não aceita um
+// <source media> extra, então aqui o <picture> é montado à mão — e para isso
+// precisamos dos srcsets prontos, que é o que getImage() devolve em
+// `.srcSet.attribute`.
+const arte = srcEstreito
+  ? await (async () => {
+      const gerar = (imagem: ImageMetadata, widths: number[], format: 'webp' | 'jpg') =>
+        getImage({ src: imagem, widths, format, ...(qualidade ? { quality: qualidade } : {}) });
+
+      const degrausEstreito = largurasEstreito ?? [480, srcEstreito.width];
+      const degrausLargo = comuns.widths;
+
+      const [estreitoWebp, estreitoJpg, largoWebp, largoJpg] = await Promise.all([
+        gerar(srcEstreito, degrausEstreito, 'webp'),
+        gerar(srcEstreito, degrausEstreito, 'jpg'),
+        gerar(src, degrausLargo, 'webp'),
+        gerar(src, degrausLargo, 'jpg'),
+      ]);
+
+      return { estreitoWebp, estreitoJpg, largoWebp, largoJpg };
+    })()
+  : null;
 ---
 
 {/*
@@ -92,7 +138,31 @@ const comuns = {
 */}
 <div class:list={['foto', className]} style={aspectRatio ? `--foto-proporcao: ${aspectRatio};` : undefined}>
   {
-    comFallback ? (
+    arte ? (
+      /*
+        ORDEM IMPORTA: o navegador para no PRIMEIRO <source> que casa. Os dois
+        com `media` vêm antes, então a variante estreita ganha na tela pequena;
+        acima da media query eles não casam e sobra o par de baixo. O <img> é
+        o último recurso e carrega o JPG largo.
+      */
+      <picture>
+        <source media={mediaEstreito} type="image/webp" srcset={arte.estreitoWebp.srcSet.attribute} sizes={sizesEstreito} />
+        <source media={mediaEstreito} type="image/jpeg" srcset={arte.estreitoJpg.srcSet.attribute} sizes={sizesEstreito} />
+        <source type="image/webp" srcset={arte.largoWebp.srcSet.attribute} sizes={sizes} />
+        <img
+          src={arte.largoJpg.src}
+          srcset={arte.largoJpg.srcSet.attribute}
+          sizes={sizes}
+          width={src.width}
+          height={src.height}
+          alt={alt}
+          loading={comuns.loading}
+          fetchpriority={comuns.fetchpriority}
+          decoding={comuns.decoding}
+          style={comuns.style}
+        />
+      </picture>
+    ) : comFallback ? (
       <Picture {...comuns} formats={['webp']} fallbackFormat="jpg" />
     ) : (
       <Image {...comuns} format="webp" />

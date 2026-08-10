@@ -103,14 +103,26 @@ const passos = [
             para chegar a 2x e pulava direto pro arquivo de 1600 (244 KB).
             Com 1100 ele atinge os mesmos 2x por ~115 KB. */}
         larguras={[480, 800, 1100, 1600]}
-        {/* NÃO é a largura da caixa — é a largura que a imagem TERIA antes
-            do recorte do `cover`, que é o que o navegador precisa baixar.
-            A caixa de 390 exibe uma imagem de 541.7 de largura (o resto é
-            cortado), ou seja 139vw; no desktop a de 754 exibe 1371, ou
-            95vw. Com os 100vw/45vw anteriores o navegador pedia arquivo
-            pequeno e o mobile saía em 1.48x em vez de 2x — era daí que
-            vinha a moleza da imagem. */}
-        sizes="(max-width: 56.25rem) 139vw, 95vw"
+        {/* Abaixo de 56.25rem quem entra é a retrato, com `sizes` próprio —
+            este vale só para o desktop agora, sem a cláusula de mobile.
+            NÃO é a largura da caixa: é a largura que a imagem TERIA antes do
+            recorte do `cover`, que é o que o navegador precisa baixar. Em
+            1440px a caixa de 754 exibe 1371 de largura, ou 95vw. */}
+        sizes="95vw"
+        {/* A RETRATO DO CELULAR. Arquivo diferente, não outro tamanho: a tela
+            do telefone é vertical e a paisagem 2.22 do desktop não serve.
+            `media` idêntica ao breakpoint do CSS abaixo — se as duas
+            divergirem, a imagem de uma tela aparece no layout da outra.
+            `100vw`: a caixa é a largura da tela, e como o recorte do `cover`
+            aqui é VERTICAL (a foto é mais estreita que a tela), a largura
+            exibida é igual à da caixa — nada de multiplicar por causa do
+            corte, ao contrário do desktop.
+            Degraus até 720, a largura nativa. Não há original maior: em tela
+            cheia de iPhone a DPR 3 o aparelho amplia ~1,6x. */}
+        srcEstreito={fotosLimo.casamentoNoivos.srcRetrato}
+        mediaEstreito="(max-width: 56.25rem)"
+        largurasEstreito={[480, 720]}
+        sizesEstreito="100vw"
         {/* Céu em gradiente e lataria branca fazem banding com compressão
             agressiva — 85 é o piso aceitável para esta foto. */}
         qualidade={85}
@@ -973,25 +985,40 @@ const passos = [
        nos cantos — então some. Vale também pra borda esquerda: o
        arredondamento de 50px é uma composição de desktop, onde a foto
        flutua dentro da tela. */
+    /* A FOTO OCUPA A VISTA VISÍVEL INTEIRA: largura da tela por 100svh.
+       `svh` e não `vh` nem `dvh`: svh é a viewport COM as barras do
+       navegador aparecendo, exatamente "a vista do navegador" no iPhone. Com
+       `vh` a caixa nasceria maior que o visível e a base ficaria sob a barra;
+       com `dvh` ela mudaria de tamanho a cada aparecer/esconder da barra, e
+       a foto pularia durante o scroll.
+
+       `height` explícito anula o `aspect-ratio` do componente sem precisar de
+       `--foto-proporcao`: com largura e altura definidas, a proporção deixa
+       de ter efeito (é a regra do CSS, não um truque). */
     .hero-estagio1__midia :global(.foto) {
       border-radius: 0;
-      /* METADE DA ALTURA de antes, com a largura seguindo nas duas
-         extremidades da página. Como a largura já era 100% e não pode
-         crescer mais, quem muda é a proporção: 4/5 (0.8) → 8/5 (1.6),
-         que é exatamente o dobro da largura em relação à altura.
-         Em 390px: 390x487.5 → 390x243.75. Em 768px: 768x960 → 768x480.
-
-         Ganho lateral: a janela do `cover` sobe de 576px para 1152px da
-         origem, o que acaba com a ampliação de 1.33x que existia no 768. */
-      --foto-proporcao: 8 / 5;
+      height: 100svh;
+      aspect-ratio: auto;
     }
 
-    /* Com a caixa em 8/5 a janela do cover passa a 1152px da origem — o
-       dobro de antes —, então o casal e o carro inteiro cabem com folga e
-       o recorte deixa de ser apertado. 12% começa em 54, e o buquê abre em
-       175: 121px de margem. Acima de 25% o buquê começaria a sair. */
+    /* A foto é retrato 0.45 e a vista do iPhone é ~0.59: ela é mais ESTREITA
+       que a tela, então o `cover` recorta na VERTICAL, não na horizontal —
+       largura inteira, altura sobrando.
+       Num iPhone 14 (390x664) a imagem é exibida em 390x866.7 e sobram 374px
+       do original de 1600 para cortar. O recorte foi escolhido medindo o
+       conteúdo: céu do topo até y≈356, casal e carro de 356 a 1120, e de 1120
+       a 1600 são ~480px só de pedra portuguesa.
+       Em `center 35%` a janela vai de y=131 a y=1357 do original: sobram 225px
+       de céu acima do casal e 237px de pavimento abaixo dos pés. O casal e o
+       carro entram INTEIROS nas duas pontas.
+       Por que 35% e não menos: quanto MAIOR a porcentagem, mais a janela
+       desce e mais folga sobra embaixo. Em `top` (0%) o corte viria todo da
+       base e os pés encostariam na borda; em 25% ainda ficava apertado em
+       768px de largura, onde a caixa é mais alta e o recorte chega a 682px.
+       Em 35% até esse caso fica com respiro. Testado quadro a quadro em 375,
+       390, 430 e 768. */
     .hero-estagio1__midia :global(.foto img) {
-      object-position: 12% center;
+      object-position: center 35%;
     }
 
   }

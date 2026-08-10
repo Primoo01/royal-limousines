@@ -52,6 +52,14 @@ export const fotosLimo = {
   // define é o CSS do hero, em ConteudoHome.astro.
   casamentoNoivos: {
     src: foto('Casamento1'),
+    // ART DIRECTION, não outro tamanho do mesmo arquivo. `src` é paisagem
+    // (1600x720, proporção 2.22) e serve a caixa larga do desktop; esta é
+    // retrato (720x1600, proporção 0.45) e serve a tela vertical do celular,
+    // onde a foto ocupa a viewport inteira. Uma tela baixa só uma das duas —
+    // ver o <picture> com `media` em Foto.astro.
+    // O mesmo alt vale para as duas: as duas mostram os noivos ao lado da
+    // limousine branca, e só uma <img> é renderizada.
+    srcRetrato: foto('casamento2'),
     alt: 'Noivos ao lado da limousine Chrysler 300C branca em festa de casamento ao ar livre em São Paulo',
   },
   tresQuartosFrontalDark2: {
