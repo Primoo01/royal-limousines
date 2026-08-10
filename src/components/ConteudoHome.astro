@@ -209,12 +209,13 @@ const passos = [
     alt=""
     aria-hidden="true"
     widths={[900, 1600]}
-    {/* Com `cover` isto não é a largura da CAIXA — é a largura que a imagem
-        tem depois de escalada para cobrir, que é maior. Em 1440px a seção
-        mede 1200x531 e a arte (3.38 de proporção) precisa de ~1793px de
-        largura para cobrir a altura. Anunciar 90vw fazia o navegador pedir
-        arquivo pequeno demais. */}
-    sizes="(max-width: 56.25rem) 150vw, 125vw"
+    {/* Acima de 34rem a arte é exibida em exatamente 100vw — largura da
+        caixa e largura exibida coincidem, porque não há mais recorte.
+        Abaixo de 34rem ainda há `cover`, e aí a largura exibida é maior que
+        a caixa: 19rem de altura x 3,3755 = 1026px de arte num viewport de
+        390 = 263vw. Anunciar 100vw ali faria o navegador pedir arquivo
+        pequeno demais para o carro ampliado. */}
+    sizes="(max-width: 34rem) 265vw, 100vw"
     format="webp"
     loading="lazy"
   />
@@ -752,37 +753,56 @@ const passos = [
     }
   }
 
-  /* O position: relative e o overflow existem por causa da silhueta de
-     fundo, que é absoluta e sangra além da caixa. O padding vertical é o
-     mesmo de antes: a seção não muda de posição na página. */
+  /* O position: relative existe por causa da silhueta de fundo, que é
+     absoluta. O padding vertical é o mesmo de antes: a seção não muda de
+     posição na página.
+     SEM `overflow: hidden`: ele recortaria a arte nos 1200px do container
+     justamente onde ela precisa escapar para chegar às bordas da tela.
+     Nada mais aqui depende dele — a arte é o único filho absoluto, e ela
+     não sangra na vertical (é mais baixa que a seção). Medido nas três
+     larguras: scrollWidth continua igual a clientWidth, sem overflow. */
   .secao-abertura {
     position: relative;
-    overflow: hidden;
     padding-block: var(--espaco-6);
   }
 
-  /* Atrás do texto, centralizada, e bem mais apagada que a silhueta do
-     Hero 2 (25% contra 50%) justamente porque aqui há texto por cima. */
-  /* COBRE A SEÇÃO INTEIRA, encostando nas quatro bordas.
-     Antes era dimensionada pela LARGURA com `height: auto`: como a arte é
-     3.38 de proporção (muito larga e baixa) e a seção é bem mais alta,
-     sobrava faixa vazia em cima e embaixo — 80,8px de cada lado em 1440px,
-     109,8 em 768 e 216,1 em 390. Não era `contain` nem padding do
-     contêiner: era o `height: auto` seguindo a proporção nativa.
-     Agora `inset: 0` + `cover` recorta o excedente em vez de encolher a
-     imagem, e o `overflow: hidden` da seção já estava lá para conter. */
+  /* Atrás do texto, e bem mais apagada que a silhueta do Hero 2 (25% contra
+     50%) justamente porque aqui há texto por cima.
+
+     A ARTE INTEIRA, SEM CORTE, de borda a borda da tela.
+     A arte não é uma silhueta de perfil: são o 300C de frente à esquerda e
+     de traseira à direita, com o MIOLO VAZIO, feito para o texto passar no
+     meio. O `cover` que estava aqui escalava pela altura e comia as
+     laterais — 378px de cada lado em 1440px, 567 em 768 e 869 em 390, ou
+     seja 81,7% da arte. O que sobrava era exatamente o miolo vazio, e por
+     isso o desenho parecia ter sumido no celular.
+     Agora quem manda é a largura, com `height: auto` seguindo a proporção
+     nativa (1600x474 = 3,3755). A faixa que sobra em cima e embaixo cai na
+     cor de fundo da página — a seção não tem fundo próprio, então não vira
+     buraco.
+     `100vw` e não `100%` para escapar do `max-width: 75rem` do
+     `.u-container`: em 1440px a arte passa de 1200 para 1440 de largura, os
+     dois carros vão para as pontas e se afastam do texto. Seguro aqui
+     porque acima de 56rem a barra de rolagem é escondida (global.css), então
+     100vw é igual à largura útil. Abaixo disso a regra do mobile troca por
+     `100%`, que nunca inclui a barra. */
   .secao-abertura__fundo {
     position: absolute;
     z-index: 0;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    /* O reset global tem `img { max-width: 100% }`; aqui não atrapalha
-       mais, mas fica explícito porque a regra é sobre esta imagem. */
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: auto;
+    transform: translate(-50%, -50%);
+    /* Com `height: auto` a caixa já nasce na proporção nativa, então não há
+       o que ajustar — `contain` está aqui como seguro: se algum dia alguém
+       fixar uma altura nesta regra, a arte fica menor dentro da caixa em vez
+       de esticar. O padrão (`fill`) deformaria em silêncio. */
+    object-fit: contain;
+    /* O reset global tem `img { max-width: 100% }`, que limitaria a arte à
+       largura do container e mataria o full-bleed. */
     max-width: none;
-    /* `cover` preserva a proporção e recorta — nunca deforma. */
-    object-fit: cover;
-    object-position: center center;
     opacity: 0.25;
     pointer-events: none;
     user-select: none;
@@ -808,13 +828,40 @@ const passos = [
   }
 
   @media (max-width: 56.25rem) {
+    /* Ainda a arte inteira, só que medida pelo elemento e não pelo viewport.
+       `100%` no lugar de `100vw` porque abaixo de 56rem a barra de rolagem
+       volta a ocupar espaço no desktop (global.css só a esconde acima
+       disso), e 100vw a incluiria — 15px de transbordo horizontal.
+       A opacidade menor entra aqui: daqui para baixo o texto ocupa a
+       largura toda e passa por cima do desenho. */
     .secao-abertura__fundo {
-      /* A largura de 130% que morava aqui saiu junto com o dimensionamento
-         por largura: com `cover` quem manda é o `inset: 0`, e esticar além
-         de 100% só criaria transbordo sem cobrir mais nada.
-         A opacidade menor fica: no mobile a coluna de texto ocupa a largura
-         toda e passa por cima do desenho. */
+      left: 0;
+      right: 0;
+      width: 100%;
+      transform: translateY(-50%);
       opacity: 0.18;
+    }
+  }
+
+  /* 34rem = 544px, e a linha foi medida, não herdada do breakpoint de
+     layout. A arte inteira encolhe junto com a tela: ocupa 44,9% da altura
+     da seção em 860px, 40,4% em 768, 33,9% em 640, 29,9% em 560 — e despenca
+     para 18,3% em 390px, onde os dois carros ficam do tamanho de três linhas
+     de texto, atrás do parágrafo do meio. Até 544px a composição dos dois
+     carros ainda se lê; abaixo dela, não.
+     Então aqui, e só aqui, o corte é deliberado: mostramos apenas o 300C de
+     frente, ampliado.
+     19rem também é medido. Com `cover` a arte exibida fica com 1026px de
+     largura, e o centro do carro da frente (18,75% da arte) cai em 192,4px —
+     a 2,6px do centro de uma tela de 390. Mais baixo que isso e o carro
+     escorrega para a esquerda; mais alto e passa do centro.
+     `left center` e não uma porcentagem: o carro está colado na borda
+     esquerda da arte, então qualquer deslocamento à direita abriria vão. */
+  @media (max-width: 34rem) {
+    .secao-abertura__fundo {
+      height: 19rem;
+      object-fit: cover;
+      object-position: left center;
     }
   }
 
