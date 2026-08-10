@@ -585,7 +585,17 @@
 
   if (ehDesktop && !reduzMovimento) {
     import('lenis').then(({ default: Lenis }) => {
-      const lenis = new Lenis();
+      // O scrub NÃO recebe amortecimento próprio: o Lenis já suaviza a
+      // posição de scroll que `atualizarTransicaoHero()` lê via
+      // getBoundingClientRect(). Amortecer de novo no scrub empilharia dois
+      // filtros e deixaria a sequência borrachuda.
+      const lenis = new Lenis({
+        // peso: 0.1 = padrão atual · 0.075 = mais pesado · 0.05 = muito pesado
+        lerp: 0.075,
+        wheelMultiplier: 0.9,
+        smoothWheel: true,
+        syncTouch: false,
+      });
 
       function rafLenis(time: number) {
         lenis.raf(time);
