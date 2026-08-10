@@ -787,6 +787,9 @@ const passos = [
      100vw é igual à largura útil. Abaixo disso a regra do mobile troca por
      `100%`, que nunca inclui a barra. */
   .secao-abertura__fundo {
+    /* 1600 / 474, a proporção nativa da arte. Fica em variável porque a
+       centralização do carro no mobile depende dela — ver a regra de 34rem. */
+    --fundo-arte-prop: 3.3755;
     position: absolute;
     z-index: 0;
     inset: auto;
@@ -851,17 +854,34 @@ const passos = [
      carros ainda se lê; abaixo dela, não.
      Então aqui, e só aqui, o corte é deliberado: mostramos apenas o 300C de
      frente, ampliado.
-     19rem também é medido. Com `cover` a arte exibida fica com 1026px de
-     largura, e o centro do carro da frente (18,75% da arte) cai em 192,4px —
-     a 2,6px do centro de uma tela de 390. Mais baixo que isso e o carro
-     escorrega para a esquerda; mais alto e passa do centro.
-     `left center` e não uma porcentagem: o carro está colado na borda
-     esquerda da arte, então qualquer deslocamento à direita abriria vão. */
+     19rem também é medido: com `cover` a arte exibida fica com 1026px de
+     largura, e o carro da frente com 289px — 74% de uma tela de 390.
+
+     O CENTRO DO CARRO É CALCULADO, não é `left` nem uma porcentagem solta.
+     Medi a tinta da arte coluna por coluna: o carro da frente ocupa x 37 a
+     488 de 1600, então o centro dele está a 16,41% da largura — e não no
+     meio da arte, que ali é vazio. `left` alinhava a borda da ARTE com a
+     borda da caixa e deixava o carro 26,6px à esquerda do centro numa tela
+     de 390.
+     A conta do `object-position`: o termo de 50% vale
+     (largura da caixa − largura exibida) / 2, então somar
+     larguraExibida × (50% − 16,41%) faz o deslocamento virar
+     metadeDaCaixa − centroDoCarro, ou seja o carro no centro exato — e para
+     QUALQUER largura de tela, porque o termo da caixa aparece nos dois
+     lados. Como a largura exibida é derivada da altura, mexer em
+     --fundo-altura mantém a centralização sozinha.
+     O vão que sobra à esquerda não aparece: a arte tem fundo próprio
+     (#F5EEE6) quase idêntico ao da página, e a 18% de opacidade a diferença
+     é de meio ponto por canal. */
   @media (max-width: 34rem) {
     .secao-abertura__fundo {
-      height: 19rem;
+      --fundo-altura: 19rem;
+      height: var(--fundo-altura);
       object-fit: cover;
-      object-position: left center;
+      object-position: calc(
+          50% + var(--fundo-altura) * var(--fundo-arte-prop) * 0.3359
+        )
+        center;
     }
   }
 
