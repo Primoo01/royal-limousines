@@ -10,7 +10,20 @@
   --claro-surface: #e7e0d4;
   --claro-linha: #cfc6b5;
   --claro-texto: #1a1815;
-  --claro-texto-mut: #8a8578;
+  /* Era #8a8578, que reprovava no AA nos dois fundos do mundo claro: 3.26:1
+     sobre --claro-bg e 2.81:1 sobre --claro-surface. O surface é o gargalo,
+     porque é o mais escuro dos dois.
+
+     A cor nova é o MESMO cinza-areia, só mais escuro: matiz 43.3° e saturação
+     7.1% preservados do original, luminosidade de 52% para 37%. Não é um cinza
+     neutro nem um tom novo na paleta.
+
+     Por que 37% e não 38%: em 38% (#68645a) a razão sobre o surface cai em
+     4.50:1 exato, e limite exato é frágil — outra ferramenta arredondando pra
+     baixo já reprova. Em 37% sobra margem.
+
+     Agora: 5.47:1 sobre --claro-bg e 4.70:1 sobre --claro-surface. */
+  --claro-texto-mut: #656158;
 
   /* ---- Mundo escuro (300C preto) ---- */
   --escuro-bg: #141210;

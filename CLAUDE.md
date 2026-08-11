@@ -246,8 +246,15 @@ A frota são dois Chrysler 300C: o **branco** (limousine esticada) e o **preto**
 --claro-surface:   #E7E0D4
 --claro-linha:     #CFC6B5
 --claro-texto:     #1A1815
---claro-texto-mut: #8A8578
+--claro-texto-mut: #656158
 ```
+
+`--claro-texto-mut` era `#8A8578` e reprovava no AA nos dois fundos do mundo
+claro (3.26:1 sobre `bg`, 2.81:1 sobre `surface`). O `#656158` é o mesmo
+cinza-areia com a luminosidade mais baixa — matiz e saturação preservados — e
+dá 5.47:1 e 4.70:1. Não escolha um valor entre os dois: em `#68645A` a razão
+sobre o `surface` cai em 4.50:1 exato, e limite exato reprova em qualquer
+ferramenta que arredonde pra baixo.
 
 **Mundo escuro (300C preto):**
 
@@ -267,6 +274,28 @@ A frota são dois Chrysler 300C: o **branco** (limousine esticada) e o **preto**
 ```
 
 Use o dourado com **restrição**: fio divisor, eyebrow, borda de botão, detalhe de foco. Nunca em grandes áreas preenchidas.
+
+#### Dívida conhecida: o dourado sobre fundo claro não passa no AA
+
+`--ouro-claro` (`#A8823C`) dá **3.14:1 sobre `--claro-bg`** e **2.70:1 sobre
+`--claro-surface`**. O mínimo AA para texto normal é 4.5:1. Isso vale para todo
+eyebrow, label e detalhe dourado do mundo claro.
+
+**É uma decisão consciente, não um descuido**, e fica assim por ora: escurecer o
+`#A8823C` até 4.5:1 leva ele para um marrom-mostarda que deixa de ler como
+champagne, e o dourado é o elemento que une os dois mundos — é identidade da
+marca, não decoração trocável. Escurecer só do lado claro também quebraria o
+par com `--ouro-escuro`.
+
+**Não "corrija" isso por conta própria.** Se for resolver algum dia, as saídas
+que não destroem a identidade são: subir o tamanho dos eyebrows para o patamar
+de "texto grande" do WCAG (24px, ou 18.66px em negrito, onde o mínimo cai para
+3:1 e o `#A8823C` passa sobre o `bg`); ou usar o dourado só em elementos
+não-textuais (fios, molduras, ícones), passando os eyebrows para
+`--claro-texto-mut`. As duas mudam o desenho e precisam de decisão do cliente.
+
+O mundo escuro está fora dessa dívida: `--ouro-escuro` (`#C6A25E`) sobre
+`--escuro-bg` passa com folga.
 
 ### Tipografia
 
