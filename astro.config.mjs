@@ -16,9 +16,13 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      // /lp-limousine/ tem canonical apontando para / (é a landing dos
-      // anúncios). Não faz sentido pedir pro Google indexar as duas como
-      // páginas distintas, então ela fica de fora do sitemap.
+      // /lp-limousine/ é a landing dos anúncios e nunca foi indexada: leva
+      // `noindex, follow`, NÃO leva canonical nenhum, e fica fora do sitemap
+      // (CLAUDE.md > Mapa de páginas). Verificado no build: é a única das 14
+      // sem <link rel="canonical">, e a única com <meta name="robots">.
+      //
+      // O comentário anterior aqui dizia que ela tinha canonical apontando
+      // para / — nunca teve. Era a descrição que estava errada, não o código.
       filter: (page) => !page.endsWith('/lp-limousine/'),
     }),
   ],
