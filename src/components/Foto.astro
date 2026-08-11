@@ -153,8 +153,15 @@ const arte = srcEstreito
           src={arte.largoJpg.src}
           srcset={arte.largoJpg.srcSet.attribute}
           sizes={sizes}
-          width={src.width}
-          height={src.height}
+          {/* As dimensões vêm do RESULTADO do getImage, não de `src.width` /
+              `src.height`. Ler a propriedade direto da ImageMetadata faz o
+              Astro emitir o arquivo ORIGINAL em _astro/ além dos derivados —
+              e ninguém referencia esse original, então ele vira peso morto no
+              deploy. Medido: 453 KB só do Casamento1 aqui, e 3,5 MB quando o
+              mesmo padrão estava no MenuMidia. Os valores são idênticos: o
+              `attributes` do getImage traz a largura e a altura nativas. */}
+          width={arte.largoJpg.attributes.width}
+          height={arte.largoJpg.attributes.height}
           alt={alt}
           loading={comuns.loading}
           fetchpriority={comuns.fetchpriority}
