@@ -37,6 +37,15 @@ import grotesk500 from '@fontsource/space-grotesk/files/space-grotesk-latin-500-
 // reflui; o corpo é Grotesk 400.
 const fontesCriticas = [cormorant600, grotesk400, cormorant500, grotesk500];
 
+// Vercel Speed Insights — coleta Core Web Vitals de visitantes reais. Entra
+// AQUI, no único layout do projeto, e é por isso que uma linha cobre as 14
+// páginas: os 7 arquivos de src/pages/ usam este layout, e o [pagina].astro
+// responde pelas 8 de região.
+//
+// Ele só reporta quando servido pela Vercel. Em local e em qualquer outro host
+// o script carrega e não envia nada — não é erro, é o desenho dele.
+import SpeedInsights from '@vercel/speed-insights/astro';
+
 import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -244,6 +253,11 @@ const localBusiness = {
     <Footer />
     <WhatsAppButton />
     <Movimento />
+
+    {/* Depois de tudo, de propósito: quanto mais tarde no <body>, menos ele
+        disputa com o caminho crítico que este projeto ajustou em várias
+        rodadas. Não mover para o <head>. */}
+    <SpeedInsights />
 
     {/*
       CAMINHO RÁPIDO do preloader: revela assim que as duas fontes de fato
