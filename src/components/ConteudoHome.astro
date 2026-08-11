@@ -548,16 +548,23 @@ const passos = [
      O TRILHO. A altura é o que define quanto scroll a sequência consome.
      O fundo é o mundo ESCURO: é ele que aparece atrás do painel enquanto
      o painel ainda não cobriu a tela, dando continuidade ao Hero 1. */
-  /* 320vh de contêiner com 100vh presos pelo sticky = 220vh ÚTEIS, que é a
+  /* 250vh de contêiner com 100vh presos pelo sticky = 150vh ÚTEIS, que é a
      distância em que o progresso p vai de 0 a 1. O útil é sempre
      `altura − innerHeight`, nunca a altura declarada (ver
-     atualizarTransicaoHero em Movimento.astro).
-     Era 250vh / 150vh. Os cinco limiares de p NÃO mudaram — as fases só se
-     espalham por mais scroll, cada uma ganhando 47% de distância.
-     O mobile continua em 160svh / 60svh, na media query mais abaixo. */
+     atualizarTransicaoHero em Movimento.astro). É o valor do CLAUDE.md.
+     O mobile fica em 160svh, na media query mais abaixo.
+
+     TESTADO E REJEITADO: 320vh. Como os cinco limiares são frações de p, as
+     fases só se espalhavam — a animação saía IDÊNTICA. Medido a 1440x900,
+     41 amostras, lendo o p real do rect: a curva de ocupação da tela é a
+     mesma nos dois (0% até p=0.3, 17% em p=0.4, 30% no fim). O que mudava
+     era só o preço: útil de 1350 para 1980px, a home inteira de 7931 para
+     8561px, e o trecho de tela vazia de ~494 para ~724px. Mais scroll para
+     entregar exatamente o mesmo quadro, piorando o vão morto que já é um
+     problema aberto aqui. */
   .transicao-hero {
     position: relative;
-    height: 320vh;
+    height: 250vh;
     background-color: var(--escuro-bg);
   }
 
