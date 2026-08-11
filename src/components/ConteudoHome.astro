@@ -714,12 +714,40 @@ const passos = [
      nada some.
 
      Mobile: svh e nunca vh. 100vh no celular vale a viewport SEM a barra
-     do navegador; quando ela aparece a altura muda e a composição pula.
-     E a distância cai de 250vh pra 160svh, porque um gesto de toque
-     percorre muito mais scroll que uma rolagem de mouse. */
+     do navegador; quando ela aparece a altura muda e a composição pula. */
   @media (max-width: 56.25rem) {
+    /* A CONTA MORA EM svh, e a divisão é o que importa: 199 = 100svh de tela
+       PRESA + 99svh de trilho útil. A tela presa não é consumida pela
+       sequência; só o trilho é. Era 160svh = 100 + 60.
+
+       O trilho cresceu 1.65x porque as fases 2 a 5 dobraram de duração e a 1
+       ficou como estava — pesos 35/34/40/24/32, soma 165 contra 100. Daí
+       60 x 1.65 = 99 exato: os 21svh do painel continuam 21, e 10.2 / 12 /
+       7.2 / 9.6 viram 20.4 / 24 / 14.4 / 19.2. Nenhum multiplicador arredonda.
+
+       POR QUE alongar: com easing linear (ver Movimento.astro) o solavanco
+       das junções acabou, e o que sobrou foi pressa. Em scrub, duração é
+       distância — não existe `duration` para aumentar aqui.
+
+       TESTADO E REJEITADO: 283svh, com a fase 1 alongada 5x (peso 175).
+       Alongar a JANELA do painel não aumenta a presença dele em nada — o
+       painel percorre a mesma tela, só exigindo 5x mais dedo, e o ganho caía
+       de 2.20 para 0.44px por pixel de rolagem: mais lento que o polegar.
+       Custava +1038px na home (8433 -> 9471px, +12%) para não entregar
+       movimento nenhum. E era a fase errada: quem se move na fase 1 é o painel
+       bege VAZIO (o logo está em opacity 0 e a silhueta fora da tela), não a
+       limusine — o carro é a fase 3. Medido: com percurso 5x o painel cobre 0%
+       da tela em p=0.10 e p=0.30, ou seja metade da fase seria tela escura
+       esperando.
+
+       O PREÇO desta versão, medido em 390x844: trilho de 506 para 836px e a
+       home de 8433 para 8762px (+3.9%). O painel mantém os 2.20px por pixel de
+       dedo que sempre teve.
+
+       Os limiares NÃO moram aqui, mas dependem deste valor para virar pixel.
+       Mudar um sem olhar o outro é o erro a evitar. */
     .transicao-hero {
-      height: 160svh;
+      height: 199svh;
     }
 
     .transicao-hero__sticky {
@@ -780,7 +808,18 @@ const passos = [
       order: 2;
       width: calc(100% - var(--espaco-3) * 2);
       margin-top: var(--espaco-3);
-      opacity: 0.3;
+      /* Era 0.3. A dívida de contraste do CLAUDE.md (dourado sobre traço da
+         silhueta dando 1.38:1, e 1.97:1 mesmo a 0.3) é sobre TEXTO POR CIMA do
+         desenho — a situação do desktop, onde ela é camada absoluta. Aqui ela é
+         `position: static` no fluxo, com 24px de folga do logo e 40px dos
+         valores: nada de texto passa por cima, então aquela restrição não vale
+         nesta regra. Era cautela herdada.
+         Fica ABAIXO do 0.5 do desktop de propósito: no mobile o desenho divide
+         a coluna com o logo em vez de ocupar a metade vazia da tela, e igualar
+         o valor o faria competir com a marca. Se algum dia ela voltar a
+         sobrepor texto — subir a escala além de 1.6x faz isso —, este número
+         volta para a mesa junto. */
+      opacity: 0.45;
       /* Aqui o repouso encosta na margem de conteúdo, então a fuga é a tela
          inteira. Os dois `--espaco-3` a mais não são enfeite: abaixo de
          382px o Chrome mobile reduz o zoom (o header impõe essa largura

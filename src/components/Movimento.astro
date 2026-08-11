@@ -406,8 +406,6 @@
     // folga e sem sobreposição — o intervalo entre duas entradas é a duração
     // da anterior. Trocar a ordem é trocar as janelas de lugar levando a
     // largura junto; a soma continua 1.00 e a sequência não fica mais longa.
-    // Ordem: painel (0.35) → logo (0.17) → carro (0.20) → valores (0.12) →
-    // procedência (0.16).
     //
     // REGRA DE SEGURANÇA: o CSS nasce no estado FINAL (tudo visível). Quem
     // aplica os estados iniciais é este código, e só depois de confirmar
@@ -450,10 +448,63 @@
     //
     // TESTADO E REJEITADO ANTES DESTA: dobrar a distância no mobile. Dobrar
     // espaça os solavancos, não os remove — foi cancelado sem ser aplicado.
+    // (Depois de linear a distância voltou à mesa, mas como resposta a outro
+    // sintoma: pressa, não solavanco. Ver a tabela de pesos abaixo.)
     //
     // Progresso LOCAL de uma fase, normalizado. Sem curva.
     const faseLocal = (p: number, inicio: number, fim: number) =>
       Math.min(Math.max((p - inicio) / (fim - inicio), 0), 1);
+
+    // AS JANELAS DAS FASES — uma tabela por mundo, derivadas de PESOS.
+    //
+    // Os pesos não são limiares: são durações RELATIVAS. Quem os converte em
+    // janelas é `janelas()`, normalizando pela soma — então a soma dos
+    // limiares fecha 1.00 por CONSTRUÇÃO, e não por eu ter digitado cinco
+    // decimais que por sorte somam certo. Alongar uma fase é mexer num peso;
+    // não existe a conta de "e agora corrijo os outros quatro à mão".
+    //
+    // Desktop = 35/17/20/12/16, os valores originais do CLAUDE.md, intocados.
+    //
+    // Mobile dobra as fases 2 a 5 e deixa a 1 como está: 35/34/40/24/32. A soma
+    // vira 165 contra 100, e é por isso que o trilho em ConteudoHome.astro subiu
+    // de 60 para 99svh — sem crescer a distância, alongar uma fase seria roubar
+    // janela das outras. Os dois arquivos são um par: mexer num sem o outro muda
+    // a PROPORÇÃO em vez da duração.
+    //
+    // TESTADO E REJEITADO: peso 175 na fase 1 (alongá-la 5x, trilho de 183svh).
+    // Alongar a janela do painel só o deixa mais lento que o polegar — 0.44px
+    // por pixel de dedo contra 2.20 — sem entregar movimento, porque o painel
+    // percorre a mesma tela de qualquer jeito. Ver a nota longa em
+    // ConteudoHome.astro, inclusive por que a fase 1 não é a limusine.
+    //
+    // Limiares que isto produz no mobile: 0.212121 / 0.418182 / 0.660606 /
+    // 0.806061 / 1. São frações exatas de 165 (a primeira é 7/33).
+    const PESOS_DESKTOP = [35, 17, 20, 12, 16];
+    const PESOS_MOBILE = [35, 34, 40, 24, 32];
+
+    function janelas(pesos: number[]) {
+      const total = pesos.reduce((a, b) => a + b, 0);
+      let acumulado = 0;
+      return pesos.map((peso) => {
+        const inicio = acumulado / total;
+        acumulado += peso;
+        return [inicio, acumulado / total] as [number, number];
+      });
+    }
+
+    const JANELAS_DESKTOP = janelas(PESOS_DESKTOP);
+    const JANELAS_MOBILE = janelas(PESOS_MOBILE);
+
+    // O MESMO breakpoint do CSS que controla a altura da seção (56.25rem em
+    // ConteudoHome.astro) — deliberadamente NÃO o 56rem do Lenis mais abaixo.
+    // Os dois diferem por 4px, e nessa faixa o CSS daria altura de mobile
+    // enquanto o JS daria janelas de desktop: a fase 1 ocuparia 541px em vez
+    // de 886px. Casar com quem manda na altura elimina a faixa.
+    const mqMobile = window.matchMedia('(max-width: 56.25rem)');
+    // Lido a cada quadro, não uma vez no carregamento: o scrub já relê
+    // `rect.height` sempre, então uma rotação de tela que cruze o breakpoint
+    // continua coerente. Ler `.matches` é O(1) e não força layout.
+    const janelasAtuais = () => (mqMobile.matches ? JANELAS_MOBILE : JANELAS_DESKTOP);
 
     // Guardado entre quadros: a cor da barra do topo depende de saber se o
     // painel já cobriu a tela.
@@ -508,27 +559,29 @@
       progressoHero = Math.min(Math.max(-rect.top / util, 0), 1);
       const p = progressoHero;
 
+      const [j1, j2, j3, j4, j5] = janelasAtuais();
+
       try {
         // Fase 1 — o painel entra pela direita.
-        const fPainel = faseLocal(p, 0, 0.35);
+        const fPainel = faseLocal(p, ...j1);
         heroPainel!.style.transform = `translateX(${(1 - fPainel) * 100}%)`;
 
         // Fase 2 — o logo aparece por transparência, sem deslocamento.
-        heroLogo!.style.opacity = String(faseLocal(p, 0.35, 0.52));
+        heroLogo!.style.opacity = String(faseLocal(p, ...j2));
 
         // Fase 3 — a silhueta entra de FORA da tela, pela direita.
         // O JS manda só o fator normalizado (1 = fora, 0 = no lugar); quem
         // traduz isso em distância é o CSS, em vw, porque o quanto ela
         // precisa andar depende da largura da tela e do repouso de cada
         // breakpoint. Mandar uma % daqui foi o que a deixava meio visível.
-        const fSilhueta = faseLocal(p, 0.52, 0.72);
+        const fSilhueta = faseLocal(p, ...j3);
         heroSilhueta!.style.setProperty('--silhueta-entrada', String(1 - fSilhueta));
 
         // Fase 4 — as três palavras.
-        heroValores!.style.opacity = String(faseLocal(p, 0.72, 0.84));
+        heroValores!.style.opacity = String(faseLocal(p, ...j4));
 
         // Fase 5 — a procedência entra pela esquerda, por último.
-        const fTagline = faseLocal(p, 0.84, 1);
+        const fTagline = faseLocal(p, ...j5);
         heroTagline!.style.opacity = String(fTagline);
         heroTagline!.style.transform = `translateX(${(1 - fTagline) * -40}%)`;
       } catch {
@@ -576,9 +629,18 @@
       if (!escura && temTransicaoHero) {
         const r = transicaoHero!.getBoundingClientRect();
         const cobreABarra = r.top <= alturaBarraHeader && r.bottom > alturaBarraHeader;
-        // 0.35 é o fim da fase 1: antes disso o painel claro ainda não
+        // O corte é o FIM DA FASE 1: antes disso o painel claro ainda não
         // chegou à borda esquerda e o que está sob a barra é o mundo escuro.
-        if (cobreABarra && progressoHero < 0.35) escura = true;
+        //
+        // LIDO DA MESMA TABELA que anima o painel — nunca redigitado. Era o
+        // literal `0.35`, escrito aqui e na fase 1, e as duas cópias tinham
+        // que concordar por vigilância. Agora concordam por construção: com
+        // uma tabela por breakpoint seriam QUATRO cópias do mesmo conceito, e
+        // a primeira edição que esquecesse uma delas trocaria a cor da barra
+        // no meio da entrada do painel — em um dos dois mundos, o que é
+        // justamente o tipo de defeito que só aparece no aparelho do cliente.
+        const fimDaFase1 = janelasAtuais()[0][1];
+        if (cobreABarra && progressoHero < fimDaFase1) escura = true;
       }
 
       if (escura === barraEscura) return;
