@@ -92,7 +92,31 @@ const passosOrcamento = [
       <Foto
         src={fotosLimo.tresQuartosFrontalDark2.src}
         alt={fotosLimo.tresQuartosFrontalDark2.alt}
-        posicao={fotosLimo.tresQuartosFrontalDark2.posicao}
+        {/*
+          ENQUADRAMENTO PRÓPRIO DESTA MÁSCARA, e não o `posicao` do arquivo de
+          dados. O `center bottom` de lá está certo para as máscaras retrato e
+          quase quadradas onde esta foto também aparece (mídia do menu,
+          carrossel em 4/5, páginas de região em 3/4), mas errado aqui.
+
+          A CONTA: a foto é 1600x2844 (proporção 0,563, retrato) e a máscara é
+          4/3 (1,333). Com `cover` a escala vem da LARGURA, então a altura
+          visível é 0,563 / 1,333 = 42,2% da foto — os outros 57,8% saem do
+          quadro. Com `bottom`, a janela é 57,8%→100%: pega a metade de baixo
+          do carro e o resto é pedra portuguesa.
+
+          A limousine ocupa de 48% a 72% da altura do arquivo (medido sobre a
+          foto, não estimado). Para centrar essa faixa numa janela de 42,2%, o
+          topo visível precisa ficar em 38,7%, e como `object-position` em
+          porcentagem posiciona o topo em Y × (1 − 42,2%), sai Y = 67%.
+          Janela resultante: 38,7%→80,9%, com o carro inteiro dentro e a
+          cidade ao fundo aparecendo por cima.
+
+          UM VALOR SERVE AS TRÊS LARGURAS: a proporção da máscara é fixa em
+          4/3 por `aspect-ratio`, então a fração visível não muda com a
+          viewport — medido idêntico em 390, 768 e 1440px. Não precisa de
+          media query (que aliás não venceria este style inline).
+        */}
+        posicao="center 67%"
         aspectRatio="4/3"
         prioridade
         class="reveal"
@@ -174,7 +198,18 @@ const passosOrcamento = [
     <Foto
       src={fotosLimo.lateral.src}
       alt={fotosLimo.lateral.alt}
-      posicao={fotosLimo.lateral.posicao}
+      {/*
+        Mesma razão da máscara do hero acima, e o caso é mais severo: a máscara
+        é 16/9 (1,778) contra uma foto de proporção 0,563, então a altura
+        visível é só 31,6% do arquivo. Com `bottom` a janela era 68,4%→100% —
+        sobrava o teto do carro cortado e calçada.
+
+        A limousine ocupa de 61% a 79% da altura. Centrando essa faixa na
+        janela de 31,6%: topo visível em 54,0%, Y = 54,0 / (1 − 31,6) = 79%.
+        Janela resultante: 54,0%→85,6%, carro inteiro com folga em cima e
+        embaixo.
+      */}
+      posicao="center 79%"
       aspectRatio="16/9"
       class="reveal"
     />
