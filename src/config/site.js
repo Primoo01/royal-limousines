@@ -41,9 +41,15 @@ export const site = {
   },
 
   seo: {
-    // Ainda não há foto real do cliente para servir de og:image padrão.
-    // Enquanto isso, cada página decide se envia og:image; sem valor aqui
-    // para não referenciar um arquivo inexistente.
+    // OVERRIDE MANUAL do og:image de todo o site. `null` NÃO significa mais
+    // "sem og:image": o padrão é gerado no BaseLayout, recortando a foto do
+    // hero da home para 1200x630 (o formato que Facebook e WhatsApp esperam).
+    // Ele não pode morar aqui porque esse recorte exige o astro:assets, que só
+    // funciona dentro de componente.
+    //
+    // Preencha isto apenas para apontar um arquivo pronto — caminho absoluto a
+    // partir da raiz do site, ex. '/og-royal.jpg' em public/. Uma página
+    // isolada pode passar `ogImage` direto no BaseLayout.
     imagemPadrao: null,
   },
 };

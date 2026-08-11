@@ -37,6 +37,36 @@ import grotesk500 from '@fontsource/space-grotesk/files/space-grotesk-latin-500-
 // reflui; o corpo é Grotesk 400.
 const fontesCriticas = [cormorant600, grotesk400, cormorant500, grotesk500];
 
+// OG:IMAGE PADRÃO — 1200x630 (razão 1.905), o que Facebook e WhatsApp esperam.
+//
+// A fonte é `casamentoNoivos` (Casamento1, 1600x720), a MESMA foto do hero da
+// home. Escolhida por três motivos medidos: é a única paisagem larga do
+// conjunto, então o recorte para 1200x630 corta 14% da largura e nada da
+// altura (as outras são retrato de 0.563, onde a mesma caixa decapitaria o
+// carro); mostra o produto em uso, que é o que faz alguém abrir um link
+// compartilhado; e é o que o visitante encontra ao chegar, então a prévia não
+// promete uma página diferente da que ele vê.
+//
+// Derivada aqui e não em site.js porque 1200x630 exige o astro:assets, que só
+// existe dentro de componente. A foto continua vindo do registro único
+// (fotos-limo.js) — não existe segunda cópia do arquivo.
+//
+// JPEG, não WebP: prévia de link é lida por scraper, e o do WhatsApp trata
+// WebP de forma inconsistente. `quality: 78` → 171 KB, dentro do que os
+// clientes de mensagem buscam sem cortar.
+import { getImage } from 'astro:assets';
+import { fotosLimo } from '../data/fotos-limo.js';
+
+const ogPadrao = await getImage({
+  src: fotosLimo.casamentoNoivos.src,
+  width: 1200,
+  height: 630,
+  fit: 'cover',
+  position: 'center',
+  format: 'jpeg',
+  quality: 78,
+});
+
 import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -79,7 +109,7 @@ const {
   canonicalPath,
   semCanonical = false,
   robots,
-  ogImage = site.seo.imagemPadrao,
+  ogImage = site.seo.imagemPadrao ?? ogPadrao.src,
   ogType = 'website',
   topoEscuro = false,
 } = Astro.props;
@@ -87,6 +117,10 @@ const {
 const paginaUrl = new URL(Astro.url.pathname, Astro.site);
 const canonicalUrl = canonicalPath ? new URL(canonicalPath, Astro.site) : paginaUrl;
 const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : null;
+// Largura/altura/alt só saem quando a imagem é a padrão — são as dimensões
+// DELA. Se uma página passar `ogImage` própria, declarar 1200x630 mentiria, e
+// o Facebook desenha a moldura pelo que a tag diz antes de baixar o arquivo.
+const ogPadraoEmUso = ogImage === ogPadrao.src;
 
 // JSON-LD LocalBusiness (ver CLAUDE.md > SEO técnico). Vai em TODAS as
 // páginas: é a ficha do negócio, não da página. Todos os dados vêm do
@@ -148,11 +182,22 @@ const localBusiness = {
     <meta property="og:url" content={paginaUrl} />
     <meta property="og:locale" content={site.localeOg} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    {
+      ogImageUrl && ogPadraoEmUso && (
+        <>
+          <meta property="og:image:type" content="image/jpeg" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={fotosLimo.casamentoNoivos.alt} />
+        </>
+      )
+    }
 
     <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={title} />
     {description && <meta name="twitter:description" content={description} />}
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+    {ogImageUrl && ogPadraoEmUso && <meta name="twitter:image:alt" content={fotosLimo.casamentoNoivos.alt} />}
 
     <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} />
 
