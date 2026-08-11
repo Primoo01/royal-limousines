@@ -216,12 +216,40 @@ import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
   }
 
   // Mídia do painel esquerdo (ver CLAUDE.md > Navegação): troca em crossfade
-  // no hover. São fotos, não vídeo — o carregamento sob demanda e o
-  // pause/play saíram junto com o vídeo, que foi descartado (ver
-  // menu-midia.js). O `loading="lazy"` das imagens já segura o download até
-  // o painel entrar em cena.
+  // no hover. São fotos, não vídeo (ver menu-midia.js), mas o carregamento sob
+  // demanda ficou — e é obrigatório. O comentário que estava aqui dizia que o
+  // `loading="lazy"` segurava o download até o painel entrar em cena: era
+  // falso. O overlay é `position: fixed; inset: 0`, e o lazy loading do Chrome
+  // decide pela posição de LAYOUT, não por opacity/visibility — as 6 fotos
+  // baixavam sempre, 631 KB a 390px, com o menu fechado, disputando banda com
+  // o LCP. Por isso elas nascem com data-src/data-srcset (MenuMidia.astro) e
+  // são promovidas aqui, na primeira abertura.
   const camadasMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-camada]')) : [];
   const gruposComMidia = overlay ? Array.from(overlay.querySelectorAll<HTMLElement>('[data-midia-grupo]')) : [];
+
+  // Promove data-src/data-srcset → src/srcset. Roda uma vez só: o removeAttribute
+  // marca o próprio elemento, então nem depende da flag pra ser idempotente.
+  // A ORDEM IMPORTA: srcset primeiro, src depois. Ao contrário, o navegador
+  // resolveria o `src` sozinho e baixaria o fallback de 1600px (367–709 KB)
+  // antes de ver os candidatos de 640px.
+  let midiaPromovida = false;
+
+  function promoverMidia() {
+    if (midiaPromovida || !overlay) return;
+    midiaPromovida = true;
+    overlay.querySelectorAll<HTMLImageElement>('img[data-src]').forEach((img) => {
+      const src = img.getAttribute('data-src');
+      const srcset = img.getAttribute('data-srcset');
+      if (srcset) {
+        img.setAttribute('srcset', srcset);
+        img.removeAttribute('data-srcset');
+      }
+      if (src) {
+        img.setAttribute('src', src);
+        img.removeAttribute('data-src');
+      }
+    });
+  }
 
   function ativarMidia(grupo: string) {
     camadasMidia.forEach((camada) => {
@@ -266,6 +294,9 @@ import logoHorizontal from '../assets/logo/royal-horizontal.svg?raw';
   // e o motivo do bug de clique interceptado).
   function abrirMenu() {
     if (!overlay || !botaoMenu) return;
+    // Antes de qualquer coisa: quanto mais cedo o fetch começa, menos o
+    // crossfade do primeiro hover espera.
+    promoverMidia();
     ultimoFoco = document.activeElement as HTMLElement;
     overlay.setAttribute('data-aberto', 'true');
     botaoMenu.setAttribute('aria-expanded', 'true');

@@ -5,23 +5,39 @@
 //
 // Sem vídeo: são fotos com um zoom lento e contínuo (ver menu-midia.js pra
 // por quê). O movimento é só transform, e some inteiro em reduced-motion.
-import { Image } from 'astro:assets';
+// NASCEM SEM `src`/`srcset`, e é por isso que aqui tem getImage() em vez de
+// <Image>: o overlay é `position: fixed; inset: 0`, e o lazy loading do Chrome
+// decide pela posição de LAYOUT — um elemento fixo cobrindo a viewport conta
+// como dentro da viewport, então `loading="lazy"` não adiava nada. Medido na
+// home a 390px, com o menu FECHADO: as 6 fotos disparavam juntas em 1134ms e
+// ocupavam o tubo até 5,7s, 631 KB disputando banda com o LCP. Quem promove
+// data-src → src é o abrirMenu() do Header.astro, na primeira abertura. Mesmo
+// padrão que o CLAUDE.md já manda usar no vídeo do menu.
+import { getImage } from 'astro:assets';
 import menuMidiaData from '../data/menu-midia.js';
 
-const grupos = Object.entries(menuMidiaData);
+const grupos = await Promise.all(
+  Object.entries(menuMidiaData).map(async ([chave, item]) => ({
+    chave,
+    item,
+    imagem: await getImage({ src: item.src, widths: [640, 1080], format: 'webp' }),
+  }))
+);
 ---
 
 <div class="menu-midia" data-menu-midia aria-hidden="true">
   {
-    grupos.map(([chave, item]) => (
+    grupos.map(({ chave, item, imagem }) => (
       <div class="menu-midia__camada" data-midia-camada={chave} data-ativa={chave === 'padrao' ? 'true' : 'false'}>
-        <Image
-          src={item.src}
-          alt=""
-          widths={[640, 1080]}
+        <img
+          data-src={imagem.src}
+          data-srcset={imagem.srcSet.attribute}
           sizes="(max-width: 56rem) 100vw, 40vw"
-          format="webp"
+          width={item.src.width}
+          height={item.src.height}
+          alt=""
           loading="lazy"
+          decoding="async"
           style={item.posicao ? `object-position: ${item.posicao};` : undefined}
         />
       </div>
