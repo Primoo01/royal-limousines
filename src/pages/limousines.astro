@@ -22,7 +22,7 @@ import Video360 from '../components/Video360.astro';
 // como ambiente dentro da camada de fundo (ver .fundo-dinamico no CSS).
 import CortinaDeLuz from '../components/CortinaDeLuz.astro';
 import { videos360 } from '../data/videos-360.js';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import silhuetaSedan from '../assets/fundos/300c-sedan-silhueta.png';
 import site from '../config/site.js';
 import paginas from '../data/paginas-antigas.json';
@@ -31,6 +31,35 @@ import { fichaSegura } from '../data/sedan.js';
 import { fotosGaleriaSedan } from '../data/galeria-sedan.js';
 
 const dados = paginas.paginas.find((p) => p.url === '/limousines/');
+
+// PRELOAD DO ELEMENTO LCP DESTA PÁGINA.
+//
+// Medido em 390px com Fast 3G + CPU 4x: o LCP era a foto do 300C branco, em
+// 3096ms. Ela só era DESCOBERTA em 1306ms — depois de o HTML ser parseado, o
+// CSS aplicado e o layout resolvido, porque nasceu `loading="lazy"` e
+// `fetchpriority="auto"` como todas as outras. Nesse mesmo instante seis
+// imagens da mídia do menu começam a baixar juntas e disputam o mesmo tubo:
+// a de 183 KB só terminou em 6209ms.
+//
+// Duas correções, e as duas são necessárias — uma sem a outra não resolve:
+//   1. `prioridade` na <Foto> abaixo → loading="eager" + fetchpriority="high",
+//      então ela deixa de ser adiada e passa na frente das concorrentes;
+//   2. este preload, que a torna descobrível no parse do <head>, antes de
+//      qualquer layout — é ele que corta o 1306ms de espera.
+//
+// `imagesrcset` + `imagesizes` em vez de `href`: a <Foto> emite um srcset com
+// três degraus e o navegador precisa preloadar EXATAMENTE o degrau que vai
+// usar, senão baixa duas vezes. Os widths e o format aqui têm que continuar
+// iguais aos do componente ([480, 800, larguraServida] com webp) — se algum
+// dia divergirem, o preload vira download desperdiçado.
+const lcpFoto = await getImage({
+  src: fotosLimo.tresQuartosFrontal.src,
+  widths: [480, 800, 1200],
+  format: 'webp',
+});
+// O mesmo `sizes` do padrão do componente <Foto>. Precisa bater, pelo mesmo
+// motivo acima.
+const lcpSizes = '(max-width: 56.25rem) 100vw, 50vw';
 // O backup não tinha meta description nesta página. Escrita a partir de fatos
 // reais já usados no corpo da própria página (Chrysler 300C branco, 8m, 8
 // passageiros, casamentos/aniversários/eventos, São Paulo).
@@ -39,6 +68,18 @@ const description =
 ---
 
 <BaseLayout title={dados.title} description={description}>
+  {/* Ver a nota no frontmatter: sem isto a foto do LCP só é descoberta depois
+      do layout, e já entra disputando banda com a mídia do menu. */}
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    type="image/webp"
+    imagesrcset={lcpFoto.srcSet.attribute}
+    imagesizes={lcpSizes}
+    fetchpriority="high"
+  />
+
   <section class="u-container bloco-frota reveal">
     <p class="u-eyebrow">Frota Royal Limousines</p>
     <EntradaTitulo as="h1">Limousine | Aluguel de Limousine</EntradaTitulo>
@@ -60,6 +101,10 @@ const description =
         alt={fotosLimo.tresQuartosFrontal.alt}
         posicao={fotosLimo.tresQuartosFrontal.posicao}
         aspectRatio="4/3"
+        {/* É o elemento LCP desta página (medido). `prioridade` troca
+            loading=lazy por eager e fetchpriority=auto por high; o preload
+            no <head> acima é a outra metade da correção. */}
+        prioridade
         class="reveal"
       />
       <div>
