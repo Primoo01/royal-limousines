@@ -5,6 +5,38 @@ import '@fontsource/space-grotesk/400.css';
 import '@fontsource/space-grotesk/500.css';
 import '../styles/global.css';
 
+// PRELOAD DOS 4 SUBSETS QUE O SITE REALMENTE USA.
+//
+// O @fontsource declara 16 @font-face (5 subsets para Cormorant, 3 para Space
+// Grotesk), mas o `unicode-range` faz só os latinos serem baixados — medido:
+// os 12 restantes (cyrillic, cyrillic-ext, vietnamese, latin-ext) nunca são
+// requisitados. Preload de fonte não usada é banda gasta e atraso no que
+// importa, então só estes quatro entram. `font-display: swap` continua no CSS
+// do @fontsource, intocado.
+//
+// O QUE ISTO RESOLVE: o CSS é inline, mas as fontes só são DESCOBERTAS quando
+// o navegador aplica esse CSS e encontra um elemento que precisa delas —
+// medido em ~670ms com Fast 3G. Daí o texto passa ~600ms na fonte de fallback
+// na mediana, e é essa troca que produz o CLS registrado no site.
+//
+// O QUE ISTO CUSTA, medido e aceito por decisão do cliente: os quatro
+// arquivos têm prioridade alta e disputam banda com o próprio HTML, que é
+// onde mora o CSS inline de 55 KB. Na home em 390px, com Fast 3G + CPU 4x e
+// n=9, o FCP foi de 816ms para 2120ms. Sem throttling não há penalidade
+// (276 → 244ms). Reduzir para 2 preloads não recuperou o FCP.
+//
+// `?url` faz o Vite devolver o caminho final com hash, o mesmo que o
+// @font-face vai pedir — caminho escrito à mão erraria o hash e baixaria o
+// arquivo duas vezes.
+import cormorant500 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-500-normal.woff2?url';
+import cormorant600 from '@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url';
+import grotesk400 from '@fontsource/space-grotesk/files/space-grotesk-latin-400-normal.woff2?url';
+import grotesk500 from '@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2?url';
+
+// Ordem = ordem de necessidade na tela: o <h1> é Cormorant 600 e é ele que
+// reflui; o corpo é Grotesk 400.
+const fontesCriticas = [cormorant600, grotesk400, cormorant500, grotesk500];
+
 import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -78,6 +110,18 @@ const localBusiness = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f4f1eb" />
+
+    {/*
+      Antes de qualquer outra coisa buscável no <head>: o preload só vale se a
+      requisição sair cedo. `crossorigin` é OBRIGATÓRIO em preload de fonte,
+      mesmo com o arquivo no mesmo domínio — sem ele o navegador busca num modo
+      diferente do que o @font-face vai usar e baixa tudo DUAS vezes. Ver a
+      nota no frontmatter sobre por que só 4 dos 16 subsets.
+    */}
+    {fontesCriticas.map((href) => (
+      <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+    ))}
+
     {/*
       Favicon. A ORDEM IMPORTA: o PNG vem primeiro e o SVG depois, porque
       navegador que entende os dois fica com a última declaração que
