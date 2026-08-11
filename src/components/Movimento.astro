@@ -421,11 +421,39 @@
 
     const temTransicaoHero = !!(transicaoHero && heroPainel && heroSilhueta && heroLogo && heroTagline && heroValores);
 
-    // power3.out — o mesmo easing do resto do site.
-    const suavizar = (t: number) => 1 - Math.pow(1 - t, 3);
-    // Progresso LOCAL de uma fase, normalizado e suavizado.
+    // SEM EASING — linear, de propósito. Aqui o eixo é o dedo, não o relógio.
+    //
+    // Era `power3.out` (1 − (1−t)³), o easing do resto do site. Numa animação
+    // por TEMPO ele é o certo: a desaceleração lê como peso. Num SCRUB ele é o
+    // oposto do que se quer, porque a derivada dele é 3(1−t)²:
+    //
+    //   t=0.00 → 3.00x da velocidade média   t=0.50 → 0.75x
+    //   t=0.25 → 1.69x                       t=1.00 → 0.00x
+    //
+    // Ou seja: cada fase EXPLODIA no primeiro pixel de scroll e morria antes de
+    // a janela acabar. Medido na fase 1 (painel) em 390x844: percurso de 390px
+    // numa janela de 177px = 2.20x de ganho médio, 6.60x no arranque — o painel
+    // opaco de tela cheia saltava ~6.6px por pixel de dedo. No desktop o pico
+    // era ainda maior (9.14x), mas o Lenis o dissolvia antes de virar pixel.
+    //
+    // E as fases são encostadas, então cada junção era uma DESCONTINUIDADE de
+    // velocidade: a anterior chegava a 0.00x e a seguinte partia de 3.00x.
+    // Cinco solavancos em posições fixas do trilho (p = 0, 0.35, 0.52, 0.72,
+    // 0.84), atravessados um a um por quem rola devagar. Era esse o
+    // arranca-freia.
+    //
+    // Linear não é ausência de decisão: é a única curva em que px de scroll
+    // vira px de movimento na mesma proporção do começo ao fim, e em que as
+    // junções não têm degrau. O amortecimento continua vindo do Lenis no
+    // desktop; no mobile (onde o Lenis não roda) a leitura do dedo agora entra
+    // crua numa curva que não a amplifica.
+    //
+    // TESTADO E REJEITADO ANTES DESTA: dobrar a distância no mobile. Dobrar
+    // espaça os solavancos, não os remove — foi cancelado sem ser aplicado.
+    //
+    // Progresso LOCAL de uma fase, normalizado. Sem curva.
     const faseLocal = (p: number, inicio: number, fim: number) =>
-      suavizar(Math.min(Math.max((p - inicio) / (fim - inicio), 0), 1));
+      Math.min(Math.max((p - inicio) / (fim - inicio), 0), 1);
 
     // Guardado entre quadros: a cor da barra do topo depende de saber se o
     // painel já cobriu a tela.
