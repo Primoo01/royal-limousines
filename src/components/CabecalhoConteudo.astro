@@ -84,9 +84,12 @@ const { eyebrow, titulo, apoio, linha = 'curva' } = Astro.props;
     margin-top: var(--espaco-2);
   }
 
-  /* Cor de texto normal, não a atenuada: esta linha é conteúdo, não legenda.
-     Com --texto-mut media 3,26:1 sobre o fundo claro, abaixo dos 4,5:1
-     exigidos para texto (ver auditoria). */
+  /* Cor de texto normal, não a atenuada: esta linha é CONTEÚDO, não legenda —
+     é a frase de apoio do <h1>, e ela sustenta a hierarquia do cabeçalho.
+     O motivo original também citava contraste: --texto-mut dava 3,26:1 sobre o
+     fundo claro. Esse argumento caiu — a variável foi escurecida para #656158
+     e hoje dá 5,47:1, passando no AA. A escolha continua sendo --texto, agora
+     por hierarquia e só por isso. */
   .cabecalho-conteudo__apoio {
     margin-top: var(--espaco-3);
     max-width: 44ch;
