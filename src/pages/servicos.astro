@@ -4,6 +4,7 @@
 // festas debutantes) e do fato real "São Paulo" já usado em outras páginas.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Foto from '../components/Foto.astro';
+import { getImage } from 'astro:assets';
 import { fotosLimo } from '../data/fotos-limo.js';
 import Botao from '../components/Botao.astro';
 import CabecalhoConteudo from '../components/CabecalhoConteudo.astro';
@@ -55,9 +56,38 @@ const servicos = [
     ],
   },
 ];
+
+// PRELOAD DA FOTO DO LCP — a do PRIMEIRO cartão. Mesmo padrão da /limousines/:
+// o `prioridade` no <Foto> dá eager + fetchpriority=high, mas a descoberta
+// continua esperando o CSS resolver. O preload é o que antecipa a requisição
+// para o parse do <head>. Medido antes: descoberta em 977ms, LCP em 1936ms,
+// com as duas fotos de baixo da dobra (106 + 43 KB) dividindo banda.
+//
+// `widths` e `format` têm que ser IDÊNTICOS aos que o <Foto> gera, senão o
+// navegador baixa o arquivo DUAS vezes. Este cartão passa larguraServida={800}
+// e não passa `larguras`, então o componente usa [480, 800, larguraServida] —
+// é essa lista, com o 800 repetido, que se reproduz aqui de propósito.
+const lcpFoto = await getImage({
+  src: servicos[0].imagem.src,
+  widths: [480, 800, 800],
+  format: 'webp',
+});
+// O `sizes` padrão do <Foto>, que este cartão não sobrescreve. Também precisa
+// bater exatamente, pelo mesmo motivo.
+const lcpSizes = '(max-width: 56.25rem) 100vw, 50vw';
 ---
 
 <BaseLayout title={dados.title} description={description}>
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    type="image/webp"
+    imagesrcset={lcpFoto.srcSet.attribute}
+    imagesizes={lcpSizes}
+    fetchpriority="high"
+  />
+
   {/*
     Linha de apoio realocada: era o parágrafo de lead logo abaixo do h1,
     palavra por palavra. Saiu do corpo e virou a linha do cabeçalho.
@@ -75,7 +105,7 @@ const servicos = [
   <section class="u-container secao-servicos reveal">
     <div class="secao-servicos__grade reveal-grupo">
       {
-        servicos.map((servico) => (
+        servicos.map((servico, i) => (
           <article class="servico-card">
             <Foto
               src={servico.imagem.src}
@@ -85,6 +115,13 @@ const servicos = [
               posicao={servico.posicao ?? servico.imagem.posicao}
               aspectRatio="16/9"
               larguraServida={800}
+              {/* SÓ O PRIMEIRO CARTÃO. Medido a 390px: ele nasce com o topo em
+                  506px, DENTRO da viewport de 844, e é o elemento LCP da
+                  página. Nascia `loading="lazy"` — lazy numa imagem da
+                  primeira tela — e a descoberta só acontecia em 977ms, depois
+                  do layout. Os outros dois cartões ficam em 974 e 1492px e
+                  continuam lazy, corretamente. */}
+              prioridade={i === 0}
             />
             <h2>{servico.titulo}</h2>
             <ul>
