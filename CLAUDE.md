@@ -75,6 +75,30 @@ O backup é um espelho feito com wget. Cada página virou uma pasta com um `inde
 - Nenhuma imagem servida acima de 1600px de largura
 - Formato de imagem: WebP/AVIF via `astro:assets`
 
+#### Como declarar um alvo de performance
+
+**Alvo sem ferramenta, throttling e elemento LCP declarados não é alvo — é
+discussão.** "LCP abaixo de 2,5s" não quer dizer nada sozinho: o mesmo build
+mediu 1,2s, 3,0s e 9,1s conforme o método, e em duas dessas leituras o elemento
+LCP nem era o mesmo. Comparar números de elementos diferentes não mede nada.
+
+Um alvo deste projeto declara as quatro coisas:
+
+1. **Ferramenta e modo.** Lighthouse simulado (Lantern) é um MODELO, não uma
+   medição — use só para comparar com ele mesmo ao longo do tempo, nunca como
+   alvo. Para alvo, harness com throttling real ou `--throttling-method=devtools`.
+2. **Throttling e viewport.** O padrão daqui é Fast 3G + CPU 4x a 390px.
+3. **Elemento LCP.** Registre qual é. Se ele muda entre execuções, essas
+   execuções não entram na mediana — e a mudança é o achado, não um detalhe.
+4. **Número de execuções e a mediana.** Uma execução só não decide: já foi
+   medida amplitude de 2464 a 4492ms na mesma página, mesmo build.
+
+**Sirva COM gzip ao medir.** O `http-server` não comprime; Vercel e Cloudflare
+comprimem. Medir sem compressão já inventou aqui um CLS de 0,1653 que não
+existe em produção (o real é 0,0427) e quase trocou o inline do CSS por uma
+folha externa que custava 300-380ms de first-paint em toda página. Há um
+servidor com gzip no scratchpad para isso.
+
 ---
 
 ## Mapa de páginas
@@ -526,9 +550,31 @@ As 8 páginas de serviço/região não podem ficar órfãs. No site antigo o men
 
 ---
 
-## Mídia pesada (vídeo)
+## Mídia pesada (vídeo e imagem)
 
 O site tem orçamento de JS de 25 KB e não pode ser traído por mídia.
+
+### Mídia dentro de camada fixa não pode nascer com `src`
+
+**Qualquer elemento `position: fixed` cobrindo a viewport é "visível" para o
+lazy loading e para o `IntersectionObserver`, independente de `opacity`,
+`visibility` ou `transform`.** Os dois decidem pela posição de LAYOUT, e um
+elemento fixo em `inset: 0` ocupa a tela inteira mesmo invisível.
+
+Consequência: **mídia dentro dele não pode nascer com `src`** — nem com
+`loading="lazy"`, que ali não adia nada. Ela nasce com `data-src`/`data-srcset`
+e o handler que abre a camada promove os atributos na primeira abertura,
+marcando o elemento para não repetir. Ao promover, **`srcset` antes de `src`**:
+na ordem inversa o navegador resolve o `src` sozinho e baixa o fallback de
+largura cheia antes de ver os candidatos.
+
+Vale para o overlay do menu, o preloader e qualquer camada futura. Medido no
+overlay do menu: 6 fotos, 631 KB, baixando em toda página com o menu fechado.
+
+Isso também vale ao contrário, para o `IntersectionObserver`: um observer sobre
+elemento dentro de camada fixa dispara com a camada fechada.
+
+### Vídeo
 
 - **Vídeo no menu é permitido** porque só carrega quando o menu abre. Use `preload="none"`, e inicie o carregamento apenas na primeira abertura.
 - Todo vídeo: `muted`, `loop`, `playsinline`, sem controles, sem áudio, com `poster` de imagem leve.
