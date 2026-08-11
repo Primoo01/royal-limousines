@@ -41,16 +41,32 @@ export const site = {
   },
 
   seo: {
-    // OVERRIDE MANUAL do og:image de todo o site. `null` NÃO significa mais
-    // "sem og:image": o padrão é gerado no BaseLayout, recortando a foto do
-    // hero da home para 1200x630 (o formato que Facebook e WhatsApp esperam).
-    // Ele não pode morar aqui porque esse recorte exige o astro:assets, que só
-    // funciona dentro de componente.
+    // OG:IMAGE DO SITE INTEIRO — 1200x630, o formato que Facebook e WhatsApp
+    // esperam. Fonte: src/assets/limo/Casamento1.jpg (a foto do hero da home,
+    // única paisagem larga do conjunto — as outras são retrato e a caixa
+    // 1200x630 decapitaria o carro).
     //
-    // Preencha isto apenas para apontar um arquivo pronto — caminho absoluto a
-    // partir da raiz do site, ex. '/og-royal.jpg' em public/. Uma página
-    // isolada pode passar `ogImage` direto no BaseLayout.
-    imagemPadrao: null,
+    // MORA EM public/ E NÃO EM src/assets/, de propósito: prévia de link
+    // precisa de URL estável. Um derivado do astro:assets carrega hash no
+    // nome, e o hash muda quando a foto de origem muda — todo link já
+    // compartilhado no WhatsApp passaria a apontar para um arquivo que não
+    // existe mais. Em public/ o caminho é literal e sobrevive a rebuilds.
+    //
+    // Gerada com sharp: fit 'cover', position sharp.strategy.attention,
+    // jpeg({ quality: 95, mozjpeg: true }) = 296 KB. O 95 é o teto abaixo de
+    // 300 KB; 96 salta para 342 KB. JPEG e não WebP porque o scraper do
+    // WhatsApp trata WebP de forma inconsistente.
+    //
+    // Para REGERAR depois de trocar a foto de origem, repita exatamente esses
+    // parâmetros — e confira o recorte com o olho antes de commitar, porque o
+    // `attention` decide sozinho onde cortar.
+    imagemPadrao: '/og-royal.jpg',
+    imagemPadraoLargura: 1200,
+    imagemPadraoAltura: 630,
+    imagemPadraoTipo: 'image/jpeg',
+    // Descreve o RECORTE que foi para o arquivo, não a foto inteira.
+    imagemPadraoAlt:
+      'Noivos ao lado da limousine Chrysler 300C branca em festa de casamento ao ar livre em São Paulo',
   },
 };
 
