@@ -5,6 +5,7 @@ import '@fontsource/space-grotesk/400.css';
 import '@fontsource/space-grotesk/500.css';
 import '../styles/global.css';
 
+import Preloader from '../components/Preloader.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppButton from '../components/WhatsAppButton.astro';
@@ -111,9 +112,68 @@ const localBusiness = {
 
     <script type="application/ld+json" set:html={JSON.stringify(localBusiness)} />
 
+    {/*
+      PRELOADER — decisão e timeout. `is:inline` e no <head> de propósito: o
+      Astro não deve processar nem mover este bloco, e ele precisa rodar antes
+      do primeiro paint, senão a camada apareceria DEPOIS de a página já estar
+      na tela, que é pior que não ter camada nenhuma.
+
+      Três garantias, nesta ordem:
+
+      1. QUEM ESCONDE É O JS. O CSS do Preloader nasce com a camada ausente
+         (opacity 0 + visibility hidden); só a classe `preloader-ativo` a liga.
+         Com JS desligado a classe nunca é escrita e a página entra normal.
+
+      2. reduced-motion nem liga a camada. Sai antes de escrever a classe, em
+         vez de ligar e revelar em seguida — ligar para desligar no quadro
+         seguinte é justamente o flash que se quer evitar.
+
+      3. O TIMEOUT É INDEPENDENTE. `setTimeout(revelar, 800)` está solto, fora
+         de qualquer callback, promise ou listener. Se `document.fonts` não
+         existir, lançar, ou nunca resolver, a página aparece aos 800ms de
+         qualquer forma. O caminho das fontes só ANTECIPA a revelação; ele
+         nunca é a única via.
+
+      Só na primeira visita da SESSÃO: navegação interna não repete. Em modo
+      privado onde sessionStorage lança, mostra e não persiste — o custo de
+      errar para o lado de mostrar é 800ms, e para o outro lado é uma tela
+      preta permanente.
+    */}
+    <script is:inline>
+      (function () {
+        var raiz = document.documentElement;
+
+        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        try {
+          if (sessionStorage.getItem('royal:preloader') === 'visto') return;
+          sessionStorage.setItem('royal:preloader', 'visto');
+        } catch (e) {}
+
+        raiz.classList.add('preloader-ativo');
+
+        var revelado = false;
+        function revelar() {
+          if (revelado) return;
+          revelado = true;
+          raiz.classList.remove('preloader-ativo');
+        }
+
+        // A rede de segurança. Não mexa nisto sem reler a nota acima.
+        setTimeout(revelar, 800);
+
+        // Exposto para o caminho rápido, no fim do <body> — lá o CSS já foi
+        // parseado e as @font-face existem. Perguntar por elas aqui devolveria
+        // "pronto" na hora, porque a família ainda não estaria declarada, e a
+        // camada piscaria sem nunca esperar nada.
+        window.__royalRevelarPreloader = revelar;
+      })();
+    </script>
+
     <slot name="head" />
   </head>
   <body>
+    <Preloader />
     <Header />
     <main>
       <slot />
@@ -121,5 +181,31 @@ const localBusiness = {
     <Footer />
     <WhatsAppButton />
     <Movimento />
+
+    {/*
+      CAMINHO RÁPIDO do preloader: revela assim que as duas fontes de fato
+      usadas estiverem carregadas, em vez de esperar os 800ms cheios.
+
+      Aqui no fim do <body> as @font-face já foram parseadas — pedir por elas
+      no <head> devolveria "pronto" imediatamente, porque a família ainda não
+      existiria. `document.fonts.load` pede as faces por nome, ao contrário de
+      `document.fonts.ready`, que resolve quando nada está pendente (medido:
+      ~600ms, antes de qualquer layout ter acontecido) e por isso não serve
+      como sinal.
+
+      Nada aqui é obrigatório: se este bloco não rodar, o timeout do <head>
+      revela sozinho.
+    */}
+    <script is:inline>
+      (function () {
+        var revelar = window.__royalRevelarPreloader;
+        if (!revelar) return;
+        if (!document.fonts || !document.fonts.load) return revelar();
+        Promise.all([
+          document.fonts.load('600 1em "Cormorant Garamond"'),
+          document.fonts.load('400 1em "Space Grotesk"'),
+        ]).then(revelar, revelar);
+      })();
+    </script>
   </body>
 </html>

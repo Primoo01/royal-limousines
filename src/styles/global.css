@@ -95,6 +95,10 @@
                               de propósito: o botão de menu mora dentro do
                               header, e precisa continuar clicável com o
                               menu aberto — ver Header.astro)
+       5. --z-preloader    → camada da primeira visita (ver Preloader.astro).
+                              Acima de tudo, inclusive do header: ela cobre a
+                              tela inteira por no máximo 800ms e não pode ter
+                              nada por cima.
 
      Invertido em relação à primeira versão desta escala: o header por cima
      do overlay era a única forma de manter o botão de menu clicável sem
@@ -110,6 +114,7 @@
   --z-whatsapp: 40;
   --z-menu: 50;
   --z-header: 100;
+  --z-preloader: 200;
 
   color-scheme: light;
 }
@@ -643,9 +648,13 @@ p + p {
 /* ---------------------------------------------------------------- */
 /* Silhueta de fundo — desenho técnico do carro, decorativo           */
 /* ---------------------------------------------------------------- */
-/* Metade direita, sangrando pela borda (52% + 62% = 114% da largura),
-   atrás de tudo e sem capturar ponteiro. O contêiner precisa ser
-   position: relative + overflow: hidden.
+/* Metade direita, atrás de tudo e sem capturar ponteiro. O contêiner
+   precisa ser position: relative.
+   Estes são os valores BASE. Quem usa a classe pode ajustá-los, e ajusta:
+   o Hero 2 troca o `left` (ConteudoHome.astro) e a seção do sedan troca a
+   `width` no desktop (limousines.astro) para caber inteira sem recorte.
+   O `overflow: hidden` do contêiner é necessário só onde a arte sangra de
+   propósito — no sticky do Hero 2 e na versão mobile do sedan.
 
    A arte do sedan vem com fundo chapado quase preto, e `screen` faz ele
    sumir no mundo escuro, sobrando só o traço.
@@ -658,9 +667,19 @@ p + p {
   position: absolute;
   z-index: 0;
   top: 50%;
-  /* 56% + 60% = 116%: começa depois da coluna de texto (que termina em
-     40rem) e ainda sangra 16% pela borda direita. Em 52% o desenho tocava
-     os últimos 16px das linhas mais longas da seção do sedan. */
+  /* CORREÇÃO DE UM COMENTÁRIO ERRADO QUE MOROU AQUI: dizia que a arte
+     "começa depois da coluna de texto (que termina em 40rem)". Não começa.
+     Medido na seção do sedan, o primeiro traço da arte cai ANTES do último
+     glifo da linha mais longa — 3px em 1920px, 14px em 1440px e 67px em
+     1024px de largura.
+     Isso não vira texto sobre desenho porque as duas faixas não coincidem na
+     VERTICAL: o traço mais à esquerda é a ponta do para-choque, numa altura
+     onde não há linha de texto. Conferido amostrando os pixels reais sob cada
+     caixa de texto — o pior fundo é #020202 puro, ou seja nenhum traço embaixo
+     de nenhum glifo, com 16,85:1 de contraste no texto claro e 8,63:1 nos
+     rótulos dourados.
+     O 52% que o comentário antigo citava era uma tentativa anterior, em que o
+     desenho realmente tocava as linhas mais longas. */
   left: 56%;
   width: 60%;
   height: auto;

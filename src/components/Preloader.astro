@@ -1,0 +1,96 @@
+---
+// Preloader da primeira visita da sessão.
+//
+// A REGRA QUE MANDA AQUI: o esconder vem de JS, nunca de CSS estático. O
+// estado base desta camada é AUSENTE (opacity 0 + visibility hidden), e quem
+// a liga é a classe `preloader-ativo` no <html>, escrita pelo script inline do
+// <head> (ver BaseLayout). Com JS desligado a classe nunca aparece e a página
+// entra normal — sem overlay, sem tela preta, sem nada.
+//
+// E o timeout de 800ms mora num setTimeout independente, fora de qualquer
+// callback: se `document.fonts` falhar, não existir ou nunca resolver, a
+// página aparece de todo jeito. Ver a nota no BaseLayout.
+//
+// A coroa é o mesmo arquivo do favicon compacto, inline por `?raw` para que o
+// fill herde a cor do CSS daqui (o arquivo vem com fill="white").
+import coroa from '../assets/logo/favicon-compact.svg?raw';
+---
+
+<!--
+  `aria-hidden` e sem texto: é uma camada decorativa de 800ms no máximo. Anunciar
+  "carregando" a leitor de tela só atrapalharia — o conteúdo real já está no DOM
+  por baixo, e é ele que o leitor percorre.
+-->
+<div class="preloader" data-preloader role="presentation" aria-hidden="true">
+  <span class="preloader__coroa" set:html={coroa} />
+</div>
+
+<style>
+  /* ESTADO BASE = AUSENTE. Não é `display: none` porque a saída é uma
+     transição de opacidade, e display não transiciona. `visibility` entra
+     junto para a camada não capturar clique nem foco quando invisível. */
+  .preloader {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-preloader);
+    display: grid;
+    place-items: center;
+    background-color: #141210;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), visibility 0.35s;
+  }
+
+  /* Ligada só pelo script do <head>, e só na primeira visita da sessão. */
+  :global(html.preloader-ativo) .preloader {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .preloader__coroa {
+    display: block;
+    width: 68px;
+    color: var(--ouro-escuro);
+    animation: preloader-respirar var(--preloader-dur, 1.6s) ease-in-out infinite;
+  }
+
+  /* O SVG entra por set:html, então precisa de :global. O arquivo vem com
+     fill="white" em cada forma; sobrescrevo para a cor da marca no mundo
+     escuro, que é onde esta camada vive. */
+  .preloader__coroa :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .preloader__coroa :global(path) {
+    fill: currentColor;
+  }
+
+  /* Não é spinner: é a marca respirando. Só opacity, composta na GPU. */
+  @keyframes preloader-respirar {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* NÃO travo o scroll enquanto a camada está ativa, de propósito:
+     `overflow: hidden` em <html> ou <body> mata o `position: sticky` da
+     transição Hero 1 → Hero 2 (ver CLAUDE.md). São 800ms no máximo, a camada
+     é fixed e cobre tudo — rolar por baixo dela não tem consequência. */
+
+  @media (prefers-reduced-motion: reduce) {
+    .preloader {
+      transition: none;
+    }
+
+    .preloader__coroa {
+      animation: none;
+      opacity: 1;
+    }
+  }
+</style>
