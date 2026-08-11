@@ -46,6 +46,14 @@ export const fotosLimo = {
   // proporção 2.22) entrando num contêiner bem mais estreito — o `cover`
   // preserva só uma faixa da largura, então o recorte NÃO pode ser central.
   //
+  // O arquivo foi refeito a partir de `Casamento1-hd.png` (3064x1376), que
+  // substituiu um original que já vinha em 1600x720 e mole: medido pela
+  // variância laplaciana, o mesmo recorte em 1600 saltou de 1257 para 2543,
+  // o dobro de detalhe fino. As dimensões e a proporção são as MESMAS de
+  // antes de propósito — o enquadramento do hero (object-position: 22%) e o
+  // recorte no carrossel dependem delas, e mudá-las moveria os dois.
+  // Mesmo nome base serve os dois lugares: hero e carrossel (galeria-limo.js).
+  //
   // SEM `posicao` de propósito: aqui o recorte depende do breakpoint (a
   // janela vai de 880px da origem no desktop para 576px abaixo de 900px),
   // e `posicao` viraria style inline, que venceria a media query. Quem
