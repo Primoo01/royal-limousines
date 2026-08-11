@@ -386,9 +386,15 @@ const passos = [
     /* Desce o bloco inteiro — h1, lead, botões e a nota — de uma vez, pelo
        contêiner que já os agrupa. `transform` e não `margin`: com
        `align-self: center` a margem seria redistribuída pela centralização
-       e o deslocamento sairia pela metade. Assim são 90px exatos, e o
-       marquee (irmão, fora deste bloco) não se mexe. */
-    transform: translateY(90px);
+       e o deslocamento sairia pela metade. Assim são 40px exatos, e o
+       marquee (irmão, fora deste bloco) não se mexe.
+
+       ERA 90px. Subiu 50 mudando ESTE valor, não empilhando margem negativa
+       por cima — o deslocamento continua tendo uma origem só. Com 90px a nota
+       "SÃO PAULO E REGIÃO" entrava 26px por dentro do marquee (medido, era a
+       pendência aberta do commit e8865d7); com 40px sobram 24px de folga
+       entre as duas. */
+    transform: translateY(40px);
   }
 
   .hero-estagio1__topo h1 {
@@ -972,11 +978,14 @@ const passos = [
 
     .hero-estagio1__topo {
       order: 1;
-      /* Os 50px do desktop não valem aqui. Medido: no empilhado do mobile
-         eles jogam "SÃO PAULO E REGIÃO" 10px por dentro do marquee, que
-         no desktop fica no rodapé da seção mas aqui vem logo abaixo do
-         bloco de texto. Os botões continuariam dentro da dobra (sobram
-         300px em 390), então não é a dobra que impede — é a colisão. */
+      /* O deslocamento do desktop não vale aqui — nem os 90px de antes, nem os
+         40px de agora. Medido: no empilhado do mobile ele joga "SÃO PAULO E
+         REGIÃO" por dentro do marquee, que no desktop fica no rodapé da seção
+         mas aqui vem logo abaixo do bloco de texto. Os botões continuariam
+         dentro da dobra (sobram 300px em 390), então não é a dobra que
+         impede — é a colisão.
+         (O comentário anterior dizia "os 50px do desktop"; o valor nunca foi
+         50, era 90. Corrigido junto com a redução para 40.) */
       transform: none;
       /* Sem tela cheia e sem centralização vertical: era daí que vinha o
          vazio grande e variável entre o header e o h1. O bloco agora
