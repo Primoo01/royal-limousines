@@ -50,6 +50,15 @@ export const fotosGaleriaSedan = [
     imagem: arquivo('Interna-tras'),
     alt: 'Interior do Chrysler 300C preto visto do banco traseiro, com o teto solar aberto',
   },
+  // Entrou junto com o seletor de dois carros do hero da home, e está aqui
+  // para a regra do topo deste arquivo continuar verdadeira: TODAS as fotos de
+  // src/assets/sedan-preto/ entram no carrossel, nenhuma fica de fora. É o
+  // mesmo padrão da limousine, cujas duas fotos de hero (Casamento1 e
+  // casamento2) também aparecem no carrossel dela.
+  {
+    imagem: arquivo('tres-quartos-traseira-garagem'),
+    alt: 'Chrysler 300C preto visto de trás em três quartos, estacionado em uma garagem de concreto ao fim da tarde',
+  },
 ];
 
 export default fotosGaleriaSedan;

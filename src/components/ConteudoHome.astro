@@ -4,12 +4,13 @@
 // sóbrio, inspirado na /lp-limousine/, mas toda frase com palavra-chave do
 // backup original foi preservada — ver comparação de keywords no relatório
 // da etapa. A seção "Segurança e confiança" é nova aqui: existia só na LP.
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Foto from './Foto.astro';
 import Carrossel from './Carrossel.astro';
 import Video360 from './Video360.astro';
 import { videos360 } from '../data/videos-360.js';
 import { fotosLimo } from '../data/fotos-limo.js';
+import { fotosSedan } from '../data/fotos-sedan.js';
 import { fotosGaleriaLimo } from '../data/galeria-limo.js';
 import silhuetaLimo from '../assets/fundos/300c-limo-silhueta-2.png';
 // Arte de fundo da seção de abertura. Vem da pasta de origem na raiz e
@@ -21,6 +22,96 @@ import Marquee from './Marquee.astro';
 import Botao from './Botao.astro';
 import EntradaTitulo from './EntradaTitulo.astro';
 import site from '../config/site.js';
+
+// ---------------------------------------------------------------------------
+// SELETOR DE DOIS CARROS DO HERO 1
+// ---------------------------------------------------------------------------
+// Quatro imagens, não duas. Cada carro tem a CHEIA (o palco) e a FRESTA (a
+// faixa clicável que mostra o outro carro).
+//
+// A fresta é uma DERIVADA RECORTADA na proporção da faixa — nunca a imagem
+// cheia encolhida por CSS. `fit: 'cover'` + `width`/`height` no getImage faz o
+// recorte no build (suportado pelo serviço sharp do Astro), então o arquivo
+// que chega ao navegador já tem a forma da faixa e nenhum pixel viaja para ser
+// descartado no `object-fit`.
+//
+// Os degraus são 1x e 2x da faixa REAL medida no CSS abaixo:
+//   vertical  (desktop, ao lado do palco): 160 x 582 CSS px
+//   horizontal (mobile, no pé do palco):   450 x  75 CSS px
+//
+// Por que o 2x da vertical para no que para: a foto do sedan tem 820x954, e
+// 320x1164 pede 1.22x de ampliação. Numa faixa decorativa de 160px isso não é
+// perceptível; ampliar mais seria. Ver a nota de resolução em fotos-sedan.js.
+const FRESTA = {
+  vertical: [
+    { w: 160, h: 582 },
+    { w: 320, h: 1164 },
+  ],
+  horizontal: [
+    { w: 450, h: 75 },
+    { w: 900, h: 150 },
+  ],
+};
+
+// DEGRAU QUE A FONTE NÃO ALCANÇA É DESCARTADO, não encolhido.
+//
+// O serviço do Astro não amplia além do original, mas TAMBÉM não avisa: pedir
+// 900x150 de uma foto com 820px de largura devolve um arquivo 820x150 — e o
+// `attributes.width` do getImage continua dizendo 900, porque ele reflete o
+// que foi PEDIDO. Escrever "900w" no srcset seria mentir para o navegador:
+// num aparelho de 450 CSS px em DPR 2 ele escolheria esse candidato esperando
+// 900px, receberia 820 e ampliaria de novo — exatamente o que a fresta existe
+// para evitar.
+//
+// Pior: com a largura capada e a altura não, a proporção do arquivo muda
+// (5.47 em vez de 6.00) e o `cover` passa a recortar num lugar que ninguém
+// escolheu.
+//
+// Então o teste é nas DUAS dimensões, e o degrau que não couber sai fora. A
+// consequência real: a foto do sedan (820x954) só sustenta o degrau 1x das
+// duas frestas. É a limitação de resolução aceita pelo cliente aparecendo
+// aqui — ver a nota em fotos-sedan.js.
+async function recortarFresta(src, degraus) {
+  const cabem = degraus.filter(({ w, h }) => w <= src.width && h <= src.height);
+  const usados = cabem.length ? cabem : [degraus[0]];
+
+  const gerados = await Promise.all(
+    usados.map(({ w, h }) => getImage({ src, width: w, height: h, fit: 'cover', position: 'center', format: 'webp', quality: 72 }))
+  );
+
+  return {
+    src: gerados[0].src,
+    srcset: gerados.map((g, i) => `${g.src} ${usados[i].w}w`).join(', '),
+    // Dimensões do 1x, para o `width`/`height` do <img>: elas só existem para
+    // reservar a caixa e evitar CLS, e a caixa é a do CSS.
+    largura: usados[0].w,
+    altura: usados[0].h,
+  };
+}
+
+const [frestaLimoV, frestaLimoH, frestaSedanV, frestaSedanH] = await Promise.all([
+  recortarFresta(fotosLimo.casamentoNoivos.srcRetrato, FRESTA.vertical),
+  recortarFresta(fotosLimo.casamentoNoivos.src, FRESTA.horizontal),
+  recortarFresta(fotosSedan.heroGaragem.src, FRESTA.vertical),
+  recortarFresta(fotosSedan.heroGaragem.src, FRESTA.horizontal),
+]);
+
+// A CHEIA DO SEDAN. Não usa <Foto> porque precisa nascer sem `src`: ela é a
+// única imagem grande da página que NÃO deve competir com o LCP. Quem a
+// promove é o script do fim deste arquivo, em requestIdleCallback DEPOIS do
+// load — assim o clique na fresta já encontra a imagem em cache e parece
+// instantâneo, sem ter disputado banda com o elemento LCP.
+//
+// Um só arquivo serve os dois layouts (decisão do cliente): 0.86 recorta bem
+// tanto na caixa 1.30 do desktop quanto na 0.46 do mobile — conferido gerando
+// os dois recortes e olhando. Por isso não há art direction aqui, ao
+// contrário da limousine.
+const sedanCheia = await getImage({
+  src: fotosSedan.heroGaragem.src,
+  widths: [480, 820],
+  format: 'webp',
+  quality: 82,
+});
 
 const passos = [
   {
@@ -94,8 +185,20 @@ const passos = [
 
     {/* Fora do grid, sangrando a partir de ~55% da largura da tela até a
         mesma margem lateral do container (ver .hero-estagio1__midia). No
-        mobile volta pro fluxo normal, como último item da coluna. */}
-    <div class="hero-estagio1__midia">
+        mobile volta pro fluxo normal, como último item da coluna.
+
+        SELETOR DE DOIS CARROS. `data-seletor-ativo` no wrapper é o ÚNICO
+        estado: todo o resto (qual cheia aparece, qual fresta aparece, qual
+        ação aparece, o rótulo do botão) é CSS reagindo a esse atributo. O JS
+        só troca o valor entre "limo" e "sedan".
+
+        SEM JS a página fica no estado inicial e completo: a limousine no
+        palco, a fresta do sedan visível, e a ação da limousine com href real.
+        O que não funciona é a troca — nada some, nada quebra. */}
+    <div class="hero-estagio1__midia seletor" data-seletor data-seletor-ativo="limo">
+      {/* PALCO — as duas imagens cheias, empilhadas. Só a ativa fica opaca. */}
+      <div class="seletor__palco">
+      <div class="seletor__cheia" data-cheia="limo">
       <Foto
         src={fotosLimo.casamentoNoivos.src}
         alt={fotosLimo.casamentoNoivos.alt}
@@ -139,6 +242,77 @@ const passos = [
         comFallback
         prioridade
       />
+      </div>
+
+        {/* A CHEIA DO SEDAN nasce SEM src — ver a nota no frontmatter. É a
+            única imagem grande da home que não pode competir com o LCP.
+            `srcset` é promovido ANTES de `src`: na ordem inversa o navegador
+            resolve o `src` sozinho e baixa o candidato de largura cheia antes
+            de ver os degraus (regra do CLAUDE.md > Mídia pesada). */}
+        <div class="seletor__cheia" data-cheia="sedan">
+          <img
+            data-src={sedanCheia.src}
+            data-srcset={sedanCheia.srcSet.attribute}
+            sizes="(max-width: 56.25rem) 100vw, 95vw"
+            width={sedanCheia.attributes.width}
+            height={sedanCheia.attributes.height}
+            alt={fotosSedan.heroGaragem.alt}
+            decoding="async"
+          />
+        </div>
+      </div>
+
+      {/* FRESTA — o controle de troca. É <button> porque troca estado na
+          página; não é navegação. Mostra sempre o carro INATIVO, que é o que
+          o clique vai trazer para o palco. */}
+      {/* SEM aria-label, de propósito.
+          Ele existia e dizia "Ver o Chrysler 300C preto no destaque", enquanto
+          o texto VISÍVEL do botão era "Sedan 300C preto". `aria-label`
+          SOBRESCREVE o conteúdo, então o nome acessível não continha o rótulo
+          visível — é falha do WCAG 2.5.3 (Label in Name), e quebra comando de
+          voz: quem diz "clicar em Sedan 300C preto" não acerta um botão cujo
+          nome é outro.
+          Sem ele, o nome acessível passa a ser o próprio rótulo, que já troca
+          com o estado. As imagens dentro têm alt="" e aria-hidden, então não
+          entram no cálculo do nome. */}
+      <button class="seletor__fresta" type="button" data-seletor-troca>
+        {/* Duas frestas por carro: a vertical serve o desktop e a horizontal
+            o mobile. `media` idêntica ao breakpoint do CSS — se divergirem, a
+            faixa de um layout aparece no outro. */}
+        <span class="seletor__faixa" data-faixa="sedan">
+          <picture>
+            <source media="(max-width: 56.25rem)" srcset={frestaSedanH.srcset} sizes="100vw" />
+            <img src={frestaSedanV.src} srcset={frestaSedanV.srcset} sizes="160px"
+              width={frestaSedanV.largura} height={frestaSedanV.altura}
+              alt="" aria-hidden="true" decoding="async" />
+          </picture>
+        </span>
+        {/* A fresta da limousine só aparece DEPOIS da primeira troca, então
+            nasce sem src como a cheia do sedan. São ~4 KB, mas o princípio é
+            o mesmo: nada que não seja visto no primeiro paint disputa banda
+            com o LCP. */}
+        <span class="seletor__faixa" data-faixa="limo">
+          <picture>
+            <source media="(max-width: 56.25rem)" data-srcset={frestaLimoH.srcset} sizes="100vw" />
+            <img data-src={frestaLimoV.src} data-srcset={frestaLimoV.srcset} sizes="160px"
+              width={frestaLimoV.largura} height={frestaLimoV.altura}
+              alt="" aria-hidden="true" decoding="async" />
+          </picture>
+        </span>
+        <span class="seletor__rotulo" data-seletor-rotulo>Sedan 300C preto</span>
+      </button>
+
+      {/* AÇÕES — uma por carro, só a do ativo visível. Links reais, então
+          funcionam sem JS. `#video-limusine` e `/limousines/#sedan` são os
+          dois destinos; os dois alvos levam scroll-margin-top. */}
+      <div class="seletor__acoes">
+        <span class="seletor__acao" data-acao="limo">
+          <Botao variante="terciario" href="#video-limusine">A limousine em detalhe</Botao>
+        </span>
+        <span class="seletor__acao" data-acao="sedan">
+          <Botao variante="terciario" href="/limousines/#sedan">Chrysler 300C Sedan em detalhe</Botao>
+        </span>
+      </div>
     </div>
 
     {/* Marquee fora do grid, como irmão: no desktop é uma linha reservada da
@@ -308,7 +482,13 @@ const passos = [
   </ol>
 </section>
 
-<section class="secao-galeria reveal">
+{/* O `id` mora na <section>, não na div do vídeo: o destino da âncora precisa
+    incluir o eyebrow e o h2, senão o link pousa no vídeo e o visitante não vê
+    o que está olhando. Mesmo padrão do `id="sedan"` em /limousines/, que
+    também está na seção. O `scroll-margin-top` é obrigatório aqui — o
+    interceptor de âncoras em Movimento.astro LÊ essa margem do alvo, e sem ela
+    lê 0 e o título nasce por baixo do header fixo. */}
+<section class="secao-galeria reveal" id="video-limusine">
   <div class="u-container">
     <p class="u-eyebrow">Fotos</p>
     <EntradaTitulo as="h2">A limousine em detalhe</EntradaTitulo>
@@ -524,6 +704,207 @@ const passos = [
        158, dois passos antes do buquê, que começa em 175. Medido, não
        estimado. A altura entra inteira: nada de corte vertical. */
     object-position: 22% center;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* SELETOR DE DOIS CARROS                                              */
+  /* ------------------------------------------------------------------ */
+  /* TODO o estado vem do atributo `data-seletor-ativo` no wrapper. O JS
+     escreve "limo" ou "sedan" ali e mais nada — nenhuma classe, nenhum style
+     inline. Isso mantém uma definição só do estado e faz o CSS ser a única
+     autoridade sobre o que aparece.
+
+     REPOUSO = ESTADO INICIAL COMPLETO. Sem JS o atributo nasce "limo" no HTML,
+     a limousine está no palco, a fresta do sedan aparece e a ação da limousine
+     é um link real. Nada depende de JS para estar visível. */
+  .seletor {
+    /* O palco herda o arredondamento; a fresta tem o dela. `overflow` fica no
+       .foto e no .seletor__faixa, não aqui, porque este elemento é
+       `position: absolute` no desktop e recortá-lo cortaria a sangria. */
+    display: grid;
+  }
+
+  /* No desktop a fresta rouba 160px da esquerda do bloco e o palco fica com o
+     resto. As duas colunas somam a largura da caixa, então a sangria à direita
+     e a âncora no canto inferior direito continuam iguais. */
+  .seletor {
+    grid-template-columns: 160px 1fr;
+    grid-template-areas: 'fresta palco';
+    align-items: stretch;
+  }
+
+  .seletor__palco {
+    grid-area: palco;
+    position: relative;
+    overflow: hidden;
+    /* O raio de 50px que era do .foto passa para o palco: a esquerda agora é
+       a fresta, e é ela que encosta no texto. */
+    border-radius: 0;
+  }
+
+  /* As duas cheias ocupam a mesma célula. Só `opacity` anima — nada de
+     display, que não transiciona e ainda faria o navegador reavaliar layout. */
+  /* O ARREDONDAMENTO DO PALCO MORA AQUI, não no .foto.
+     São dois carros e dois markups diferentes — a limousine vem do componente
+     <Foto> (uma div com overflow próprio) e o sedan é uma <img> crua, porque
+     precisa nascer sem src. Arredondar cada um separadamente daria dois
+     valores para manter em sincronia, e eles divergiriam na primeira edição.
+     Aqui o recorte é um só e vale para os dois.
+     Valor do desktop = o mesmo de sempre: 50px só à esquerda, porque à direita
+     a foto sangra até a margem e arredondar ali abriria falha no meio do
+     sangramento (ver a nota em .hero-estagio1__midia :global(.foto)). */
+  .seletor__cheia {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 50px 0 0 50px;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .seletor__cheia :global(.foto),
+  .seletor__cheia :global(picture),
+  .seletor__cheia img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .seletor__cheia img {
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+  }
+
+  [data-seletor-ativo='limo'] .seletor__cheia[data-cheia='limo'],
+  [data-seletor-ativo='sedan'] .seletor__cheia[data-cheia='sedan'] {
+    opacity: 1;
+  }
+
+  /* A FRESTA. Botão de verdade: recebe foco, responde a Enter e Espaço, e
+     anuncia o destino da troca pelo aria-label (atualizado pelo JS). */
+  .seletor__fresta {
+    grid-area: fresta;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    overflow: hidden;
+    /* QUATRO CANTOS IGUAIS, nos dois breakpoints. Era `50px 0 0 50px`, herdado
+       do desenho de quando a foto principal era o único bloco e sangrava pela
+       direita. A fresta não sangra: ela encosta no palco. Arredondar só a
+       esquerda deixava a costura com o palco reta de um lado e curva do outro.
+       O `overflow: hidden` acima é o que faz a imagem respeitar a curva. */
+    border-radius: 50px;
+    /* Só transform, e só no hover — a faixa avança um passo para fora,
+       sugerindo que ela entra no lugar do palco. */
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .seletor__fresta:hover {
+    transform: translateX(-6px);
+  }
+
+  .seletor__fresta:active {
+    transform: translateX(-2px) scale(0.995);
+  }
+
+  .seletor__faixa {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  .seletor__faixa picture,
+  .seletor__faixa img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .seletor__faixa img {
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+  }
+
+  /* A fresta mostra sempre o carro INATIVO — é o que o clique traz. */
+  [data-seletor-ativo='limo'] .seletor__faixa[data-faixa='sedan'],
+  [data-seletor-ativo='sedan'] .seletor__faixa[data-faixa='limo'] {
+    opacity: 1;
+  }
+
+  /* Rótulo na vertical, lendo de baixo para cima, encostado na base da faixa.
+     Véu por trás porque a fresta é foto e o contraste do texto não pode
+     depender do que caiu naquele recorte. */
+  .seletor__rotulo {
+    position: absolute;
+    left: 50%;
+    bottom: var(--espaco-3);
+    transform: translateX(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    padding: 0.75rem 0.5rem;
+    font-family: var(--fonte-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--escuro-texto);
+    background-color: rgba(20, 18, 16, 0.55);
+    border: 1px solid rgba(237, 231, 219, 0.28);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* AÇÕES. Só a do carro ativo aparece. `visibility` junto com `opacity` para
+     a escondida sair da ordem de foco — sem isso o Tab pousaria num link
+     invisível. */
+  .seletor__acoes {
+    grid-area: palco;
+    position: relative;
+    z-index: 1;
+    align-self: start;
+    justify-self: start;
+    padding: var(--espaco-3);
+    display: grid;
+  }
+
+  .seletor__acao {
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s cubic-bezier(0.2, 0.7, 0.3, 1), visibility 0.45s;
+  }
+
+  [data-seletor-ativo='limo'] .seletor__acao[data-acao='limo'],
+  [data-seletor-ativo='sedan'] .seletor__acao[data-acao='sedan'] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* O terciário do sistema é escuro; aqui ele vive sobre foto. Véu atrás,
+     mesma solução do rótulo e pela mesma razão. */
+  .seletor__acao :global(.botao) {
+    padding: 0.5rem 0.75rem;
+    color: var(--escuro-texto);
+    background-color: rgba(20, 18, 16, 0.55);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seletor__cheia,
+    .seletor__faixa,
+    .seletor__acao,
+    .seletor__fresta {
+      transition: none;
+    }
+
+    .seletor__fresta:hover,
+    .seletor__fresta:active {
+      transform: none;
+    }
   }
 
   /* Faixa inferior do hero: linha própria da seção, no fluxo. Como é o
@@ -1079,7 +1460,10 @@ const passos = [
        de ter efeito (é a regra do CSS, não um truque). */
     .hero-estagio1__midia :global(.foto) {
       border-radius: 0;
-      height: 100svh;
+      /* 100% do palco, não `100svh`: quem carrega a altura da tela agora é o
+         `.seletor` (ver a nota lá). Manter `100svh` aqui faria a foto
+         transbordar o palco em exatamente os 72px da fresta. */
+      height: 100%;
       aspect-ratio: auto;
     }
 
@@ -1103,6 +1487,69 @@ const passos = [
       object-position: center 35%;
     }
 
+    /* SELETOR NO MOBILE. A fresta deixa de ser coluna e vira faixa no PÉ do
+       palco, atravessando a largura toda. Duas linhas em vez de duas colunas —
+       o mesmo grid, virado. */
+    .seletor {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 72px;
+      grid-template-areas: 'palco' 'fresta';
+      /* A ALTURA MORA AQUI AGORA, e precisa morar: antes ela vinha do
+         `height: 100svh` do próprio .foto, que era filho direto deste bloco.
+         Com o seletor, o .foto passou a viver dentro de `.seletor__cheia`, que
+         é `position: absolute` — e elemento absoluto não gera altura para o
+         pai. Sem esta linha o grid colapsava e a caixa inteira virava 172px
+         (medido), em vez da tela cheia.
+         A tela continua sendo UMA: os 72px da fresta saem do palco, não se
+         somam a ele. */
+      height: 100svh;
+    }
+
+    /* 72px é a altura da faixa, e é ela que o recorte da fresta horizontal
+       persegue: 450x75 e 900x150 no getImage cobrem 1x e 2x desta faixa numa
+       tela de até 450 CSS px. Mudar este número sem mudar aqueles serve uma
+       derivada com a proporção errada, e o `cover` volta a jogar pixel fora. */
+    /* No mobile o palco também fecha os quatro cantos: aqui ele não sangra
+       para lado nenhum — a foto vai de borda a borda da tela, e a razão que
+       justifica os cantos retos à direita no desktop não existe. */
+    .seletor__cheia {
+      border-radius: 50px;
+    }
+
+    /* Os mesmos 50px da fresta do desktop. Numa faixa de 72px de altura o raio
+       é grande em relação à caixa e ela lê quase como pílula — é o desenho
+       pedido, não sobra de valor. */
+    .seletor__fresta {
+      border-radius: 50px;
+    }
+
+    /* A faixa entra POR BAIXO no mobile: deslizar na horizontal aqui apontaria
+       para fora da tela, que não é onde o palco está. */
+    .seletor__fresta:hover {
+      transform: translateY(-4px);
+    }
+
+    .seletor__fresta:active {
+      transform: translateY(-1px) scale(0.995);
+    }
+
+    /* Rótulo volta à horizontal e centraliza na faixa. */
+    .seletor__rotulo {
+      left: 50%;
+      top: 50%;
+      bottom: auto;
+      transform: translate(-50%, -50%);
+      writing-mode: horizontal-tb;
+      padding: 0.5rem 0.875rem;
+    }
+
+    /* A ação sai do topo e vai para o pé do palco, logo acima da faixa —
+       no mobile o topo do palco é onde o carro aparece inteiro. */
+    .seletor__acoes {
+      align-self: end;
+      justify-self: center;
+      padding-bottom: var(--espaco-4);
+    }
   }
 
   /* Rede de segurança: mesmo que algum estado inicial tenha sido aplicado
@@ -1136,6 +1583,13 @@ const passos = [
   .secao-contato {
     padding-block: var(--espaco-6);
     border-top: 1px solid var(--linha);
+  }
+
+  /* Alvo do link "#video-limusine" vindo do seletor do hero. Sem isto o
+     eyebrow "Fotos" nasce por baixo do header fixo. Mesmo valor e mesma razão
+     do `#sedan` em /limousines/. */
+  .secao-galeria {
+    scroll-margin-top: var(--altura-header);
   }
 
   /* .secao-passos não leva border-top: o <Marquee> logo acima já faz esse
@@ -1238,3 +1692,79 @@ const passos = [
 
   }
 </style>
+
+{/*
+  SELETOR DE DOIS CARROS — script.
+
+  Mora AQUI e não em Movimento.astro de propósito: aquele componente vai nas 14
+  páginas, e este seletor só existe na home. As 8 páginas de serviço/região são
+  as que trazem o tráfego do Google e continuam leves — é a mesma razão pela
+  qual o Swiper é importado só na home e na /limousines/.
+
+  O script faz três coisas e nada mais:
+    1. troca `data-seletor-ativo` (todo o resto é CSS);
+    2. promove `data-src`/`data-srcset` em requestIdleCallback DEPOIS do load;
+    3. mantém aria-label e rótulo em sincronia com o estado.
+*/}
+<script>
+  const seletor = document.querySelector<HTMLElement>('[data-seletor]');
+
+  if (seletor) {
+    const botao = seletor.querySelector<HTMLButtonElement>('[data-seletor-troca]');
+    const rotulo = seletor.querySelector<HTMLElement>('[data-seletor-rotulo]');
+
+    // Nome de cada carro, para rótulo e aria-label. O rótulo mostra sempre o
+    // carro INATIVO — é o que a fresta exibe e o que o clique vai trazer.
+    const nomes = { limo: 'Limousine 300C branca', sedan: 'Sedan 300C preto' };
+
+    // PROMOÇÃO DA MÍDIA ADIADA. Nasce em data-* para não competir com o LCP;
+    // aqui vira src de verdade.
+    //
+    // `srcset` ANTES de `src`, e o <source> antes do <img>: na ordem inversa o
+    // navegador resolve o `src` sozinho e baixa o candidato de largura cheia
+    // antes de ver os degraus (CLAUDE.md > Mídia pesada). O mesmo vale para o
+    // <source> de um <picture> — se o <img> ganhar src primeiro, a media query
+    // do source ainda nem foi avaliada.
+    let promovido = false;
+    function promover() {
+      if (promovido) return;
+      promovido = true;
+      seletor!.querySelectorAll<HTMLElement>('[data-srcset], [data-src]').forEach((el) => {
+        const ss = el.getAttribute('data-srcset');
+        if (ss) {
+          el.setAttribute('srcset', ss);
+          el.removeAttribute('data-srcset');
+        }
+        const s = el.getAttribute('data-src');
+        if (s) {
+          el.setAttribute('src', s);
+          el.removeAttribute('data-src');
+        }
+      });
+    }
+
+    // Depois do `load`, e ainda assim só numa janela ociosa: o objetivo é que o
+    // clique encontre a imagem em cache e pareça instantâneo, sem ter disputado
+    // banda com o elemento LCP. O `timeout` é a rede de segurança para aba que
+    // nunca fica ociosa; sem ele, a promoção poderia não acontecer nunca.
+    const ocioso = window.requestIdleCallback ?? ((fn: () => void) => window.setTimeout(fn, 1200));
+    if (document.readyState === 'complete') ocioso(promover, { timeout: 3000 });
+    else window.addEventListener('load', () => ocioso(promover, { timeout: 3000 }), { once: true });
+
+    // O rótulo visível É o nome acessível do botão (não há aria-label — ver a
+    // nota no markup), então trocar o texto já troca o que o leitor de tela
+    // anuncia. Uma escrita, não duas.
+    function sincronizar(ativo: 'limo' | 'sedan') {
+      const outro = ativo === 'limo' ? 'sedan' : 'limo';
+      seletor!.dataset.seletorAtivo = ativo;
+      if (rotulo) rotulo.textContent = nomes[outro];
+    }
+
+    botao?.addEventListener('click', () => {
+      // Promove antes de trocar: se o clique vier antes da janela ociosa, a
+      // imagem começa a carregar agora em vez de o palco ficar vazio.
+      promover();
+      sincronizar(seletor.dataset.seletorAtivo === 'limo' ? 'sedan' : 'limo');
+    });
+  }
+</script>
