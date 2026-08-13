@@ -512,6 +512,23 @@ Entrada escalonada dos itens — precisa parecer instantâneo, não uma sequênc
 
 ## SEO técnico
 
+### Domínio canônico: COM `www` — decisão fechada
+
+O domínio do projeto é **`https://www.limousinesroyal.com.br`**, com `www`. É o
+valor de `site` no `astro.config.mjs`, e é a base de toda URL absoluta do site:
+canônicas, `og:url`, `og:image`, `robots.txt` e sitemap.
+
+**O motivo é o único que importa aqui: é a forma das 14 URLs congeladas.** O
+backup do site antigo é `www.limousinesroyal.com.br`, e é essa a forma que o
+Google tem indexada há anos. A regra 1 das REGRAS INVIOLÁVEIS manda sobre
+qualquer preferência estética por URL curta.
+
+**Houve uma decisão anterior por `sem www`, e ela está revogada.** Chegou a
+existir um critério de aceite escrito como "nenhuma URL absoluta no head contém
+www" — ele está DESATUALIZADO e não deve ser aplicado. Uma auditoria que
+encontre `www` no head está vendo o comportamento correto, não uma regressão.
+Não "corrija" isso.
+
 Implementar em todas as páginas:
 
 - `<title>` e meta description **extraídos do backup**, um por página
