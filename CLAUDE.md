@@ -99,6 +99,29 @@ existe em produção (o real é 0,0427) e quase trocou o inline do CSS por uma
 folha externa que custava 300-380ms de first-paint em toda página. Há um
 servidor com gzip no scratchpad para isso.
 
+#### Mexeu acima da dobra? O aceite inclui LCP
+
+**Qualquer mudança que altere altura ou posição de elemento acima da dobra
+precisa medir LCP no critério de aceite — não só CLS e console.**
+
+O LCP é o maior elemento VISÍVEL sem rolar. Quem decide não é o autor da
+mudança: é a área que sobra na viewport. Então **remover conteúdo pode promover
+uma imagem a LCP** — encurtar um bloco de texto empurra a imagem seguinte para
+cima, expõe mais dela acima da dobra, e ela passa o elemento que vencia antes.
+Vale para adicionar, remover, encolher, crescer e reposicionar.
+
+Aconteceu aqui, e passou batido: remover o parágrafo de apoio do Hero 1 (commit
+`ca90762`) subiu a foto 106px em 390×844, expondo 41 206px² a mais. A área
+visível dela passou de 16 752 para 57 958, ultrapassando os 43 669 do `<span>`
+do h1 — e **o LCP da home foi de ~800ms para ~1920ms**. O aceite daquele batch
+cobria CLS, console e geometria, e os três passaram limpos. Nenhum deles
+enxerga troca de elemento LCP.
+
+Ao medir, **registre qual é o elemento** (a regra das quatro coisas, acima).
+Comparar o LCP de antes com o de depois sem olhar o elemento não mede nada: se
+o elemento mudou, são duas grandezas diferentes, e a mudança de elemento é o
+achado.
+
 ---
 
 ## Mapa de páginas
@@ -652,6 +675,54 @@ Centralizar em **um único arquivo de configuração** para que a troca seja fei
 - Preserve as palavras-chave das páginas de serviço/região. Elas parecem repetitivas de propósito — é assim que o site ranqueia.
 - Quando o backup tiver duas versões do mesmo conteúdo, prefira a da /lp-limousine/ — é mais sóbria e atual. Mas isso vale só para o texto do corpo. <title>, meta description e <h1> das páginas indexadas continuam intocados: são eles que ranqueiam.
 - Em página indexada, **toda palavra-chave que existia no backup precisa continuar existindo**. Melhorar a escrita nunca pode reduzir a cobertura de termos nem encurtar o texto relevante.
+
+---
+
+## Duplicação — a mesma coisa escrita duas vezes sempre desanda
+
+Três casos já aconteceram aqui, e **nenhum deles deu erro**: o site continuou
+buildando, o console continuou limpo, e o defeito ficou de pé até alguém olhar.
+É por isso que estão escritos.
+
+### Valor duplicado: uma fonte só — e comentário não substitui
+
+A tabela `paresDeCor` do `Movimento.astro` repete, em hexadecimal, os doze
+valores da paleta do `global.css`. O comentário em cima dela já dizia "precisa
+ficar em sincronia se a paleta mudar por lá" — **e não impediu nada**: o commit
+`53eaaf5` corrigiu `--claro-texto-mut` de `#8a8578` para `#656158` no
+`global.css`, e a tabela do JS ficou com o valor velho. Como o JS escreve essas
+variáveis no wrapper E na raiz, a `/limousines/` virou a única página do site
+onde a correção de contraste não valia — inclusive no rodapé.
+
+Quando não der para eliminar a cópia, **prefira referência a hexadecimal
+digitado de novo**: foi assim que o repouso da `/limousines/` passou a ler
+`var(--claro-bg)` em vez de `#f4f1eb`.
+
+### Mesmo tratamento visual em markups diferentes: aplique no ancestral comum
+
+No seletor de dois carros do Hero 1 os dois carros têm markup diferente — a
+limousine vem do componente `<Foto>` (uma `div`) e o sedan é uma `<img>` crua,
+porque precisa nascer sem `src` (ver "Mídia pesada"). Arredondar o canto em cada
+um daria **dois valores para manter iguais**, e nada avisaria quando
+divergissem.
+
+O raio mora no `.seletor__cheia`, o ancestral comum: **um recorte só**, e os
+dois carros não têm como discordar. Vale para qualquer tratamento visual — raio,
+recorte, sombra, máscara.
+
+### `aria-label` que repete o texto visível: apague, não sincronize
+
+`aria-label` **sobrescreve** o conteúdo do elemento. Se o rótulo visível muda
+com o estado e o `aria-label` é fixo, o nome acessível deixa de conter o texto
+visível — falha do **WCAG 2.5.3 (Label in Name)**, que quebra comando de voz:
+quem lê a tela e diz "clicar em X" não aciona nada.
+
+Aconteceu no botão do seletor: o `aria-label` dizia "Ver o Chrysler 300C preto
+no destaque" enquanto o rótulo visível era "Sedan 300C preto".
+
+**Se o texto visível já descreve a ação, não use `aria-label`.** O nome
+acessível passa a ser o próprio rótulo e acompanha o estado sozinho — uma
+escrita em vez de duas.
 
 ---
 
