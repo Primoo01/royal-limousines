@@ -410,6 +410,35 @@ Na página `/limousines/`:
 
 Implementação leve: interpolar as variáveis CSS de cor conforme o progresso do scroll da seção de transição (`requestAnimationFrame` + uma única leitura de posição). Não use canvas, não use vídeo, não use biblioteca.
 
+#### O repouso em CSS é o DIA — decisão fechada
+
+O estado que o CSS declara para o wrapper `.mundo-dinamico` é a **paleta clara**.
+Quem anima para a noite é o JS, a partir do scroll. **Não inverta isso.**
+
+Era a noite, e custava um **flash preto de ~900ms**: a `.fundo-dinamico` é
+`fixed; inset: 0`, então pinta a viewport inteira desde o primeiro paint, e o
+`Movimento.astro` só corrige depois do parse. Medido em 390×844 sob Fast 3G +
+CPU 4×. O preloader escondia isso na primeira visita da sessão; da segunda em
+diante aparecia cru.
+
+**Esta é a única página do site onde `prefers-reduced-motion` mostra o estado de
+ABERTURA e não o estado final** — a página inteira fica no mundo claro, inclusive
+a seção do 300C preto.
+
+É exceção consciente à regra geral de "reduced-motion mostra o conteúdo em seu
+estado final", e o motivo é que aqui a regra geral não se aplica: **numa
+transição atrelada ao scroll, o "estado final" só existe para quem rola.** Quem
+não rola não tem um final — tem a abertura. Forçar a noite entregava o Chrysler
+**branco** sobre `#020202`, que contradiz a própria narrativa da página.
+
+Consequências aceitas nesse modo: a seção do sedan preto aparece no mundo claro,
+e a silhueta dele (`mix-blend-mode: screen`, que só funciona sobre fundo escuro)
+fica invisível. As duas são decorativas; a legibilidade do texto é preservada,
+porque o texto acompanha a paleta clara.
+
+Uma auditoria que encontre a /limousines/ clara com reduced-motion está vendo o
+comportamento correto, **não uma regressão**.
+
 ### Indicador de scroll — "a estrada"
 
 - **No hero:** um chevron fino, animado sutilmente (sobe e desce), que desaparece assim que o usuário começa a rolar.

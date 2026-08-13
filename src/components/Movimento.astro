@@ -361,12 +361,20 @@
 
     // Mesmos pares de cor do global.css (claro → escuro). Precisa ficar em
     // sincronia se a paleta mudar por lá.
+    //
+    // ISSO JÁ FALHOU UMA VEZ, e o aviso acima não impediu: o commit 53eaaf5
+    // corrigiu `--claro-texto-mut` de #8a8578 para #656158 (o antigo reprovava
+    // no AA, 3.26:1 sobre bg e 2.81:1 sobre surface) e esta tabela ficou com o
+    // valor velho. Como o JS escreve estas variáveis no wrapper E na raiz, a
+    // /limousines/ era a ÚNICA página do site onde a correção de contraste não
+    // valia — inclusive no rodapé. Conferidos os doze valores contra o
+    // global.css: era a única divergência.
     const paresDeCor: Record<string, [string, string]> = {
       '--bg': ['#f4f1eb', '#141210'],
       '--surface': ['#e7e0d4', '#211e18'],
       '--linha': ['#cfc6b5', '#3a342a'],
       '--texto': ['#1a1815', '#ede7db'],
-      '--texto-mut': ['#8a8578', '#8c857a'],
+      '--texto-mut': ['#656158', '#8c857a'],
       '--ouro': ['#a8823c', '#c6a25e'],
     };
 
@@ -654,6 +662,19 @@
       atualizarTransicaoHero();
       atualizarCorDaBarra();
       if (!transicao || !mundoDinamico) return;
+
+      // REDUCED-MOTION: não interpola nada, e o repouso do CSS (o dia) fica.
+      //
+      // Esta guarda é NOVA e a ausência dela era uma bomba armada. O bloco
+      // rodava mesmo em reduced-motion; como o CSS põe `.transicao-dia-noite`
+      // em `display: none`, o rect vinha zerado, `-0/0` dava NaN, e as cores
+      // saíam `rgb(NaN, NaN, NaN)`. O resultado certo acontecia por ACIDENTE
+      // de aritmética — dependendo de como o motor trata NaN em custom
+      // property (podem ser aceitas como texto, e aí `var(--bg)` viraria
+      // inválido e o fundo cairia para transparente). Trocar aquele
+      // `display: none` por outra técnica de esconder reativaria a
+      // interpolação sem ninguém perceber.
+      if (reduzMovimento) return;
 
       const rect = transicao.getBoundingClientRect();
       const progresso = Math.min(Math.max(-rect.top / rect.height, 0), 1);

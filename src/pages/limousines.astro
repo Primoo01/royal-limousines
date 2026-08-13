@@ -221,17 +221,36 @@ const description =
     Transição dia→noite (ver CLAUDE.md > Signature). O fundo/texto/dourado
     de tudo daqui pra baixo é controlado por CSS custom properties no
     wrapper .mundo-dinamico, interpoladas via JS conforme o scroll (Movimento.astro).
-    O style inline abaixo já nasce com os valores do mundo escuro — é o
-    estado de repouso (fim da transição, ou fallback sem JS). Como a seção
-    começa fora da viewport (depois do carro branco), o JS assume antes que
-    desse valor inicial "flashar" pra quem está rolando a página. Com
-    prefers-reduced-motion, global.css força esses mesmos valores e esconde
-    o spacer da transição — sem JS nenhum rodando.
+
+    O REPOUSO É O DIA, e isto é a coisa mais importante desta nota.
+
+    ERA A NOITE, e custava um flash preto medido de ~900ms. O raciocínio
+    antigo era que a seção da transição começa fora da viewport, então "o JS
+    assume antes de o valor inicial flashar". Isso vale para quem já está
+    ROLANDO; para quem está CARREGANDO, não: o Movimento.astro é módulo no fim
+    do <body> e roda depois do parse, e a `.fundo-dinamico` é fixed/inset:0,
+    ou seja pinta a viewport inteira desde o primeiro paint. Medido em 390x844
+    sob Fast 3G + CPU 4x: a página inteira renderizava em cores de noite sobre
+    #020202 de 1497 a 2414ms. O preloader (#141210) escondia isso na PRIMEIRA
+    visita da sessão; da segunda em diante aparecia cru.
+
+    O repouso agora é a paleta clara, por referência ao global.css em vez de
+    hexadecimal repetido — foi justamente uma cópia hex desatualizada que
+    anulou a correção de AA do `--texto-mut` nesta página (ver a nota em
+    Movimento.astro > paresDeCor).
+
+    `--bg-escuro-pagina` FICA, e não é decoração: o Movimento.astro o lê para
+    definir o destino escuro da interpolação (#020202, mais fundo que o
+    --escuro-bg do resto do site). Removê-lo faria a transição terminar em
+    #141210 — a animação mudaria de cor no fim, sem erro nenhum aparecendo.
+
+    Com prefers-reduced-motion a página fica NO DIA, o estado de abertura, e
+    não no fim da transição. Ver CLAUDE.md > Signature.
   -->
   <div
     class="mundo-dinamico"
     data-mundo-dinamico
-    style="--bg-escuro-pagina:#020202;--surface:#211e18;--linha:#3a342a;--texto:#ede7db;--texto-mut:#8c857a;--ouro:#c6a25e;"
+    style="--bg-escuro-pagina:#020202;--bg:var(--claro-bg);--surface:var(--claro-surface);--linha:var(--claro-linha);--texto:var(--claro-texto);--texto-mut:var(--claro-texto-mut);--ouro:var(--ouro-claro);"
   >
     {/*
       CAMADA ÚNICA DE FUNDO. É a única coisa que pinta fundo daqui pra
@@ -543,12 +562,14 @@ const description =
   /* O wrapper só carrega as variáveis e a cor do TEXTO. Quem pinta fundo é
      a camada fixa abaixo — duas camadas pintando é o que criava costura. */
   .mundo-dinamico {
-    /* FONTE ÚNICA do preto mais fundo desta página. `--bg-escuro-pagina`
-       vem inline (junto do resto do estado de repouso) e é lido em três
-       lugares, todos por referência: aqui como repouso/sem-JS, pelo JS como
-       destino da interpolação, e pelo reforço de prefers-reduced-motion em
-       global.css. Assim o valor existe uma vez só. */
-    --bg: var(--bg-escuro-pagina);
+    /* O `--bg` NÃO mora mais aqui. Ele era `var(--bg-escuro-pagina)`, e era
+       esta linha que pintava a viewport de #020202 no primeiro paint (ver a
+       nota longa no markup). Agora as seis variáveis do repouso vivem juntas
+       no style inline do wrapper, num lugar só — o repouso tem uma definição,
+       não duas que podem divergir.
+
+       `--bg-escuro-pagina` continua inline e tem UM leitor: o Movimento.astro,
+       como destino escuro da interpolação. */
     color: var(--texto);
   }
 

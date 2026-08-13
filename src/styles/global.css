@@ -871,21 +871,22 @@ p + p {
     transform: none !important;
   }
 
-  /* /limousines/: sem transição dia→noite animada, direto pro mundo escuro
-     (o wrapper já nasce com esses valores inline — isto é só reforço/clareza). */
-  .mundo-dinamico {
-    /* `--bg-escuro-pagina` deixa a página escolher um preto próprio: a
-       /limousines/ termina em #020202, mais fundo que o --escuro-bg. Sem
-       essa referência, o reforço aqui puxaria o fundo de volta pro
-       #141210 e o repouso divergiria da transição animada. */
-    --bg: var(--bg-escuro-pagina, var(--escuro-bg)) !important;
-    --surface: var(--escuro-surface) !important;
-    --linha: var(--escuro-linha) !important;
-    --texto: var(--escuro-texto) !important;
-    --texto-mut: var(--escuro-texto-mut) !important;
-    --ouro: var(--ouro-escuro) !important;
-  }
+  /* /limousines/: sem transição dia→noite animada. A página fica NO DIA — o
+     estado de ABERTURA, não o fim da transição.
 
+     AQUI HAVIA UM BLOCO que forçava a paleta escura com !important. Foi
+     removido de propósito, e não é para voltar. Duas razões:
+
+     1. Numa transição atrelada ao scroll, "estado final" só existe para quem
+        rola. Quem não rola não tem um final — tem a abertura, e a abertura
+        desta página é o mundo claro com o Chrysler branco (CLAUDE.md >
+        Signature). Forçar a noite entregava o carro branco sobre #020202.
+     2. Desde que o repouso do wrapper virou o dia (ver limousines.astro), este
+        bloco passaria a CONTRADIZER o repouso declarado, com !important
+        ganhando dele. Duas definições do mesmo estado, discordando.
+
+     O `display: none` abaixo fica: os pontos de luz e o spacer da transição
+     são decoração de movimento, e sem animação não têm função. */
   .transicao-dia-noite {
     display: none !important;
   }
