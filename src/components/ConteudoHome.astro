@@ -68,14 +68,20 @@ const passos = [
       <div class="hero-estagio1__topo">
         <EntradaTitulo as="h1">Aluguel de Limousines para casamentos em SP</EntradaTitulo>
         {/*
-          Parágrafo curto do hero (máximo duas linhas, conforme o CLAUDE.md).
-          É o parágrafo de abertura que já existia aqui — os três parágrafos
-          de conteúdo desceram inteiros para a seção logo abaixo.
+          NÃO REPONHA um parágrafo de apoio aqui. Existia um, e ele abria
+          repetindo a frase inteira do h1 acima ("Aluguel de Limousines para
+          casamentos em SP. Luxo e sofisticação para momentos especiais, com a
+          Royal Limousines.") — a mesma frase duas vezes, uma embaixo da outra,
+          na primeira tela. Removido por decisão do cliente.
+
+          A cobertura de palavra-chave não se perdeu: a frase segue no h1 logo
+          acima e em seis meta tags desta página (title, description, og:title,
+          og:description, twitter:title, twitter:description). O parágrafo era
+          repetição visual, não cobertura adicional.
+
+          O espaçamento até os botões vem do `margin-top` do próprio
+          `.hero__cta`, então não sobrou vão órfão aqui.
         */}
-        <p class="hero-estagio1__lead">
-          Aluguel de Limousines para casamentos em SP. Luxo e sofisticação
-          para momentos especiais, com a Royal Limousines.
-        </p>
         <div class="hero__cta">
           <Botao variante="primario" href="/contato/">{site.cta.orcamento}</Botao>
           <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
@@ -399,12 +405,6 @@ const passos = [
 
   .hero-estagio1__topo h1 {
     margin-top: var(--espaco-2);
-  }
-
-  .hero-estagio1__lead {
-    margin-top: var(--espaco-3);
-    max-width: 40ch;
-    color: var(--texto);
   }
 
   /* Fora do grid — sangra a partir da largura da TELA (não do container),
