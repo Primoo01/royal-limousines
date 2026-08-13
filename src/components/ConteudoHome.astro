@@ -1690,6 +1690,23 @@ const passos = [
       grid-template-columns: 1fr;
     }
 
+    /* O traço entre a .secao-passos e a .secao-galeria sai NO MOBILE, só
+       nesta junção. A regra do grupo (~linha 1585) fica intacta: a
+       .secao-frota e a .secao-contato mantêm o separador aqui, e a própria
+       .secao-galeria mantém o dela no desktop.
+
+       `transparent` e não `0`/`none` de propósito: a borda ocupa 1px de
+       LAYOUT, então zerá-la encurtaria a página em 1px e subiria tudo daqui
+       pra baixo. Assim a caixa continua idêntica e só o traço some — o
+       espaçamento entre as duas seções não muda em nada.
+
+       Fica neste bloco, e não num @media de 56.25rem, porque é aqui que as
+       duas seções da junção já recebem o tratamento mobile delas. Um limiar
+       novo abriria uma faixa de 896 a 900px com o traço apagado e a
+       .secao-frota ainda em duas colunas — mobile pela metade. */
+    .secao-galeria {
+      border-top-color: transparent;
+    }
   }
 </style>
 
