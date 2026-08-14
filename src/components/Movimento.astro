@@ -810,13 +810,42 @@
     return secao;
   }
 
-  // Respiro entre a base do header e a primeira linha de texto. O
-  // `scroll-margin-top` do alvo já reserva a altura do header; isto é só o ar.
+  // Respiro entre o topo do conteúdo e a borda de cima da tela.
   const RESPIRO_ANCORA = 24;
 
+  // A RESERVA DO HEADER SÓ VALE SE O HEADER FOR ESTAR LÁ.
+  //
+  // O `scroll-margin-top` do alvo reserva 72px para o header. Só que o header
+  // some ao descer (ver o bloco do `data-oculto` acima), e clicar numa âncora
+  // é sempre descer — então ele estava reservando espaço para uma barra que
+  // não ia estar na tela. Medido nos dois viewports e nas duas âncoras: logo
+  // depois do clique o header fica em `-74..0`, com `data-oculto="true"`, e
+  // sobravam ~96px de vazio acima do eyebrow.
+  //
+  // Mas a reserva continua CERTA em dois casos, e por isso ela não sai do CSS:
+  //
+  //   1. `prefers-reduced-motion` — a regra de esconder é `if (header &&
+  //      !reduzMovimento)`, então ali o header nunca sai. Medido: `data-oculto`
+  //      nem chega a existir e o header fica em `0..74`. Sem esta guarda o
+  //      eyebrow desses visitantes ficaria 50px POR BAIXO da barra.
+  //   2. Âncora que rola para CIMA — pelo histórico, por exemplo. Subir traz o
+  //      header de volta, e sem a reserva ele cobriria o destino.
+  //
+  // O valor no CSS também é o certo para quem está sem JS: sem JS não existe
+  // quem esconda o header, então ele está sempre visível.
+  //
+  // O QUE ISTO NÃO RESOLVE, e não tem como: se o visitante subir entre 9 e
+  // 49px depois de chegar, o header volta e cobre parte do eyebrow (medido:
+  // −10px cobre 40px, −40px cobre 10px, −60px já não cobre nada). Um respiro
+  // de 16px em vez de 24 só estreitaria essa janela, não fecharia. E não é
+  // específico das âncoras: subir um pouco cobre 74px de conteúdo em qualquer
+  // ponto de qualquer página — é o preço do hide-on-scroll, já aceito.
   function destinoDaAncora(alvo: HTMLElement) {
-    const margem = parseFloat(getComputedStyle(alvo).scrollMarginTop) || 0;
-    return Math.max(0, topoDeLayout(primeiroConteudo(alvo)) - margem - RESPIRO_ANCORA);
+    const margemCss = parseFloat(getComputedStyle(alvo).scrollMarginTop) || 0;
+    const topo = topoDeLayout(primeiroConteudo(alvo));
+    const descendo = Math.max(0, topo - RESPIRO_ANCORA) > window.scrollY;
+    const margem = reduzMovimento || !descendo ? margemCss : 0;
+    return Math.max(0, topo - margem - RESPIRO_ANCORA);
   }
 
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
