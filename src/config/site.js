@@ -29,7 +29,7 @@ export const site = {
   // não precisam estar no menu do topo.
   navegacao: [
     { rotulo: 'Início', href: '/' },
-    { rotulo: 'Frota', href: '/limousines/' },
+    { rotulo: 'Nossos carros', href: '/limousines/' },
     { rotulo: 'Serviços', href: '/servicos/' },
     { rotulo: 'Empresa', href: '/empresa/' },
     { rotulo: 'Contato', href: '/contato/' },

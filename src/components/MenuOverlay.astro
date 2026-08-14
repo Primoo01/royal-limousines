@@ -27,7 +27,7 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
       <a href="/" class="menu-overlay__link menu-overlay__link--principal" data-midia-grupo="inicio">Início</a>
 
       <a href="/limousines/" class="menu-overlay__link menu-overlay__link--principal" data-midia-grupo="frota">
-        Frota
+        Nossos carros
       </a>
 
       <div class="menu-overlay__grupo" data-midia-grupo="servicos" data-acordeao="false">
@@ -239,8 +239,8 @@ const itensServicos = casamentosEmSp ? [casamentosEmSp, ...eventos] : eventos;
 
   /* Entrada escalonada — precisa parecer quase instantâneo: 40ms entre os
      itens principais (ver CLAUDE.md > Navegação). Delay por item: Início 0
-     / Frota 40 / Serviços 80 / A Royal 205 / Contato 245ms. Os subitens de
-     Serviços não participam desse escalonamento — eles nascem escondidos
+     / Nossos carros 40 / Serviços 80 / A Royal 205 / Contato 245ms. Os
+     subitens de Serviços não participam desse escalonamento — nascem escondidos
      pelo acordeão (fechado por padrão), então já terminam a própria
      transição de opacidade em silêncio antes de qualquer clique na seta. */
   .menu-overlay__lista > *:nth-child(1) {
