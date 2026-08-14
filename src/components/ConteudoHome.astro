@@ -1752,17 +1752,31 @@ const passos = [
        do original de 1600 para cortar. O recorte foi escolhido medindo o
        conteúdo: céu do topo até y≈356, casal e carro de 356 a 1120, e de 1120
        a 1600 são ~480px só de pedra portuguesa.
-       Em `center 35%` a janela vai de y=131 a y=1357 do original: sobram 225px
-       de céu acima do casal e 237px de pavimento abaixo dos pés. O casal e o
-       carro entram INTEIROS nas duas pontas.
-       Por que 35% e não menos: quanto MAIOR a porcentagem, mais a janela
-       desce e mais folga sobra embaixo. Em `top` (0%) o corte viria todo da
-       base e os pés encostariam na borda; em 25% ainda ficava apertado em
-       768px de largura, onde a caixa é mais alta e o recorte chega a 682px.
-       Em 35% até esse caso fica com respiro. Testado quadro a quadro em 375,
-       390, 430 e 768. */
+       ERA 35%, E A CAIXA MUDOU DEBAIXO DELE. Aquele valor foi calibrado
+       quando o palco tinha 772px de altura; com o palco em 602px a janela
+       ficou mais curta e o mesmo 35% passou a deixar o assunto ALTO demais
+       — céu sobrando em cima, chão faltando embaixo.
+
+       O 63% saiu de medir onde o assunto está, não de tentativa. Com uma
+       grade de coordenadas sobre o original 720x1600:
+         noivos    38,8% .. 69,4%  (cabeça da noiva à barra do vestido)
+         limusine  40,6% .. 65,0%  (teto à base das rodas)
+         centro do assunto: 54,1%
+       Em 390x844 a máscara é 390x602 e a imagem exibida 390x868, então
+       sobram 266px na vertical. Para a faixa visível ficar centrada em
+       54,1% o corte de cima precisa ser 168 dos 266 — ou seja 63%.
+
+       Resultado medido: janela de 19,3% a 88,7% do arquivo, centro em 54,0%
+       contra os 54,1% do assunto. Desvio de 0,1%.
+
+       NÃO HÁ CORTE LATERAL: o arquivo é 0,449 e a máscara 0,648, então o
+       `cover` só tira altura. Mexer no termo horizontal aqui não faz nada.
+
+       SE A ALTURA DO PALCO MUDAR DE NOVO, ESTE VALOR PRECISA SER REFEITO —
+       ele depende da razão entre a máscara e o arquivo, não é uma constante
+       da foto. A conta está aí em cima. */
     .hero-estagio1__midia :global(.foto img) {
-      object-position: center 35%;
+      object-position: center 63%;
     }
 
     /* SELETOR NO MOBILE. A fresta deixa de ser coluna e vira faixa no PÉ do
@@ -1779,8 +1793,23 @@ const passos = [
          pai. Sem esta linha o grid colapsava e a caixa inteira virava 172px
          (medido), em vez da tela cheia.
          A tela continua sendo UMA: os 72px da fresta saem do palco, não se
-         somam a ele. */
-      height: 100svh;
+         somam a ele.
+
+         OS −170px SÃO DO PALCO, NÃO DA FRESTA. Como a fresta é uma linha
+         fixa de 72px e o palco é o `1fr`, tirar 170px da altura total sai
+         inteiro do palco: 844 − 170 − 72 = 602, e a faixa continua com os
+         72px que as derivadas de imagem dela perseguem.
+
+         Foram 220px numa primeira passada e o corte ficou excessivo; 170 é
+         o valor aprovado depois de ver os dois. Não é ajuste fino sobre o
+         anterior — é o número final, escrito inteiro.
+
+         SÓ MOBILE, e isto é restrição de geometria, não preferência: no
+         desktop o palco e a fresta dividem a MESMA LINHA do grid (são duas
+         colunas, `160px 594px`), então encurtar a linha encurtaria as duas
+         juntas. Aqui eles estão em linhas diferentes, e por isso dá para
+         mexer numa sem tocar na outra. */
+      height: calc(100svh - 170px);
     }
 
     /* 72px é a altura da faixa, e é ela que o recorte da fresta horizontal
@@ -1874,6 +1903,16 @@ const passos = [
     .seletor__acoes {
       align-self: end;
       justify-self: center;
+      /* CENTRALIZA O BOTÃO, não só a caixa. O `justify-self` acima já
+         centraliza o contêiner, mas as duas ações dividem a mesma célula
+         (`grid-area: 1 / 1`) e a caixa assume a largura da MAIOR — 298px do
+         sedan mais 48 de padding. O botão da limousine, com 224, encostava
+         na esquerda dessa caixa e ficava 37px fora do centro do palco; o do
+         sedan parecia centralizado por preencher quase tudo, o que era
+         coincidência de largura, não alinhamento.
+         `justify-items` age nos ITENS da grade, então vale para os dois
+         estados e para qualquer texto futuro, sem depender da largura. */
+      justify-items: center;
       padding-bottom: var(--espaco-4);
     }
 
