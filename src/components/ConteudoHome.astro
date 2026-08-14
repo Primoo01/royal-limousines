@@ -579,8 +579,17 @@ const passos = [
        por cima — o deslocamento continua tendo uma origem só. Com 90px a nota
        "SÃO PAULO E REGIÃO" entrava 26px por dentro do marquee (medido, era a
        pendência aberta do commit e8865d7); com 40px sobram 24px de folga
-       entre as duas. */
-    transform: translateY(40px);
+       entre as duas.
+
+       DEPOIS foi para 60px, os 40 mais os 20 pedidos de respiro acima do h1
+       no desktop. O valor é escrito aqui inteiro, não somado por fora, pela
+       mesma razão de sempre: uma origem só. A folga até o marquee aguenta —
+       ela cresceu quando o parágrafo de apoio saiu (ca90762) e hoje mede
+       76px, então sobram 56px depois do deslocamento.
+
+       No mobile este valor não vale nada: `transform: none` logo abaixo. Lá
+       o respiro é o padding da seção, e é lá que os 50px do mobile entraram. */
+    transform: translateY(60px);
   }
 
   .hero-estagio1__topo h1 {
@@ -1370,8 +1379,20 @@ const passos = [
       min-height: 0;
       /* Folga CONSTANTE abaixo do header fixo. O header é position: fixed,
          então o padding-top compensa a barra uma única vez — o respiro
-         visível é só o --espaco-3 somado aqui. */
-      padding-top: calc(var(--altura-header) + var(--espaco-3));
+         visível é só o que vem somado aqui.
+
+         ERA `var(--espaco-3)`, 24px. Virou 74px: os 50px de respiro pedidos
+         acima do h1 no mobile. Escrito inteiro em vez de somado por fora, e
+         AQUI e não numa margem do h1, porque é este padding que governa o
+         espaço no mobile — o `translateY` do `.__topo` está desligado neste
+         breakpoint (ver `transform: none` abaixo).
+
+         ISTO EMPURRA A PILHA INTEIRA 50px, foto do hero inclusive, e a foto
+         era o elemento LCP aqui. A área visível dela cai de 58.110px² para
+         38.610px², abaixo dos 43.669px² do <span> do h1 — então o LCP volta
+         a ser o h1, e volta a ser mais rápido. Medido, não deduzido: ver o
+         commit. É consequência aceita, não efeito colateral esquecido. */
+      padding-top: calc(var(--altura-header) + 74px);
       padding-bottom: var(--espaco-5);
       gap: var(--espaco-4);
     }
