@@ -897,6 +897,23 @@ const passos = [
        absoluto, uma vez por carregamento, sem nada reflowando junto. */
     position: absolute;
     inset: 0;
+    /* `right: auto` DESFAZ UMA SOBRE-RESTRIÇÃO, e sem isto o respiro empurra
+       o palco. Com `left`, `right` e `width` todos definidos a caixa está
+       sobre-restrita; enquanto a animação escreve `width`, a resolução do
+       conflito mexe na geometria e o palco andava até 6px para a direita e
+       voltava. Medido em 1440x900, isolando o respiro com uma folha injetada:
+       com ele, `palco.left` percorria 866..871; sem ele, ficava imóvel em 866.
+       Ancorando só pela esquerda, a largura manda sozinha e o palco não sente.
+       No mobile o equivalente é o `top: auto` do bloco de baixo, e existe pela
+       mesma razão — lá quem anima é a altura. */
+    right: auto;
+    /* E COM `right: auto` A LARGURA VIRA OBRIGATÓRIA AQUI. Sem ela a caixa
+       fica `width: auto` e encolhe para o conteúdo — que é todo absoluto
+       dentro dela, ou seja, colapsa para ~0. A animação repõe 160px no
+       primeiro keyframe, então o defeito só apareceria em quem NUNCA a vê:
+       sem JS, com reduced-motion, ou nos milissegundos antes de o observer
+       disparar. Repouso e animação declaram o mesmo 160px de propósito. */
+    width: 160px;
     z-index: 2;
     display: block;
     padding: 0;
@@ -930,15 +947,25 @@ const passos = [
      unobserve depois (ver o script no fim do arquivo). O atraso de 520ms
      evita que o movimento chegue junto com a entrada da própria seção.
      Cresce para DENTRO do palco, à direita, porque à esquerda está a borda
-     da tela. Como a faixa é absoluta, isto não toca na trilha do grid. */
+     da tela. Como a faixa é absoluta, isto não toca na trilha do grid.
+
+     AMPLITUDE E RITMO. Era +38px em 700ms por trecho, e lia como pulo. Agora
+     é +16px em 900ms, com 180ms parados no topo — mais lento e mais curto, o
+     que troca "saltou" por "respirou". Os 180ms de pausa são o que faz o
+     gesto ter um cume em vez de um bico.
+
+     A soma dá 1980ms (900 + 180 + 900), e é dela que saem as porcentagens:
+     900/1980 = 45.45% e 1080/1980 = 54.55%. Se mudar a duração, refaça as
+     duas — elas não são números redondos por acaso. */
   @keyframes respiro-fresta-v {
     0% { width: 160px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
-    50% { width: 198px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+    45.45% { width: 176px; animation-timing-function: linear; }
+    54.55% { width: 176px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
     100% { width: 160px; }
   }
 
   .seletor__fresta[data-respiro] {
-    animation: respiro-fresta-v 1.4s 0.52s 1 both;
+    animation: respiro-fresta-v 1.98s 0.52s 1 both;
   }
 
   /* FIO DOURADO — só desktop, na borda que a faixa divide com o palco.
@@ -1036,6 +1063,12 @@ const passos = [
     color: var(--escuro-texto);
     background-color: rgba(20, 18, 16, 0.55);
     border: 1px solid rgba(237, 231, 219, 0.28);
+    /* O MESMO 50px da fresta e do palco, não um valor novo. A caixa tem 36px
+       no lado curto, então o navegador limita o raio a 18px sozinho e ela lê
+       como pílula — igual ao que já acontece com a fresta no mobile.
+       Ele nasceu sem raio nenhum: com véu e borda de 1px, parecia um botão
+       quadrado dentro de um bloco onde todo o resto é redondo. */
+    border-radius: 50px;
     white-space: nowrap;
     pointer-events: none;
   }
@@ -1786,11 +1819,20 @@ const passos = [
        Mesmos 700ms por trecho e o mesmo easing do desktop. */
     @keyframes respiro-fresta-h {
       0% { height: 72px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
-      50% { height: 104px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+      45.45% { height: 88px; animation-timing-function: linear; }
+      54.55% { height: 88px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
       100% { height: 72px; }
     }
 
+    /* Desfaz o par `right: auto` + `width: 160px` do desktop: aqui a faixa
+       atravessa a tela, e quem anima é a ALTURA. Então volta a ser ancorada
+       pelos dois lados (largura vem de left/right) e solta o topo, para
+       crescer para cima sem o overflow da seção recortar.
+       Sem este bloco a faixa do mobile ficava com 160px de largura — o valor
+       do desktop vazando. */
     .seletor__fresta {
+      right: 0;
+      width: auto;
       top: auto;
       height: 72px;
     }
