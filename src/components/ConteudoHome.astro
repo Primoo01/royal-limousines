@@ -883,7 +883,10 @@ const passos = [
      anuncia o destino da troca pelo aria-label (atualizado pelo JS). */
   .seletor__fresta {
     grid-area: fresta;
-    /* ABSOLUTA DENTRO DA PRÓPRIA CÉLULA, e isto é o que sustenta o respiro.
+    /* ABSOLUTA DENTRO DA PRÓPRIA CÉLULA, e isto é o que sustenta o respiro —
+       que desde a remoção do respiro no desktop só existe no MOBILE (ver a
+       regra `[data-respiro]` abaixo). A geometria continua valendo nos dois
+       breakpoints, então fica descrita aqui, no lugar onde ela é declarada.
        Filho absoluto de um grid container POSICIONADO com `grid-area`
        definido usa a área do grid como bloco contentor — então `inset: 0`
        devolve exatamente a célula de sempre, e a `.seletor` continua
@@ -897,22 +900,26 @@ const passos = [
        absoluto, uma vez por carregamento, sem nada reflowando junto. */
     position: absolute;
     inset: 0;
-    /* `right: auto` DESFAZ UMA SOBRE-RESTRIÇÃO, e sem isto o respiro empurra
-       o palco. Com `left`, `right` e `width` todos definidos a caixa está
-       sobre-restrita; enquanto a animação escreve `width`, a resolução do
-       conflito mexe na geometria e o palco andava até 6px para a direita e
+    /* `right: auto` + `width` NASCERAM PARA PROTEGER O RESPIRO DO DESKTOP, que
+       não existe mais. Ficam porque hoje são a declaração estática da largura,
+       mas o motivo original está aqui para quem for mexer:
+       com `left`, `right` e `width` todos definidos a caixa fica
+       sobre-restrita; enquanto a animação escrevia `width`, a resolução do
+       conflito mexia na geometria e o palco andava até 6px para a direita e
        voltava. Medido em 1440x900, isolando o respiro com uma folha injetada:
        com ele, `palco.left` percorria 866..871; sem ele, ficava imóvel em 866.
-       Ancorando só pela esquerda, a largura manda sozinha e o palco não sente.
-       No mobile o equivalente é o `top: auto` do bloco de baixo, e existe pela
-       mesma razão — lá quem anima é a altura. */
+       No mobile o `top: auto` do bloco de baixo existe pela mesma razão, e lá
+       AINDA É NECESSÁRIO — é o único breakpoint que anima.
+       Sem o respiro, um `inset: 0` limpo daria a mesma largura tirando-a da
+       trilha do grid, e apagaria esta segunda escrita do `160px`. Não foi
+       feito junto por estar fora do escopo daquela tarefa; é a simplificação
+       óbvia se alguém voltar aqui. */
     right: auto;
     /* E COM `right: auto` A LARGURA VIRA OBRIGATÓRIA AQUI. Sem ela a caixa
        fica `width: auto` e encolhe para o conteúdo — que é todo absoluto
-       dentro dela, ou seja, colapsa para ~0. A animação repõe 160px no
-       primeiro keyframe, então o defeito só apareceria em quem NUNCA a vê:
-       sem JS, com reduced-motion, ou nos milissegundos antes de o observer
-       disparar. Repouso e animação declaram o mesmo 160px de propósito. */
+       dentro dela, ou seja, colapsa para ~0. Este `160px` é o MESMO da trilha
+       `grid-template-columns` da `.seletor`: se um mudar, o outro tem que
+       mudar junto. */
     width: 160px;
     z-index: 2;
     display: block;
@@ -927,13 +934,13 @@ const passos = [
        esquerda deixava a costura com o palco reta de um lado e curva do outro.
        O `overflow: hidden` acima é o que faz a imagem respeitar a curva. */
     border-radius: 50px;
-    /* Só transform, e só no hover — a faixa avança um passo para fora,
-       sugerindo que ela entra no lugar do palco. */
+    /* Serve o `:active` daqui e o hover do mobile. NO DESKTOP O HOVER NÃO
+       MOVE MAIS A FAIXA: havia um `translateX(-6px)`, removido a pedido.
+       Ele abria um vão de 6px entre a faixa e o palco (borda direita de 846
+       para 840, com o palco imóvel em 846) bem onde o fio dourado acende — os
+       dois somavam na mesma junta. Quem responde ao hover no desktop agora é
+       só o fio. */
     transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-
-  .seletor__fresta:hover {
-    transform: translateX(-6px);
   }
 
   .seletor__fresta:active {
@@ -941,13 +948,13 @@ const passos = [
   }
 
   /* RESPIRO — a faixa alarga uma vez, ao entrar na tela, e volta. É o aviso
-     de que ali se clica, para quem nunca vai passar o mouse: a maioria das
-     visitas é mobile, e hover não existe lá.
+     de que ali se clica, para quem nunca vai passar o mouse.
      Dispara por IntersectionObserver com threshold 0.6, uma vez só, com
      unobserve depois (ver o script no fim do arquivo). O atraso de 520ms
      evita que o movimento chegue junto com a entrada da própria seção.
-     Cresce para DENTRO do palco, à direita, porque à esquerda está a borda
-     da tela. Como a faixa é absoluta, isto não toca na trilha do grid.
+     Cresce em ALTURA e para cima; os keyframes ficam no bloco mobile, junto
+     do resto da composição de lá. Como a faixa é absoluta, isto não toca na
+     trilha do grid.
 
      AMPLITUDE E RITMO. Era +38px em 700ms por trecho, e lia como pulo. Agora
      é +16px em 900ms, com 180ms parados no topo — mais lento e mais curto, o
@@ -956,16 +963,29 @@ const passos = [
 
      A soma dá 1980ms (900 + 180 + 900), e é dela que saem as porcentagens:
      900/1980 = 45.45% e 1080/1980 = 54.55%. Se mudar a duração, refaça as
-     duas — elas não são números redondos por acaso. */
-  @keyframes respiro-fresta-v {
-    0% { width: 160px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
-    45.45% { width: 176px; animation-timing-function: linear; }
-    54.55% { width: 176px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
-    100% { width: 160px; }
-  }
+     duas — elas não são números redondos por acaso.
 
-  .seletor__fresta[data-respiro] {
-    animation: respiro-fresta-v 1.98s 0.52s 1 both;
+     SÓ MOBILE, a pedido. No desktop o hover já anuncia a faixa e o respiro
+     virava um movimento a mais no carregamento; no mobile hover não existe,
+     e sem ele nada avisa que ali se clica. Existia um `respiro-fresta-v`
+     gêmeo, que animava `width`, apagado junto.
+
+     A GUARDA É MEDIA QUERY, NÃO `if` NO JS, e o motivo não é estilo: o
+     observer dispara UMA VEZ, então uma janela de desktop redimensionada para
+     estreita depois do load ficaria sem respiro para sempre. A media query
+     reavalia sozinha. E gatear no JS poria o `56.25rem` numa segunda cópia,
+     em outra linguagem (CLAUDE.md > Duplicação).
+
+     E ESTE BLOCO PRECISA FICAR ACIMA DO `prefers-reduced-motion` que vem
+     adiante. Com igual especificidade quem vence é a ordem de origem: lá
+     embaixo, este shorthand passaria por cima do `animation: none` e o
+     respiro voltaria no mobile com reduced-motion. Antes o override do bloco
+     mobile era `animation-name` sozinho e escapava disso por acidente — o
+     `none` já tinha zerado a duração. Aqui é de propósito. */
+  @media (max-width: 56.25rem) {
+    .seletor__fresta[data-respiro] {
+      animation: respiro-fresta-h 1.98s 0.52s 1 both;
+    }
   }
 
   /* FIO DOURADO — só desktop, na borda que a faixa divide com o palco.
@@ -1852,10 +1872,11 @@ const passos = [
       padding: 0.5rem 0.875rem;
     }
 
-    /* RESPIRO NO MOBILE — a faixa cresce em ALTURA, e para CIMA: a seção tem
+    /* RESPIRO — a faixa cresce em ALTURA, e para CIMA: a seção tem
        `overflow: hidden` e a faixa encosta na base dela, então crescer para
        baixo seria recortado. Ancorar em `bottom` e mexer só na altura resolve.
-       Mesmos 700ms por trecho e o mesmo easing do desktop. */
+       É o único respiro que existe hoje; quem o liga é a media query lá em
+       cima, junto do comentário que explica o ritmo. */
     @keyframes respiro-fresta-h {
       0% { height: 72px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
       45.45% { height: 88px; animation-timing-function: linear; }
@@ -1874,10 +1895,6 @@ const passos = [
       width: auto;
       top: auto;
       height: 72px;
-    }
-
-    .seletor__fresta[data-respiro] {
-      animation-name: respiro-fresta-h;
     }
 
     /* O fio dourado é SÓ desktop. Aqui a borda compartilhada é horizontal e
@@ -2156,6 +2173,11 @@ const passos = [
     }
 
     // RESPIRO — uma vez só, quando 60% da fresta estiver na tela.
+    //
+    // O atributo é posto nos DOIS viewports de propósito; quem decide se ele
+    // vira animação é a media query do CSS, e só o mobile responde hoje. Não
+    // adianta gatear largura aqui: o observer dispara uma vez, então uma
+    // janela redimensionada depois do load ficaria presa na decisão antiga.
     //
     // A guarda de reduced-motion é dupla de propósito: o CSS já anula a
     // animação, e aqui o observer nem chega a ser criado. O CSS sozinho
