@@ -736,6 +736,99 @@ escrita em vez de duas.
 
 ---
 
+## `public/` é web pública — e `.gitignore` não protege o build
+
+**`.gitignore` protege o REPOSITÓRIO, não o BUILD.** São duas coisas
+diferentes, e confundi-las já quase publicou uma ferramenta interna aqui.
+
+Todo arquivo em `public/` é copiado para `dist/` pelo Astro, **independente
+do git**. Um arquivo ignorado continua no disco, continua sendo copiado, e
+continua indo para o ar num deploy da pasta `dist/`. Ignorar só impede o
+commit — não impede a publicação.
+
+Aconteceu com um `public/viewer.html`, visualizador de breakpoints feito para
+conferir layout no celular: ele já estava em `dist/viewer.html`, com 2 393
+bytes, pronto para responder em `/viewer.html`. Só não foi ao ar porque nada
+havia sido publicado ainda.
+
+**Para um arquivo não ser publicado, ele tem que SAIR de `public/`.** Nada
+mais resolve. Ferramenta de dev mora fora de `public/` — no scratchpad, ou em
+qualquer pasta que o build não copie.
+
+E ao auditar, **confira o `dist/`, não o `git status`**: é o `dist/` que vira
+o site. Um `git status` limpo não diz nada sobre o que será servido.
+
+---
+
+## Pós-lançamento — decisões tomadas, não pontas soltas
+
+Tudo abaixo foi **medido, discutido e decidido** antes do lançamento. Nada
+aqui é esquecimento, e nada aqui deve ser "corrigido" por iniciativa própria
+numa auditoria. São itens que exigem decisão do cliente, custam mais do que
+entregam agora, ou dependem de algo que só existe depois do site no ar.
+
+Se você chegou aqui por causa de uma auditoria que apontou um destes pontos:
+a auditoria está certa sobre o fato e errada sobre a conclusão. Leia o
+contexto antes de abrir tarefa.
+
+**Orçamento de JS estourado na home e na `/limousines/`.** O script do
+Carrossel tem 24,9 KiB gzip sozinho; com o `Movimento` dá 28,4 KiB no mobile
+e 33,5 KiB no desktop com o Lenis. O teto declarado é 25 KB. As outras 12
+páginas ficam em 8,7 KiB — são elas que trazem o tráfego do Google, e estão
+folgadas. O caminho aqui é **reconciliar o teto com a realidade**, decidindo
+qual número vale para página com carrossel; não é perseguir os 25 KB
+espremendo a biblioteca que já quebrou duas vezes na versão caseira.
+
+**`FAQPage` está só na `/contato/`.** Este documento pede o bloco em página
+indexável, "home e/ou serviços". A `/contato/` é indexável, então não há
+violação — mas a home é quem recebe o tráfego pago, e é lá que o rich result
+renderia melhor. Mover ou duplicar é decisão de SEO, não de implementação.
+
+**Vazio do Hero 1 em zoom 50%: 458px.** Já foi de 661px; o bloco de texto
+passou a acompanhar a altura no mesmo ritmo da foto (`22.5svh`). Não zera
+porque o marquee sobe com a altura na proporção 1:1 e a foto na proporção
+0,225:1. Zerar exigiria teto de altura na seção, o que contraria "seções de
+vitrine ocupam a tela inteira" — **decisão do cliente, não de quem
+implementa**.
+
+**Foto do sedan amplia 1,8× a 2,6× em DPR 2–3.** Ela tem 820×954 contra
+1536×2730 do resto do acervo. O cliente **escolheu explicitamente** manter
+esta versão, que passou por tratamento de cor que não existe no original de
+10 MB. Não troque pelo original. Ver a nota em `src/data/fotos-sedan.js`.
+
+**`/servicos/` com 149 KB de fotos abaixo da dobra.** Levantado em auditoria,
+nunca virou tarefa. Não afeta LCP nem CLS — é peso de rede depois da
+primeira tela. Vale medir o ganho real antes de mexer.
+
+**Avaliar trocar o Swiper por `scroll-snap` nativo.** É o único caminho que
+resolve o orçamento de JS sem reescrever carrossel à mão — foi a versão
+caseira que quebrou duas vezes e motivou a biblioteca. `scroll-snap` não é
+código nosso: é o navegador. Precisa de prova de que dá conta de `loop`,
+autoplay e teclado antes de qualquer troca.
+
+**Seletor de dois carros fora da dobra no mobile.** Ele ocupa `100svh` e vive
+na segunda tela: começa em y=832 numa viewport de 844, e a fresta — que é o
+que avisa da troca — fica em 1604..1676. Só aparece ao rolar. **Aceito
+conscientemente.**
+
+Duas saídas foram medidas e as duas estão **descartadas**. Subir o bloco
+exigiria 832px, o que jogaria h1, botões, nota e marquee inteiros para fora
+da tela pelo topo. Inverter as linhas do grid (fresta acima do palco) custaria
+só 60px, mas poria **o carro secundário acima do principal**, contrariando a
+hierarquia da composição — e por isso foi recusado, não por custo.
+
+A correção real é **estrutural, não de espaçamento**. Reavaliar depois do
+lançamento, com dado de uso real: se ninguém rola até lá, o problema é a
+posição do seletor na página; se rolam e não trocam, é a fresta que não
+comunica. São correções diferentes, e hoje não há como saber qual.
+
+**Easing linear do Hero 2 só existe no mobile.** No desktop as cinco fases
+seguem como estavam. O linear entrou para matar o solavanco do scrub, e o
+desktop mascara o problema com o amortecimento do Lenis — mas o ganho de
+arranque existe lá também. Estender é seguro; só não foi pedido ainda.
+
+---
+
 ## O que NÃO fazer
 
 - Não altere nenhuma URL

@@ -15,6 +15,22 @@ npm-debug.log*
 # editor/os
 .DS_Store
 
+# ---------------------------------------------------------------------
+# Cópias manuais e ferramentas de dev
+# ---------------------------------------------------------------------
+# Backup manual de arquivo que JÁ ESTÁ versionado: o git é o backup, e uma
+# cópia paralela envelhece calada — a que existia aqui era do config antes
+# do túnel de preview. Se precisar do estado anterior, use `git show`.
+*.beckup.config
+*.backup.config
+
+# NADA de ferramenta de dev dentro de public/: tudo ali é COPIADO PARA O
+# BUILD e fica acessível na web. O viewer.html de breakpoints chegou a
+# existir em public/ e saía em dist/viewer.html — .gitignore não teria
+# resolvido, porque quem publica é o build, não o git. Ferramenta de dev
+# mora fora de public/.
+public/viewer.html
+
 .vercel
 
 # ---------------------------------------------------------------------
