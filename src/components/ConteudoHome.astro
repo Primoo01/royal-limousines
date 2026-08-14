@@ -299,7 +299,15 @@ const passos = [
               alt="" aria-hidden="true" decoding="async" />
           </picture>
         </span>
-        <span class="seletor__rotulo" data-seletor-rotulo>Sedan 300C preto</span>
+        <span class="seletor__rotulo" data-seletor-rotulo>Ver o Sedan 300C preto</span>
+        {/* CONTADOR — dois pontos, o cheio é o carro que está no palco.
+            `aria-hidden` porque é redundante: o rótulo já diz o que o clique
+            faz, e o nome acessível do botão é o rótulo (WCAG 2.5.3). Ler
+            "dois pontos" no leitor de tela só atrapalharia. */}
+        <span class="seletor__contador" aria-hidden="true">
+          <span class="seletor__ponto" data-ponto="limo"></span>
+          <span class="seletor__ponto" data-ponto="sedan"></span>
+        </span>
       </button>
 
       {/* AÇÕES — uma por carro, só a do ativo visível. Links reais, então
@@ -875,7 +883,21 @@ const passos = [
      anuncia o destino da troca pelo aria-label (atualizado pelo JS). */
   .seletor__fresta {
     grid-area: fresta;
-    position: relative;
+    /* ABSOLUTA DENTRO DA PRÓPRIA CÉLULA, e isto é o que sustenta o respiro.
+       Filho absoluto de um grid container POSICIONADO com `grid-area`
+       definido usa a área do grid como bloco contentor — então `inset: 0`
+       devolve exatamente a célula de sempre, e a `.seletor` continua
+       posicionada nos dois breakpoints.
+       O ganho: a faixa pode crescer para fora da célula sem que a trilha
+       (`160px` no desktop, `72px` no mobile) mude um pixel. Nada ao redor se
+       desloca, e o CLS durante a animação é zero — medido, não suposto.
+       Animar `width`/`height` contraria a regra geral de "só transform e
+       opacity". A alternativa era `scaleX`, que esmagaria a foto dentro da
+       faixa por 1,4s. Aqui o custo de layout está contido: um elemento
+       absoluto, uma vez por carregamento, sem nada reflowando junto. */
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     display: block;
     padding: 0;
     border: 0;
@@ -899,6 +921,73 @@ const passos = [
 
   .seletor__fresta:active {
     transform: translateX(-2px) scale(0.995);
+  }
+
+  /* RESPIRO — a faixa alarga uma vez, ao entrar na tela, e volta. É o aviso
+     de que ali se clica, para quem nunca vai passar o mouse: a maioria das
+     visitas é mobile, e hover não existe lá.
+     Dispara por IntersectionObserver com threshold 0.6, uma vez só, com
+     unobserve depois (ver o script no fim do arquivo). O atraso de 520ms
+     evita que o movimento chegue junto com a entrada da própria seção.
+     Cresce para DENTRO do palco, à direita, porque à esquerda está a borda
+     da tela. Como a faixa é absoluta, isto não toca na trilha do grid. */
+  @keyframes respiro-fresta-v {
+    0% { width: 160px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+    50% { width: 198px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+    100% { width: 160px; }
+  }
+
+  .seletor__fresta[data-respiro] {
+    animation: respiro-fresta-v 1.4s 0.52s 1 both;
+  }
+
+  /* FIO DOURADO — só desktop, na borda que a faixa divide com o palco.
+     Em repouso ele é um quarto da altura; no hover e no foco completa.
+     `scaleY` e `opacity`, nada de layout. */
+  .seletor__fresta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    background-color: #a8823c;
+    transform: scaleY(0.24);
+    transform-origin: center;
+    transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .seletor__fresta:hover::after,
+  .seletor__fresta:focus-visible::after {
+    transform: scaleY(1);
+  }
+
+  /* CONTADOR. Dois pontos: o cheio é o carro NO PALCO, não o da faixa —
+     é leitura de posição ("estou no 1 de 2"), não rótulo da miniatura.
+     Desktop: na base da faixa, horizontais. O rótulo sobe para dar lugar
+     (ver `.seletor__rotulo` abaixo), senão os dois ocupariam o mesmo canto. */
+  .seletor__contador {
+    position: absolute;
+    left: 50%;
+    bottom: var(--espaco-2);
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  .seletor__ponto {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    transition: background-color 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+
+  [data-seletor-ativo='limo'] .seletor__ponto[data-ponto='limo'],
+  [data-seletor-ativo='sedan'] .seletor__ponto[data-ponto='sedan'] {
+    background-color: #c6a25e;
   }
 
   .seletor__faixa {
@@ -933,7 +1022,9 @@ const passos = [
   .seletor__rotulo {
     position: absolute;
     left: 50%;
-    bottom: var(--espaco-3);
+    /* Sobe o suficiente para o contador ocupar a base sem encostar: 16px do
+       contador + 5px do ponto + 8px de folga, somados aos 24px de origem. */
+    bottom: calc(var(--espaco-3) + 29px);
     transform: translateX(-50%) rotate(180deg);
     writing-mode: vertical-rl;
     padding: 0.75rem 0.5rem;
@@ -994,6 +1085,19 @@ const passos = [
     .seletor__fresta:hover,
     .seletor__fresta:active {
       transform: none;
+    }
+
+    /* Sem respiro. O resto das camadas continua: o verbo no rótulo, o
+       contador e o fio dourado são estado, não movimento — some só o que se
+       mexe. O fio fica no estado de repouso (scaleY .24) e ainda completa no
+       foco, porque ali a transição é que sai, não o alcance. */
+    .seletor__fresta[data-respiro] {
+      animation: none;
+    }
+
+    .seletor__ponto,
+    .seletor__fresta::after {
+      transition: none;
     }
   }
 
@@ -1664,7 +1768,9 @@ const passos = [
       transform: translateY(-1px) scale(0.995);
     }
 
-    /* Rótulo volta à horizontal e centraliza na faixa. */
+    /* Rótulo volta à horizontal e centraliza na faixa. O `bottom: auto`
+       desfaz a subida que o desktop faz para dar lugar ao contador — aqui o
+       contador vive na ponta direita, não na base. */
     .seletor__rotulo {
       left: 50%;
       top: 50%;
@@ -1672,6 +1778,43 @@ const passos = [
       transform: translate(-50%, -50%);
       writing-mode: horizontal-tb;
       padding: 0.5rem 0.875rem;
+    }
+
+    /* RESPIRO NO MOBILE — a faixa cresce em ALTURA, e para CIMA: a seção tem
+       `overflow: hidden` e a faixa encosta na base dela, então crescer para
+       baixo seria recortado. Ancorar em `bottom` e mexer só na altura resolve.
+       Mesmos 700ms por trecho e o mesmo easing do desktop. */
+    @keyframes respiro-fresta-h {
+      0% { height: 72px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+      50% { height: 104px; animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+      100% { height: 72px; }
+    }
+
+    .seletor__fresta {
+      top: auto;
+      height: 72px;
+    }
+
+    .seletor__fresta[data-respiro] {
+      animation-name: respiro-fresta-h;
+    }
+
+    /* O fio dourado é SÓ desktop. Aqui a borda compartilhada é horizontal e
+       o filete viraria um risco atravessando a tela inteira. */
+    .seletor__fresta::after {
+      content: none;
+    }
+
+    /* Contador na ponta direita, centralizado na vertical. O rótulo é
+       centralizado na faixa, então as duas pontas ficam livres — e é a ponta,
+       não a base, porque numa faixa de 72px com o rótulo de 36px no meio
+       sobram só 18px acima e abaixo. */
+    .seletor__contador {
+      left: auto;
+      right: var(--espaco-3);
+      top: 50%;
+      bottom: auto;
+      transform: translateY(-50%);
     }
 
     /* A ação sai do topo e vai para o pé do palco, logo acima da faixa —
@@ -1849,10 +1992,14 @@ const passos = [
   as que trazem o tráfego do Google e continuam leves — é a mesma razão pela
   qual o Swiper é importado só na home e na /limousines/.
 
-  O script faz três coisas e nada mais:
+  O script faz quatro coisas e nada mais:
     1. troca `data-seletor-ativo` (todo o resto é CSS);
     2. promove `data-src`/`data-srcset` em requestIdleCallback DEPOIS do load;
-    3. mantém aria-label e rótulo em sincronia com o estado.
+    3. mantém o rótulo em sincronia com o estado;
+    4. arma o respiro da fresta uma única vez, quando ela entra na tela.
+
+  O contador NÃO precisa de JS: os dois pontos leem `data-seletor-ativo` por
+  CSS, o mesmo atributo que já governa tudo o resto. Uma fonte de estado.
 */}
 <script>
   const seletor = document.querySelector<HTMLElement>('[data-seletor]');
@@ -1863,7 +2010,10 @@ const passos = [
 
     // Nome de cada carro, para rótulo e aria-label. O rótulo mostra sempre o
     // carro INATIVO — é o que a fresta exibe e o que o clique vai trazer.
-    const nomes = { limo: 'Limousine 300C branca', sedan: 'Sedan 300C preto' };
+    // O verbo entra no rótulo para dizer que ali se CLICA — quem só vê a
+    // miniatura não sabe. O nome do carro fica: os dois são Chrysler 300C, e
+    // é "Sedan preto"/"limousine branca" que diz qual deles o clique traz.
+    const nomes = { limo: 'Ver a limousine 300C branca', sedan: 'Ver o Sedan 300C preto' };
 
     // PROMOÇÃO DA MÍDIA ADIADA. Nasce em data-* para não competir com o LCP;
     // aqui vira src de verdade.
@@ -1906,6 +2056,32 @@ const passos = [
       const outro = ativo === 'limo' ? 'sedan' : 'limo';
       seletor!.dataset.seletorAtivo = ativo;
       if (rotulo) rotulo.textContent = nomes[outro];
+    }
+
+    // RESPIRO — uma vez só, quando 60% da fresta estiver na tela.
+    //
+    // A guarda de reduced-motion é dupla de propósito: o CSS já anula a
+    // animação, e aqui o observer nem chega a ser criado. O CSS sozinho
+    // bastaria para o efeito visual; o JS a mais evita pendurar um observer
+    // que nunca teria serventia.
+    //
+    // `unobserve` no primeiro disparo: o respiro é uma apresentação, não um
+    // aviso recorrente. Repetir a cada rolagem viraria ruído.
+    if (botao && 'IntersectionObserver' in window) {
+      const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduz) {
+        const observador = new IntersectionObserver(
+          (entradas) => {
+            for (const entrada of entradas) {
+              if (!entrada.isIntersecting) continue;
+              (entrada.target as HTMLElement).dataset.respiro = '';
+              observador.unobserve(entrada.target);
+            }
+          },
+          { threshold: 0.6 }
+        );
+        observador.observe(botao);
+      }
     }
 
     botao?.addEventListener('click', () => {
