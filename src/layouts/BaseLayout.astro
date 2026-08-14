@@ -114,7 +114,12 @@ const localBusiness = {
   name: site.nome,
   description: site.descricaoCurta,
   url: site.url,
-  telephone: site.contato.telefone.link.replace('tel:', ''),
+  // O `telephone` era o fixo (11) 2295-3870, removido do site. O campo NÃO foi
+  // apagado: `telephone` é sinal de LocalBusiness que o site antigo não tinha,
+  // e o número do WhatsApp é uma linha real que a empresa atende — então ele
+  // continua verdadeiro, que é o que a dado estruturado exige. Vira `+55...`
+  // porque schema.org espera formato E.164.
+  telephone: `+${site.contato.whatsapp.numero}`,
   email: site.contato.email,
   areaServed: { '@type': 'Place', name: site.contato.areaAtendida },
   address: { '@type': 'PostalAddress', addressLocality: 'São Paulo', addressRegion: 'SP', addressCountry: 'BR' },

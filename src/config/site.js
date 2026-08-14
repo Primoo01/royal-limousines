@@ -9,10 +9,13 @@ export const site = {
   localeOg: 'pt_BR',
 
   contato: {
-    telefone: {
-      exibicao: '(11) 2295-3870',
-      link: 'tel:+551122953870',
-    },
+    // NÃO EXISTE MAIS UM TELEFONE FIXO AQUI. O (11) 2295-3870 saiu do site
+    // inteiro a pedido do cliente, que não usa mais a linha. Se um telefone
+    // voltar um dia, ele volta COMO CAMPO NOVO — não reponha o número velho
+    // achando que foi perda acidental.
+    //
+    // Quem herdou o papel dele é o WhatsApp abaixo, inclusive no `telephone`
+    // do JSON-LD (ver BaseLayout.astro).
     whatsapp: {
       exibicao: '(11) 99913-0498',
       numero: '5511999130498',

@@ -106,11 +106,13 @@ const lcpSizes = '(max-width: 56.25rem) 100vw, 50vw';
         jantares românticos e eventos. Uma contratação clara, organizada e
         conduzida por uma empresa especializada.
       </p>
+      {/* O botão "Ligar: (11) 2295-3870" saiu com o telefone fixo. Esta linha
+          ficou com um botão só — e ele é SECUNDÁRIO, então a LP de anúncios
+          está sem primário. Ver a nota no segundo `.lp-cta` abaixo. */}
       <div class="lp-cta">
         <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
           {site.cta.whatsapp}
         </Botao>
-        <Botao variante="primario" href={site.contato.telefone.link}>Ligar: {site.contato.telefone.exibicao}</Botao>
       </div>
       <p class="lp-hero__selo">Royal Limousines • Desde 2008 em São Paulo</p>
     </div>
@@ -279,11 +281,23 @@ const lcpSizes = '(max-width: 56.25rem) 100vw, 50vw';
       }
     </ol>
 
+    {/* PENDÊNCIA CONSCIENTE, não esquecimento. Os dois `.lp-cta` desta página
+        tinham um par secundário + primário; o primário era o link `tel:` do
+        (11) 2295-3870 (aqui rotulado "Ligar para a Royal", sem o número à
+        vista) e saiu com ele.
+
+        Resultado: a landing dos anúncios do Google ficou SEM botão primário —
+        justo a página cujo único trabalho é converter, e onde o CLAUDE.md diz
+        que o primário "é o botão que precisa dar vontade de clicar".
+
+        A correção é uma palavra: `secundario` -> `primario` no botão de
+        WhatsApp destes dois blocos. Não foi feita junto por estar fora do
+        escopo da tarefa de remover o telefone, e por mudar peso visual de
+        página de conversão — decisão do cliente. */}
     <div class="lp-cta">
       <Botao variante="secundario" href={site.contato.whatsapp.link} target="_blank" rel="noopener">
         {site.cta.orcamento} pelo WhatsApp
       </Botao>
-      <Botao variante="primario" href={site.contato.telefone.link}>Ligar para a Royal</Botao>
     </div>
   </section>
 

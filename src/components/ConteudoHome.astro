@@ -521,8 +521,11 @@ const passos = [
 <section class="secao-contato u-container reveal">
   <p class="u-eyebrow">Contato</p>
   <EntradaTitulo as="h2">Faça um orçamento hoje mesmo</EntradaTitulo>
+  {/* Só o e-mail: o telefone fixo saiu do site. O WhatsApp não entra aqui
+      porque ele já é o segundo botão logo abaixo — repetir na mesma caixa
+      daria duas chamadas para o mesmo destino a dois centímetros uma da
+      outra. */}
   <div class="secao-contato__dados">
-    <p><a href={site.contato.telefone.link}>{site.contato.telefone.exibicao}</a></p>
     <p><a href={`mailto:${site.contato.email}`}>{site.contato.email}</a></p>
   </div>
   <div class="hero__cta">

@@ -4,8 +4,18 @@
 // Todo texto abaixo vem literalmente de src/data/paginas-antigas.json
 // (backup do site antigo), só reorganizado em campos para o template renderizar
 // como seções (parágrafos de abertura / diferenciais em lista / bloco de fechamento).
-// Nada foi reescrito ou inventado. Único ajuste de conteúdo datado: nenhum destes
-// textos tinha "Promoção 2017" ou ano antigo — não precisou de limpeza aqui.
+// Nada foi reescrito ou inventado.
+//
+// ÚNICO AJUSTE DE CONTEÚDO DATADO, e ele existe: o `fraseTelefone` das 8
+// entradas dizia "ligue para (11) 2295-3870 ou para (11) 99913-0498". O fixo
+// saiu do site inteiro (o cliente não usa mais a linha), e o trecho
+// "(11) 2295-3870 ou para " foi retirado das 8 — sobra "ligue para
+// (11) 99913-0498".
+//
+// A cobertura de palavras-chave não muda: os termos que ranqueiam estão em
+// "aluguel de limousines na Zona Sul" e afins, não no número. O
+// paginas-antigas.json continua com a frase original, porque ele é o registro
+// do que o site antigo dizia — não é servido a ninguém.
 
 export const servicosRegiao = [
   {
@@ -39,7 +49,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines em SP, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
       { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
@@ -76,7 +86,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Leste, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Leste, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
       { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
@@ -114,7 +124,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Norte, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Norte, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
       { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
@@ -151,7 +161,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Oeste, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Oeste, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
       { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
@@ -188,7 +198,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Sul, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines na Zona Sul, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Wedding-Limo-Image.jpg', rotulo: 'Limousine Royal na chegada da noiva' },
       { arquivo: '6957459_orig.jpg', rotulo: 'Detalhe do casamento com a Limousine Royal' },
@@ -223,7 +233,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre aluguel de limousines para debutantes em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre aluguel de limousines para debutantes em SP, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'Women-in-Limo.jpg', rotulo: 'Limousine Royal em festa de debutante' },
       { arquivo: 'limo-girls.jpg', rotulo: 'Limousine Royal com a debutante e as convidadas' },
@@ -259,7 +269,7 @@ export const servicosRegiao = [
       'Contrate uma empresa especializada! Entre em contato com a Royal Limousines e confira os nossos serviços e preços!',
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
-    fraseTelefone: 'Para saber mais sobre Limousines para aniversários em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+    fraseTelefone: 'Para saber mais sobre Limousines para aniversários em SP, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: 'hgfhf.jpg', rotulo: 'Limousine Royal em aniversário' },
       { arquivo: '4640854_orig.jpg', rotulo: 'Limousine Royal em festa de aniversário' },
@@ -296,7 +306,7 @@ export const servicosRegiao = [
       'Com uma equipe de atendimento 24hrs por dia, 7 dias por semana, para que você possa contratar, faça o seu orçamento hoje mesmo!',
     ],
     fraseTelefone:
-      'Para saber mais sobre aluguel de Limousines para Jantares românticos em SP, ligue para (11) 2295-3870 ou para (11) 99913-0498.',
+      'Para saber mais sobre aluguel de Limousines para Jantares românticos em SP, ligue para (11) 99913-0498.',
     imagens: [
       { arquivo: '1121.jpg', rotulo: 'Limousine Royal em jantar romântico' },
       { arquivo: 'ir.ashx_808.jpg', rotulo: 'Casal em jantar romântico com a Limousine Royal' },
