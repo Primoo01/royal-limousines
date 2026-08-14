@@ -564,16 +564,69 @@ const passos = [
     /* Ocupa o que sobra acima da faixa do marquee. */
     flex: 1;
     min-height: 0;
+    /* O BLOCO DE TEXTO PASSA A ACOMPANHAR A ALTURA DA TELA.
+       (ver a nota longa em .hero-estagio1__topo > "por que este padding") */
+    padding-top: calc(22.5svh - 202.5px);
   }
 
   .hero-estagio1__topo {
     grid-area: topo;
-    align-self: center;
-    /* Desce o bloco inteiro — h1, lead, botões e a nota — de uma vez, pelo
-       contêiner que já os agrupa. `transform` e não `margin`: com
-       `align-self: center` a margem seria redistribuída pela centralização
-       e o deslocamento sairia pela metade. Assim são 40px exatos, e o
-       marquee (irmão, fora deste bloco) não se mexe.
+    /* POR QUE ESTE PADDING (o `padding-top` da `.__grade`, logo acima)
+       ------------------------------------------------------------------
+       O bloco era o ÚNICO elemento do hero que não acompanhava a altura da
+       tela. A foto é ancorada em percentual (`top: 22.5%`) e o marquee é
+       empurrado para a base pelo `flex: 1` desta grade — os dois se
+       espalham quando a viewport cresce. O texto ficava preso a 132px
+       constantes do topo e era deixado para trás, sozinho.
+
+       Medido, o vão entre "São Paulo e região" e o marquee:
+         1440x900  (zoom 100%)    44px
+         1800x1125 (zoom  80%)   188px
+         2880x1800 (zoom  50%)   661px
+
+       Não era sobreposição nem corte — em 400, 500, 600, 700, 900, 1125,
+       1200 e 1800px de altura o bloco ficou sempre em y=132, x=144, 556 de
+       largura, sem colidir com nada. O defeito era o vazio crescente.
+
+       `align-self: center` NÃO fazia nada e por isso saiu: o bloco está na
+       linha 1 de `grid-template-rows: auto 1fr`, uma linha do tamanho do
+       conteúdo. Centralizar dentro de uma caixa que tem exatamente a
+       altura do conteúdo não desloca ninguém.
+
+       A CALIBRAÇÃO. Queremos o topo do bloco no mesmo ritmo da foto,
+       `0.225 × H`, sem sair de 132px em 900:
+         topo = 72 (padding da seção) + padding-top + 60 (translateY)
+         quero topo = 0.225·H − 70.5   →   padding-top = 22.5svh − 202.5px
+       Em 900 dá exatamente 0, então 1440x900 fica idêntico ao que era —
+       era requisito. Abaixo de 900 o valor fica negativo e o CSS o trava em
+       0, ou seja telas baixas seguem como antes.
+
+       Isto REDUZ o vazio, não elimina: o marquee sobe com a altura na
+       proporção 1:1 e a foto (e agora o texto) na proporção 0.225:1. Em
+       2880x1800 o vão cai de 661 para ~458px. Zerar exigiria teto de altura
+       na seção, que contraria "vitrine ocupa a tela inteira" do CLAUDE.md —
+       decisão de cliente, não de implementação.
+
+       `svh` e não `%`: porcentagem em padding resolve contra a LARGURA do
+       contêiner, não a altura. A equivalência com o `22.5%` da foto vale
+       enquanto a seção tiver 100svh, que é o caso sempre que o conteúdo
+       cabe. Em tela muito baixa a seção cresce além da viewport e as duas
+       ancoragens divergem — mas lá o padding já está travado em 0.
+
+       NO MOBILE ISTO NÃO EXISTE: abaixo de 56.25rem a `.__grade` vira
+       `display: contents` e não gera caixa, então o padding é ignorado.
+       Não precisou de breakpoint novo.
+
+       Desce o bloco inteiro — h1, botões e a nota — de uma vez, pelo
+       contêiner que já os agrupa. `transform` e não `margin` porque o
+       marquee é irmão deste bloco, fora dele: uma margem faria a grade
+       crescer e o empurraria junto. Assim são 60px exatos e só aqui.
+
+       (O motivo escrito aqui antes era outro — que o `align-self: center`
+       redistribuiria a margem pela metade. Aquilo valia enquanto a
+       centralização existia; ela saiu junto com esta mudança, por ser
+       inerte. O `transform` continua certo pelo motivo acima, que sempre
+       valeu em paralelo.)
 
        ERA 90px. Subiu 50 mudando ESTE valor, não empilhando margem negativa
        por cima — o deslocamento continua tendo uma origem só. Com 90px a nota
@@ -599,10 +652,12 @@ const passos = [
   /* Desce os botões 20px. `transform` e NÃO `margin-top`, por dois motivos
      que se somam:
 
-     1. No desktop o `.__topo` tem `align-self: center`. Crescer a altura do
-        bloco redistribui pela centralização — 20px de margem virariam 10
-        para baixo aqui e 10 para CIMA no h1, que não era pra se mexer.
-        Mesma armadilha já registrada na nota do `translateY` do `.__topo`.
+     1. No desktop, crescer a altura do bloco empurra o marquee, que é irmão
+        dele e fica logo abaixo na coluna flex. (Enquanto o `.__topo` teve
+        `align-self: center`, havia um segundo motivo: a margem era
+        redistribuída pela centralização e 20px viravam 10 aqui e 10 para
+        CIMA no h1. A centralização saiu — era inerte —, mas o empurrão no
+        marquee permanece.)
      2. No mobile o bloco está no fluxo, então a margem empurraria também o
         marquee e a foto que vêm depois, e os deslocamentos dos quatro itens
         se somariam uns aos outros. Com `transform` cada um anda o que foi
