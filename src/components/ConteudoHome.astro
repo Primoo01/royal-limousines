@@ -596,6 +596,24 @@ const passos = [
     margin-top: var(--espaco-2);
   }
 
+  /* Desce os botões 20px. `transform` e NÃO `margin-top`, por dois motivos
+     que se somam:
+
+     1. No desktop o `.__topo` tem `align-self: center`. Crescer a altura do
+        bloco redistribui pela centralização — 20px de margem virariam 10
+        para baixo aqui e 10 para CIMA no h1, que não era pra se mexer.
+        Mesma armadilha já registrada na nota do `translateY` do `.__topo`.
+     2. No mobile o bloco está no fluxo, então a margem empurraria também o
+        marquee e a foto que vêm depois, e os deslocamentos dos quatro itens
+        se somariam uns aos outros. Com `transform` cada um anda o que foi
+        pedido e nada mais.
+
+     Escopado ao `.__topo` de propósito: `.hero__cta` também veste os botões
+     da `.secao-contato`, mais abaixo nesta mesma página. */
+  .hero-estagio1__topo .hero__cta {
+    transform: translateY(20px);
+  }
+
   /* Fora do grid — sangra a partir da largura da TELA (não do container),
      por isso é posicionada em relação à seção inteira, não à coluna.
      Esquerda: ~55vw. Direita: a mesma margem lateral que o container usa
@@ -632,12 +650,20 @@ const passos = [
        Não colide com o marquee: ele tem width: 50vw e vive na metade
        esquerda, enquanto a foto começa em 55%.
 
-       Os -87px sobem o topo sem tocar em `bottom`, então a altura ganha
-       exatamente 87px e a base fica no lugar. Medido em 1440x900: o topo
-       vai de 216.84 para 129.84, e o header termina em 74 — sobram 55.84
-       de folga, sem colisão. */
-    top: calc(22.5% - 87px);
-    bottom: 22.5%;
+       DESCIDA DE 87px, COM A ALTURA INTACTA. O `- 87px` era do `top` e
+       fazia a caixa CRESCER 87px para cima com a base parada. Agora ele
+       mora no `bottom`: os dois lados andam 87px para baixo juntos, então
+       a altura continua `55% + 87px` (582px em 1440x900) e a proporção
+       1.2225 do enquadramento não muda — o `left`/`right` nem foi tocado.
+
+       Não confunda os dois usos do mesmo número: o 87 de crescimento virou
+       87 de deslocamento, e é coincidência de valor, não a mesma conta.
+
+       A caixa passa a 202..784 numa seção de 900, com 116px de folga na
+       base — nada é cortado pelo `overflow: hidden` da seção. Em cima
+       sobram 128px até o header. */
+    top: 22.5%;
+    bottom: calc(22.5% - 87px);
     /* ENTRADA NO LOAD. O estado BASE deste elemento é o FINAL — opacity 1
        e translateX(0) — e o deslocado/transparente existe só no `from` do
        @keyframes. Se a animação não rodar, a foto está visível e no lugar;
@@ -923,7 +949,21 @@ const passos = [
     flex: none;
     margin-top: 40px;
     width: 50vw;
-    z-index: 2;
+    /* ATRÁS da foto, não na frente. Era 2, contra o 1 da `.__midia`, e
+       depois que a foto desceu 87px as duas passaram a se cruzar (medido em
+       1440x900: 132px de sobreposição vertical, 14px de horizontal — só a
+       ponta direita da faixa, porque ela tem 50vw e a foto começa em 55%).
+
+       Trocar o z-index resolve sozinho, e isso foi verificado antes de
+       mexer: a `.hero-estagio1` é `position: relative` com `z-index: auto`,
+       ou seja NÃO cria contexto de empilhamento. As duas são irmãs diretas
+       dela e disputam no mesmo contexto, então a comparação é direta. Se a
+       seção criasse contexto, mexer só no z-index não adiantaria.
+
+       0 e não `auto` para ficar explícito que é uma posição escolhida. Fica
+       acima da cortina de luz mesmo empatando com ela em 0: empate se
+       resolve por ordem no DOM, e a cortina vem antes. */
+    z-index: 0;
     pointer-events: none;
   }
 
@@ -931,6 +971,12 @@ const passos = [
      junto com o h1 e o parágrafo, sem posicionamento próprio. */
   .hero-estagio1__nota {
     margin-top: var(--espaco-4);
+    /* Desce 12px. `transform` pela mesma razão dos botões logo acima — e
+       aqui ele também ISOLA os dois deslocamentos: no fluxo, os 20px dos
+       botões arrastariam a nota junto, e ela andaria 32px em vez de 12.
+       Com transform cada valor é o deslocamento final do próprio elemento,
+       que é o que foi pedido. */
+    transform: translateY(12px);
     font-family: var(--fonte-sans);
     font-size: 0.8125rem;
     letter-spacing: 0.14em;
@@ -1450,6 +1496,15 @@ const passos = [
          top/left/right/bottom daquela regra, que com position: relative
          (herdado da regra compartilhada acima) virariam deslocamento. */
       inset: auto;
+      /* Desce 87px, o mesmo do desktop, mas por MARGEM e não por transform.
+         Aqui a foto é o último item do fluxo e a seção tem
+         `overflow: hidden`: com transform ela passaria a base da seção e
+         seria recortada em 23px (a folga na base é de 64px). A margem faz a
+         seção crescer junto, e nada é cortado.
+
+         Os botões e a nota usam transform, então não empurram este bloco —
+         os 87px daqui são deslocamento líquido, não soma dos de cima. */
+      margin-top: 87px;
       /* Largura da PÁGINA inteira, de borda a borda. A regra compartilhada
          acima dá `padding-inline: var(--espaco-3)` a este bloco e ao topo;
          aqui ele é zerado, e como a própria seção não tem padding
