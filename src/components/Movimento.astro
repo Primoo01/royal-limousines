@@ -781,6 +781,44 @@
     return y;
   }
 
+  // O DESTINO É O PRIMEIRO CONTEÚDO, NÃO A CAIXA DA SEÇÃO.
+  //
+  // O `id` da âncora mora na <section> de propósito — é ela que carrega o
+  // eyebrow e o h2, e pousar na div do vídeo deixaria o visitante sem saber o
+  // que está olhando. Só que a caixa da seção começa bem antes do texto: a
+  // .secao-galeria tem 96px de padding-top (--espaco-6) e o #sedan tem 144px
+  // (--espaco-7). Encostar a CAIXA embaixo do header punha esse padding
+  // inteiro na tela como vazio — medido, 98px na home e 142px na
+  // /limousines/, com o texto começando só depois disso.
+  //
+  // Por isso o destino sai do primeiro filho que desenha conteúdo de fato.
+  // Pular o decorativo é obrigatório e não é detalhe: o #sedan começa com a
+  // silhueta, que é `aria-hidden` e absoluta — medi-la devolveria o topo da
+  // própria seção e o vazio voltaria inteiro.
+  //
+  // Note que o desvio NUNCA foi uma constante: ele é o padding de cada seção,
+  // 96 aqui e 144 ali. Um valor fixo acertaria uma âncora e erraria a outra.
+  function primeiroConteudo(secao: HTMLElement): HTMLElement {
+    for (const filho of Array.from(secao.children) as HTMLElement[]) {
+      if (filho.getAttribute('aria-hidden') === 'true') continue;
+      const cs = getComputedStyle(filho);
+      if (cs.position === 'absolute' || cs.position === 'fixed') continue;
+      if (cs.display === 'none') continue;
+      if (filho.getBoundingClientRect().height === 0) continue;
+      return filho;
+    }
+    return secao;
+  }
+
+  // Respiro entre a base do header e a primeira linha de texto. O
+  // `scroll-margin-top` do alvo já reserva a altura do header; isto é só o ar.
+  const RESPIRO_ANCORA = 24;
+
+  function destinoDaAncora(alvo: HTMLElement) {
+    const margem = parseFloat(getComputedStyle(alvo).scrollMarginTop) || 0;
+    return Math.max(0, topoDeLayout(primeiroConteudo(alvo)) - margem - RESPIRO_ANCORA);
+  }
+
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
     link.addEventListener('click', (evento) => {
       const id = link.hash.slice(1);
@@ -789,9 +827,8 @@
       if (!alvo) return;
 
       evento.preventDefault();
-      const margem = parseFloat(getComputedStyle(alvo).scrollMarginTop) || 0;
       window.scrollTo({
-        top: Math.max(0, topoDeLayout(alvo) - margem),
+        top: destinoDaAncora(alvo),
         behavior: reduzMovimento ? 'auto' : 'smooth',
       });
 
@@ -807,6 +844,65 @@
       alvo.focus({ preventScroll: true });
     });
   });
+
+  // 6b) Âncora que vem no ENDEREÇO ------------------------------------------
+  //
+  // `/limousines/#sedan` clicado na home não passa pelo handler acima: é
+  // navegação entre páginas, não clique em `a[href^="#"]`. Quem posiciona é o
+  // navegador, e ele usa a posição VISUAL do alvo — que no carregamento ainda
+  // carrega o translateY(56px) do `reveal--preparado`.
+  //
+  // Medido: em 390px parava em 4223 contra os 4167 do clique interno, 56px
+  // exatos além do ponto, com o topo da seção em y=16 e 58px dela enfiados sob
+  // o header. Em 1440px acertava — e acertava POR ACASO: o navegador
+  // reposiciona o fragmento várias vezes enquanto a página carrega, e lá o
+  // reveal assentava antes da última. É corrida entre carregamento e
+  // revelação, decidida por rede e CPU, não por largura de tela. Não era
+  // confiável em nenhum dos dois.
+  //
+  // Aqui o destino sai do LAYOUT, o mesmo do clique, então o estado da
+  // revelação deixa de participar da conta.
+  let usuarioRolou = false;
+  (['wheel', 'touchmove', 'keydown'] as const).forEach((evento) =>
+    window.addEventListener(evento, () => { usuarioRolou = true; }, { passive: true, once: true })
+  );
+
+  function corrigirAncoraDoEndereco(respeitarGuarda: boolean) {
+    if (respeitarGuarda && usuarioRolou) return;
+    if (location.hash.length < 2) return;
+    let alvo: HTMLElement | null = null;
+    try {
+      alvo = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    } catch {
+      return; // hash malformado — %E0 sozinho, por exemplo
+    }
+    if (!alvo) return;
+    window.scrollTo({ top: destinoDaAncora(alvo), behavior: 'auto' });
+  }
+
+  // Agora, para chegar antes da pintura sempre que der, e de novo depois do
+  // `load`, porque o navegador reposiciona o fragmento mais de uma vez
+  // enquanto carrega e a última palavra precisa ser nossa. Medido em 390px sob
+  // Fast 3G: o módulo acerta o alvo já no DOMContentLoaded, o navegador
+  // reposiciona por cima no `load`, e a segunda passada é que faz valer.
+  //
+  // A guarda de `usuarioRolou` vale só para essas duas: corrigir depois de o
+  // visitante ter rolado seria puxar a página da mão dele. Ela cobre roda,
+  // toque e teclado — não cobre quem arrasta a barra de rolagem, que aqui é
+  // invisível de propósito.
+  corrigirAncoraDoEndereco(true);
+  window.addEventListener('load', () => requestAnimationFrame(() => corrigirAncoraDoEndereco(true)));
+
+  // `hashchange` cobre a navegação de fragmento NO MESMO DOCUMENTO, em que o
+  // módulo não roda de novo: voltar pelo histórico até um endereço com hash,
+  // ou abrir /limousines/#sedan já estando na /limousines/. Sem isto o
+  // navegador posiciona sozinho e o vazio volta inteiro — medido, 142px.
+  //
+  // Aqui a guarda NÃO se aplica: quem acabou de navegar para um hash pediu
+  // para ir, e ter rolado antes disso não é motivo para ignorar o pedido.
+  // O `pushState` do handler de clique não dispara `hashchange`, então isto
+  // nunca duplica o scroll daquele caminho.
+  window.addEventListener('hashchange', () => corrigirAncoraDoEndereco(false));
 
   // 2) Scroll suave com Lenis — só desktop, só sem reduced-motion ---------
   const ehDesktop = window.matchMedia('(min-width: 56rem)').matches;
