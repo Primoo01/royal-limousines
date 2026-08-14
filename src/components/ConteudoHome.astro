@@ -1105,6 +1105,16 @@ const passos = [
     padding: 0.5rem 0.75rem;
     color: var(--escuro-texto);
     background-color: rgba(20, 18, 16, 0.55);
+    /* EXCEÇÃO PONTUAL ao "cantos retos" do sistema de botões (CLAUDE.md >
+       Botões). Vale só para ESTE botão e só no desktop: ele flutua sobre a
+       foto dentro de um bloco onde a fresta, o palco e o rótulo são todos
+       arredondados, e o canto reto no vértice superior esquerdo era o único
+       ângulo vivo da composição. O sistema continua reto em todo o resto do
+       site — nada aqui muda a regra global.
+       Os 35px cabem sem o navegador aparar: a caixa tem 36px de altura e o
+       canto inferior esquerdo está em 0, então a soma vertical (35 + 0) não
+       passa do lado. No mobile isto é desfeito logo abaixo. */
+    border-top-left-radius: 35px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1865,6 +1875,12 @@ const passos = [
       align-self: end;
       justify-self: center;
       padding-bottom: var(--espaco-4);
+    }
+
+    /* O canto arredondado do desktop não vale aqui: a exceção foi pedida só
+       para lá. Volta ao reto do sistema de botões. */
+    .seletor__acao :global(.botao) {
+      border-top-left-radius: 0;
     }
   }
 
