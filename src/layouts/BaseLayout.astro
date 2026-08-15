@@ -121,8 +121,21 @@ const localBusiness = {
   // porque schema.org espera formato E.164.
   telephone: `+${site.contato.whatsapp.numero}`,
   email: site.contato.email,
+  // `areaServed` (a região atendida) e `address` (a sede) NÃO se contradizem —
+  // são campos diferentes do mesmo LocalBusiness, e o Google usa os dois.
   areaServed: { '@type': 'Place', name: site.contato.areaAtendida },
-  address: { '@type': 'PostalAddress', addressLocality: 'São Paulo', addressRegion: 'SP', addressCountry: 'BR' },
+  // Este bloco tinha `addressLocality`/`addressRegion`/`addressCountry`
+  // ESCRITOS AQUI, em texto literal, enquanto o comentário acima afirmava que
+  // todos os dados vêm do site.js. Agora vêm de verdade, com `streetAddress` e
+  // `postalCode` que nunca existiram.
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.contato.endereco.logradouro,
+    addressLocality: site.contato.endereco.cidade,
+    addressRegion: site.contato.endereco.estado,
+    postalCode: site.contato.endereco.cep,
+    addressCountry: site.contato.endereco.pais,
+  },
 };
 ---
 

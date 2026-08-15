@@ -25,6 +25,29 @@ export const site = {
     },
     email: 'contato@limousinesroyal.com.br',
     areaAtendida: 'São Paulo e região',
+
+    // SEDE. Endereço confirmado pelo cliente. Hoje ele existe SÓ NO JSON-LD
+    // (`PostalAddress` do LocalBusiness, montado no BaseLayout) — não é
+    // publicado em texto visível em nenhuma página, por decisão do cliente.
+    // Se um dia for para o rodapé ou para a /contato/, o texto tem que sair
+    // DESTES campos, não ser digitado de novo — senão viram duas escritas do
+    // mesmo endereço, que é como elas começam a divergir.
+    //
+    // O bairro vai junto do logradouro porque `PostalAddress` do schema.org
+    // NÃO TEM campo de bairro, e no Brasil é assim que o endereço é escrito.
+    //
+    // `areaAtendida` acima e a sede aqui não se contradizem: atender a região
+    // inteira é `areaServed`, ter endereço fixo é `address`. Os dois convivem
+    // no mesmo LocalBusiness.
+    endereco: {
+      logradouro: 'Praça Louveira, 51 — Tatuapé',
+      cidade: 'São Paulo',
+      estado: 'SP',
+      cep: '03077-090',
+      // ISO 3166-1 alpha-2, que é o que o schema.org espera em
+      // `addressCountry` — não "Brasil" nem "BRA".
+      pais: 'BR',
+    },
   },
 
   // Menu enxuto — só as páginas fixas de navegação principal.
