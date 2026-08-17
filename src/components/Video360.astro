@@ -15,7 +15,7 @@
 // O <script> abaixo vira um chunk próprio, carregado só nas páginas que
 // renderizam este componente (home e /limousines/) — as 8 páginas de
 // serviço/região não o baixam.
-import { getImage } from 'astro:assets';
+import { Image } from 'astro:assets';
 
 interface Props {
   /** Caminho do MP4 em public/ (o astro:assets não processa vídeo). */
@@ -37,9 +37,31 @@ const { src, poster, largura, altura, alt, class: className } = Astro.props;
 const MANTIDO = 0.65;
 const proporcao = largura / (altura * MANTIDO);
 
-// O poster passa pelo astro:assets pra sair em WebP; o atributo `poster` do
-// <video> só aceita URL, então o componente <Image> não serve aqui.
-const posterOtimizado = await getImage({ src: poster, format: 'webp', width: largura });
+// O POSTER NÃO É MAIS O ATRIBUTO `poster` DO <video>. É um <img> sobreposto, e
+// a troca resolveu dois defeitos que o atributo não permitia consertar:
+//
+// 1. `poster` é atributo de URL ÚNICA — não existe `srcset` nem `sizes` nele
+//    (confirmado no motor: `HTMLVideoElement.prototype` tem `poster` e não tem
+//    `srcset`). Servia 1440w para todo mundo: desperdício no mobile, onde a
+//    caixa tem 390px de largura, e ainda assim insuficiente no desktop, onde
+//    em DPR 2 a 1440px seriam necessários 2880.
+// 2. `poster` é baixado de qualquer forma, MESMO com `preload="none"` no vídeo
+//    e sem ninguém rolar. Medido: 43,8 KB a +1215ms na home, para um vídeo que
+//    começa em y=6064 — sete telas abaixo da dobra. Não existe
+//    `loading="lazy"` para `poster`; existe para `<img>`.
+//
+// POR QUE SOBREPOR É SEGURO AQUI, e não seria num player comum: este vídeo
+// NUNCA toca sem JavaScript. Não há atributo `autoplay` (ver a nota grande
+// abaixo) — quem dá play é o observer. Então não existe o cenário "JS falhou e
+// a imagem ficou cobrindo um vídeo rodando": se o JS falhar, nada toca e o
+// poster é justamente o que deve ficar na tela. É o mesmo estado final do
+// atributo `poster`, inclusive em reduced-motion e no iOS com Modo de Dados
+// Reduzidos, onde as tentativas de play se esgotam.
+//
+// O teto do `srcset` é 1440w porque é o tamanho do ARQUIVO de origem. O
+// desktop em DPR 2 continua recebendo menos do que gostaria — isso não piorou,
+// era assim antes, e só melhora com um poster de origem maior.
+const LARGURAS_POSTER = [390, 480, 640, 768, 960, 1200, 1440];
 ---
 
 <div class:list={['video360', className]} style={`aspect-ratio: ${proporcao};`} data-video360>
@@ -62,7 +84,6 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
   */}
   <video
     src={src}
-    poster={posterOtimizado.src}
     width={largura}
     height={altura}
     muted
@@ -71,6 +92,31 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
     preload="none"
     aria-label={alt}
     data-video360-media></video>
+
+  {/*
+    POSTER. `alt=""` de propósito: o <video> acima já carrega a descrição no
+    `aria-label`, e repeti-la aqui faria o leitor de tela anunciar a mesma cena
+    duas vezes. A imagem é redundante em relação ao vídeo que ela representa.
+
+    `sizes="100vw"` porque a caixa é full-bleed em toda largura — medido em
+    360, 390, 402, 430, 768, 1280, 1440 e 1920px: a caixa sai sempre com a
+    largura exata da viewport.
+
+    O mesmo `object-position: center bottom` do vídeo, senão o poster mostraria
+    um recorte e o vídeo outro no instante da troca.
+  */}
+  <Image
+    src={poster}
+    widths={LARGURAS_POSTER}
+    sizes="100vw"
+    format="webp"
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    class="video360__poster"
+    data-video360-poster
+  />
 
   {/*
     Botão de play — EXCEÇÃO DELIBERADA ao "sem controles" do CLAUDE.md.
@@ -107,6 +153,29 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
     /* Ancorado embaixo: o excedente sai pelo TOPO, que é o que o corte de
        35% descarta. */
     object-position: center bottom;
+  }
+
+  /* O poster cobre a mesma caixa do vídeo, com o mesmo recorte. Fica ABAIXO do
+     botão de play na pilha (o botão é z-index 1) para que, quando o play é
+     recusado no iOS, o botão apareça SOBRE o poster e não atrás dele. */
+  .video360__poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+    pointer-events: none;
+  }
+
+  /* Sai de cena quando o vídeo REALMENTE começa a tocar — o JS marca o
+     contêiner no evento `playing`, não na chamada de play(), que resolve antes
+     do primeiro quadro aparecer e deixaria um piscada preta.
+     `opacity` e não `display`: só o compositor, sem layout (CLAUDE.md >
+     Movimento). E é de mão única — ao rolar para fora o vídeo pausa, mas o
+     poster não volta, senão piscaria a cada ida e volta. */
+  .video360[data-tocando='true'] .video360__poster {
+    opacity: 0;
   }
 
   /* Discreto de propósito: é uma saída de emergência, não um controle de
@@ -186,6 +255,28 @@ const posterOtimizado = await getImage({ src: poster, format: 'webp', width: lar
   const modoDebug = new URLSearchParams(location.search).has('videodebug');
 
   const videos = Array.from(document.querySelectorAll<HTMLVideoElement>('[data-video360-media]'));
+
+  // TIRA O POSTER DE CENA. Escuta `playing`, não o `.then()` do play(): a
+  // promessa resolve quando a reprodução é AUTORIZADA, que é antes de existir
+  // quadro na tela — esconder ali deixaria uma piscada da caixa vazia.
+  //
+  // De mão única de propósito. Ao rolar para fora o observer pausa o vídeo, mas
+  // o poster não volta: voltar faria a imagem piscar a cada ida e volta, e o
+  // vídeo pausado já mostra o último quadro, que é uma imagem legítima.
+  //
+  // Fora do `if (!reduzMovimento)` porque não depende do observer: se o vídeo
+  // tocar por qualquer via — inclusive o botão de toque do iOS —, o poster tem
+  // que sair. Em reduced-motion nada toca e o poster fica, que é o correto.
+  for (const video of videos) {
+    video.addEventListener(
+      'playing',
+      () => {
+        const caixa = video.closest<HTMLElement>('[data-video360]');
+        if (caixa) caixa.dataset.tocando = 'true';
+      },
+      { once: true }
+    );
+  }
 
   // Em prefers-reduced-motion basta não chamar play(): sem o atributo
   // `autoplay` no HTML, nada dispara sozinho e o vídeo fica no poster, como
