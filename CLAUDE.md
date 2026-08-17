@@ -238,6 +238,41 @@ Um vídeo por página, logo acima do carrossel: home leva o vídeo da limousine,
 
 **Exceção ao "sem controles".** Quando mesmo assim o autoplay é recusado — acontece no iOS com "Modo de Dados Reduzidos" ligado —, um botão de play discreto aparece sobre o poster. Ele nasce `hidden` e só é revelado depois de esgotadas as tentativas; em quem toca normalmente nunca aparece. Sem ele, esse visitante veria uma imagem parada sem nenhuma pista de que ali existe vídeo. É a única exceção à regra de não usar controles.
 
+#### Não existe `<track kind="captions">` aqui, e isso está certo
+
+O Lighthouse lista os dois vídeos na auditoria `video-caption`. **Ela tem peso 0
+e modo `informative`, com `score: 1`** (conferido no Lighthouse 13.4.1): é o
+resultado *incomplete* do axe — "Check that captions are available" —, pedido de
+revisão humana, não violação. **Não custa um único ponto.** A home marcou 100
+com essa linha presente no relatório. Fechá-la não muda pontuação em página
+nenhuma.
+
+**Os arquivos não têm faixa de áudio.** Medido de duas formas independentes:
+nos átomos do MP4, **um único `trak` em cada, handler `vide`** — zero `soun`,
+zero `mp4a`, zero faixa de legenda; e em execução, com o arquivo carregado,
+`captureStream().getAudioTracks()` devolve **0** e
+`webkitAudioDecodedByteCount` é 0, em 4,73s de duração.
+
+São silenciosos por construção, e isso muda o critério que se aplica: o **1.2.2
+(Legendas)** vale para mídia sincronizada, áudio + vídeo. Vídeo sem áudio cai no
+**1.2.1**, que pede alternativa textual para o conteúdo visual — e ela já existe
+e já está exposta: o nó acessível sai como `role: Video`, **não ignorado**, com
+nome vindo do `aria-label` do componente. **Legenda aqui seria inventar
+conteúdo**, e uma faixa VTT vazia calaria o axe declarando legendas que não
+existem.
+
+Duas "correções" que já foram avaliadas e recusadas:
+
+- **`aria-hidden="true"`** — o conteúdo é INFORMATIVO, não decorativo: é o carro
+  real do cliente, e o `aria-label` é o único texto que o descreve. Esconder
+  troca um aviso de revisão por uma perda de acesso real.
+- **`tabindex="-1"`** — inócuo. `<video>` sem `controls` já não é focável:
+  `focus()` programático não move o foco e 220 `Tab` não alcançam o elemento em
+  nenhuma das duas páginas.
+
+Uma auditoria que aponte a ausência de `<track>` está certa sobre o fato e
+errada sobre a conclusão. **Não abra tarefa e não mexa no markup.**
+
 ---
 
 ### Carrossel de fotos
