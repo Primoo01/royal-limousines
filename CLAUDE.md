@@ -232,11 +232,17 @@ Um vídeo por página, logo acima do carrossel: home leva o vídeo da limousine,
 
 **Corte de 35% do topo**, por CSS e sem editar o arquivo: o contêiner recebe overflow hidden e aspect-ratio igual a larguraDoVideo dividido por (alturaDoVideo × 0.65). O vídeo dentro usa width 100%, height 100%, object-fit cover e object-position center bottom.
 
-**Regras.** muted, loop, playsinline, **autoplay**, sem áudio, preload metadata, com poster. Pausa ao sair da viewport (IntersectionObserver) e retoma ao voltar. Em prefers-reduced-motion, o atributo autoplay é REMOVIDO por JS e fica só o poster.
+**Regras.** muted, loop, playsinline, sem áudio, **sem `autoplay`**, **`preload="none"`**, com poster. Quem dá play é um `IntersectionObserver` com threshold 0.5; ao sair da viewport pausa, ao voltar retoma. Em prefers-reduced-motion o observer nem é criado — nada toca e fica só o poster.
 
-**Por que `autoplay` e não apenas `play()` por script.** Medido num iPhone real: o `play()` programático é recusado com `NotAllowedError`, e o elemento chegava com `networkState=0` (NETWORK_EMPTY) — o iOS ignora `preload` e nunca buscava o arquivo. A correção tem três camadas: o atributo `autoplay` (caminho declarativo que a Apple documenta como permitido), `video.load()` explícito quando `networkState` é NETWORK_EMPTY, e retentativas.
+**Por que NÃO `autoplay` e NÃO `preload="metadata"`.** Os dois fazem o navegador buscar o arquivo assim que lê a tag, para um vídeo que na home começa em y=6064 — sete telas abaixo da dobra. Medido: `autoplay` somava **1,4 MB** à carga inicial; `preload="metadata"` bufferizava de **768 KB a 1 MB** no Chrome antes de alguém rolar, quase o arquivo inteiro. Com `preload="none"` são 0 KB até o vídeo entrar em cena.
 
-**Exceção ao "sem controles".** Quando mesmo assim o autoplay é recusado — acontece no iOS com "Modo de Dados Reduzidos" ligado —, um botão de play discreto aparece sobre o poster. Ele nasce `hidden` e só é revelado depois de esgotadas as tentativas; em quem toca normalmente nunca aparece. Sem ele, esse visitante veria uma imagem parada sem nenhuma pista de que ali existe vídeo. É a única exceção à regra de não usar controles.
+**Isto contraria a versão anterior deste documento, que pedia `autoplay` e `preload="metadata"` — e a mudança é deliberada.** Não "restaure" o atributo achando que corrige uma omissão.
+
+**O que substituiu o `autoplay`, medido num iPhone real.** O `play()` programático era recusado com `NotAllowedError` porque o elemento chegava com `networkState=0` (NETWORK_EMPTY): o iOS ignora `preload` e nunca buscava o arquivo, e não há como reproduzir mídia que não foi carregada. A correção não é declarativa, são três camadas no observer: **`video.load()` explícito** quando `networkState` é NETWORK_EMPTY ou `readyState` é 0, **6 retentativas a cada 400ms** (2,4s, folgado sobre os 1,1s que a revelação da seção leva) em vez de desistir na primeira rejeição, e o erro registrado em `data-video-erro` em vez de engolido. `muted` e `playsinline` continuam como atributos no HTML porque o iOS avalia os dois no momento em que lê a tag — defini-los por JS depois é tarde demais.
+
+**O poster não é o atributo `poster`.** É um `<img>` sobreposto, com `srcset`/`sizes` e `loading="lazy"`, que sai de cena no evento `playing`. O atributo não aceita `srcset` e é baixado mesmo com `preload="none"` — ver o comentário grande no `Video360.astro`.
+
+**Exceção ao "sem controles".** Quando mesmo assim o `play()` é recusado nas seis tentativas — acontece no iOS com "Modo de Dados Reduzidos" ligado —, um botão de play discreto aparece sobre o poster. Ele nasce `hidden` e só é revelado depois de esgotadas as tentativas; em quem toca normalmente nunca aparece. Sem ele, esse visitante veria uma imagem parada sem nenhuma pista de que ali existe vídeo. É a única exceção à regra de não usar controles.
 
 #### Não existe `<track kind="captions">` aqui, e isso está certo
 
