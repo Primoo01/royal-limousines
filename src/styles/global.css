@@ -36,6 +36,33 @@
   --ouro-claro: #a8823c;
   --ouro-escuro: #c6a25e;
 
+  /* DOURADO PARA TEXTO SOBRE FUNDO CLARO. Não substitui o `--ouro-claro`:
+     conviva com ele. A divisão é por PAPEL, não por gosto —
+
+       --ouro-claro       fios, molduras, ícones, bordas de foco (não-textual,
+                          onde o WCAG não pede razão de contraste)
+       --ouro-claro-texto TEXTO em cima de `--claro-bg`
+
+     O `--ouro-claro` dá 3.14:1 sobre `--claro-bg` e 2.70:1 sobre
+     `--claro-surface`, contra os 4.5:1 que o AA pede para texto normal. É a
+     dívida registrada no CLAUDE.md, e ela continua de pé para todo o resto —
+     esta variável é a primeira ocorrência resolvida, não a dívida quitada.
+
+     A cor é o MESMO dourado, só mais escura: matiz 38.9° e saturação 47.4%
+     preservados do `#a8823c`, luminosidade de 44.7% para 36.1%. Não é um tom
+     novo na paleta, e lado a lado com o original a diferença aparece; isolado,
+     não. Dá 4.54:1 sobre `--claro-bg`.
+
+     ATENÇÃO AO QUE ELA NÃO RESOLVE: sobre `--claro-surface` (#e7e0d4) ela dá
+     3.91:1 e AINDA REPROVA para texto normal. Os eyebrows do rodapé vivem no
+     surface e não se consertam com esta variável — precisariam de outra, mais
+     escura ainda. Não use aqui como se fosse solução geral.
+
+     Se um dia o cliente aceitar escurecer o dourado da marca, o caminho é
+     mover este valor para `--ouro-claro` e apagar esta variável, não o
+     contrário. */
+  --ouro-claro-texto: #886930;
+
   /* ---- Verde oficial do WhatsApp ----
      Única cor do site fora da paleta dos dois mundos. Existe só para o
      ícone ser reconhecido de imediato: usada no botão flutuante e no ícone

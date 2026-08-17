@@ -1351,7 +1351,17 @@ const passos = [
     font-size: 0.875rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--ouro-claro);
+    /* `--ouro-claro-texto`, não `--ouro-claro`: 14px peso 400 é texto normal e
+       exige 4.5:1, e o dourado da marca dá 3.14:1 sobre `--claro-bg`. Era a
+       única reprovação de contraste que o Lighthouse encontrava na home.
+       Ver a nota da variável no global.css — a divisão é por papel: fio e
+       moldura seguem no `--ouro-claro`, texto usa este.
+       A outra saída era subir a fonte para 24px, onde o mínimo cai a 3:1 e o
+       `#a8823c` passaria sem mudar cor. Recusada: a 24px a procedência
+       competiria com "Pontualidade · Discrição · Elegância" (18px) e
+       inverteria a hierarquia da assinatura, que existe justamente para a
+       procedência entrar por último e em voz baixa. */
+    color: var(--ouro-claro-texto);
   }
 
   /* As três palavras. Entram por último, depois da assinatura. */
