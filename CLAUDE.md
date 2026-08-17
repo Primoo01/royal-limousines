@@ -65,8 +65,45 @@ O backup é um espelho feito com wget. Cada página virou uma pasta com um `inde
 - **`@astrojs/sitemap`** para o sitemap
 - **`astro:assets`** para otimização de imagem
 - **Fontes self-hosted** via `@fontsource` (nunca link do Google Fonts em produção — evita FOUT e request externo)
-- **Deploy:** Cloudflare Pages (build estático, pasta `dist/`)
+- **Deploy:** **Vercel** (build estático, pasta `dist/`) — ver "Deploy e DNS" abaixo
 - **Animação:** ver "Movimento". Não instale GSAP, Framer Motion, AOS ou similar sem necessidade real.
+
+### Deploy e DNS — dois fornecedores, dois papéis
+
+Esta seção existe porque confundir os dois já custou tempo: **o documento
+declarava "Cloudflare Pages" como destino de deploy, e isso estava errado.**
+
+- **Quem SERVE o site é a Vercel.** Build estático, pasta `dist/`. É de lá que
+  o site é entregue, e é o que está no ar há semanas.
+- **O Cloudflare aqui é SÓ DNS.** Os nameservers foram migrados do Registro.br
+  para ele, e o registro `A` está em **DNS only** — sem proxy, sem CDN, sem
+  Pages. Ele resolve o nome e sai da frente; nenhum byte do site passa por ele.
+
+Consequência prática: **`Cloudflare Pages` não é destino de deploy deste
+projeto e nunca deve voltar ao documento como tal.** Se você encontrar
+"Cloudflare" escrito aqui, confira se é no papel de DNS — nesse papel está
+correto.
+
+#### O 404 de `/_vercel/speed-insights/script.js` é esperado fora da Vercel
+
+O `@vercel/speed-insights` entra pelo `BaseLayout` e injeta em toda página um
+carregador inline (~1,1 KB gzip, uma ocorrência por página nas 14). Esse
+carregador busca `/_vercel/speed-insights/script.js`, **um caminho que só
+existe na edge da Vercel**.
+
+Em servidor local — inclusive no servidor com gzip do scratchpad — esse pedido
+responde **404, uma vez por página, nas 14**. Isso é o comportamento correto:
+o script é servido pela plataforma em produção, não pelo build.
+
+**Uma auditoria que aponte esse 404 como console sujo está errada sobre a
+conclusão.** Ao medir console local, filtre exatamente essa URL e reporte
+"limpo fora o 404 do `_vercel/speed-insights`" — e confirme, ao filtrar, que
+nenhum OUTRO 404 está escondido atrás da mensagem genérica do console
+("Failed to load resource" não traz a URL; mapeie por resposta `>= 400`).
+
+Isto valeria como dívida real se o destino fosse outro host: fora da Vercel o
+carregador continuaria embutido nas 14 páginas, pesando e coletando nada. Como
+o destino **é** a Vercel, não há dívida — só ruído local.
 
 ### Orçamento de performance (requisito, não meta)
 
@@ -93,8 +130,9 @@ Um alvo deste projeto declara as quatro coisas:
 4. **Número de execuções e a mediana.** Uma execução só não decide: já foi
    medida amplitude de 2464 a 4492ms na mesma página, mesmo build.
 
-**Sirva COM gzip ao medir.** O `http-server` não comprime; Vercel e Cloudflare
-comprimem. Medir sem compressão já inventou aqui um CLS de 0,1653 que não
+**Sirva COM gzip ao medir.** O `http-server` não comprime; a **Vercel**, que é
+quem serve este site, comprime. Medir sem compressão já inventou aqui um CLS
+de 0,1653 que não
 existe em produção (o real é 0,0427) e quase trocou o inline do CSS por uma
 folha externa que custava 300-380ms de first-paint em toda página. Há um
 servidor com gzip no scratchpad para isso.
@@ -839,4 +877,6 @@ arranque existe lá também. Estender é seguro; só não foi pedido ainda.
 - Não invente texto, depoimento, prêmio, número ou estatística
 - Não use imagem gerada por IA representando os carros do cliente
 - Não mexa na pasta de backup
-- Não faça deploy nem altere DNS — isso é feito manualmente e só no final
+- Não faça deploy na Vercel nem altere DNS no Cloudflare — os dois são feitos
+  manualmente, e são fornecedores diferentes com papéis diferentes (ver "Deploy
+  e DNS")
